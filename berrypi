@@ -86,7 +86,7 @@ def runAutomation(configFile):
     tempFileName = structureName + '.struct'
     if not b_PyError.fileExists(tempFileName):
         string = DEFAULT_PREFIX + str(tempFileName)
-        string += 'does not exist'
+        string += ' does not exist'
         print string
         return False
 
@@ -514,7 +514,7 @@ if __name__ == "__main__":
         #structure path option
         elif argName in ('-p', '--structure-path'):
             structure_path = argValue
-	    structure_name = os.path.split(argValue)[0]
+	    structure_name = os.path.split(argValue)[-1]
 
         #automation disabling option
         elif argName in ('-n', '--no-auto'):
