@@ -21,7 +21,7 @@
   - python 2.7
   - numpy 1.6+
   - wien2wannier (found out version)
-  - WIEN2k
+  - WIEN2k 11.1
 
 * File Descriptions
 ** berryPyRunAutomation.py
