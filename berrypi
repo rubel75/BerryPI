@@ -8,14 +8,14 @@ import time
 import json
 import subprocess
 
-import berryPyErrorCheck as b_PyError
-import berryPyParsing as b_PyParse
-import berryPySubModuleProcess as b_PySubProcess
-import berryPyCalculations as b_PyCalc
+import errorCheck as b_PyError
+import parsing as b_PyParse
+import subModuleProcess as b_PySubProcess
+import calculations as b_PyCalc
 
-import berryPyConfiguration
-from berryPyConfiguration import BERRY_DEFAULT_CONSOLE_PREFIX as DEFAULT_PREFIX
-from berryPyConfiguration import BERRY_FILE_EXTENSION, DEFAULT_BIN_PATH, DEFAULT_PYTHON_PATH
+import config
+from config import BERRY_DEFAULT_CONSOLE_PREFIX as DEFAULT_PREFIX
+from config import BERRY_FILE_EXTENSION, DEFAULT_BIN_PATH, DEFAULT_PYTHON_PATH
 
 
 def changeToWorkingDirectory(path):
@@ -514,6 +514,7 @@ if __name__ == "__main__":
         #structure path option
         elif argName in ('-p', '--structure-path'):
             structure_path = argValue
+	    structure_name = os.path.split(argValue)[0]
 
         #automation disabling option
         elif argName in ('-n', '--no-auto'):

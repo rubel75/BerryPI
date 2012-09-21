@@ -13,11 +13,11 @@ it has been asked to return.
 '''
 import math, pprint
 
-import berryPyErrorCheck as b_PyError
-import berryPyParsing as b_PyParse
+import errorCheck as b_PyError
+import parsing as b_PyParse
 import numpy
 
-from berryPyConfiguration import BERRY_DEFAULT_CONSOLE_PREFIX as DEFAULT_PREFIX
+from config import BERRY_DEFAULT_CONSOLE_PREFIX as DEFAULT_PREFIX
 
 DEBUG = True
 

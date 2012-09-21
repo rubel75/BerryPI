@@ -9,7 +9,7 @@ and easily changed for later use
 import os.path, os, pprint
 import re
 
-from berryPyErrorCheck import ParseError
+from errorCheck import ParseError
 
 class AbstractParser(dict):
     '''
