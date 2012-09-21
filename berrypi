@@ -10,7 +10,7 @@ import subprocess
 
 import errorCheck as b_PyError
 import parsing as b_PyParse
-import subModuleProcess as b_PySubProcess
+import submoduleProcess as b_PySubProcess
 import calculations as b_PyCalc
 
 import config
@@ -70,7 +70,7 @@ def runAutomation(configFile):
     otherwise it returns True. This allows for several automation
     processes to be batched.
     '''
-    print(DEFAULT_PREFIX + "Starting BerryPy Automation for {}").format(configFile['Structure Name'])
+    print(DEFAULT_PREFIX + "Starting BerryPi Automation for {}").format(configFile['Structure Name'])
     
     #get the starting directory and switch to it
     oldCurrentWorkingDirectory = os.getcwd()
@@ -367,7 +367,7 @@ def writeResult(configFile, mainCalculationObject):
     fileHandle = open(filename, 'w')
     
     #intro to file
-    fileHandle.write("title: Output from BerryPyRunAutomation.py\n")
+    fileHandle.write("title: Output from berrypi\n")
     string = "name: {}\n".format(configFile['Structure Name'])
     fileHandle.write(string)
     string = "date: {}\n".format(time.ctime())
@@ -485,7 +485,7 @@ if __name__ == "__main__":
         print str(err) # will print something like "option -a not recognized"
         sys.exit(2)
 
-    #boolean for whether to check berryPyConfiguration for
+    #boolean for whether to check config for
     #configuration dicts
     checkConfig = True
 
@@ -495,9 +495,9 @@ if __name__ == "__main__":
     #defaults
     structure_name = ''
     structure_path = ''
-    structure_kmesh = berryPyConfiguration.DEFAULT_KMESH_DIVISIONS
-    structure_initlapw1 = berryPyConfiguration.DEFAULT_INCLUDE_LAPW1
-    structure_lapw1_parallel = berryPyConfiguration.DEFAULT_INCLUDE_LAPW1_PARALLEL
+    structure_kmesh = config.DEFAULT_KMESH_DIVISIONS
+    structure_initlapw1 = config.DEFAULT_INCLUDE_LAPW1
+    structure_lapw1_parallel = config.DEFAULT_INCLUDE_LAPW1_PARALLEL
     VERBOSE = False
     #begin checking command line arguments
     for argName, argValue in opts:
@@ -542,16 +542,16 @@ if __name__ == "__main__":
     #to the automation and calculations
     if structure_name or structure_path:
         if structure_name and structure_path:
-            #follows same format as berryPyConfiguration.py configurations
+            #follows same format as config.py configurations
             configFile = {
                 'Structure Name' : structure_name,
                 'Structure Path' : structure_path,
-                'Number of K-Points' : berryPyConfiguration.DEFAULT_NUMBER_OF_KPOINTS,
+                'Number of K-Points' : config.DEFAULT_NUMBER_OF_KPOINTS,
                 'K-Mesh Divisions' : structure_kmesh,
-                'K-Mesh Shift' : berryPyConfiguration.DEFAULT_KMESH_SHIFT, 
+                'K-Mesh Shift' : config.DEFAULT_KMESH_SHIFT, 
                 'Bloch Band' : (1,20), #different everytime, deprecated
-                'Number of Wannier Functions' : berryPyConfiguration.DEFAULT_WANNIER_FUNCTIONS,
-                'Center Atom and Character' : berryPyConfiguration.DEFAULT_CENTER_ATOM_AND_CHARACTER,
+                'Number of Wannier Functions' : config.DEFAULT_WANNIER_FUNCTIONS,
+                'Center Atom and Character' : config.DEFAULT_CENTER_ATOM_AND_CHARACTER,
                 'Perform LAPW1' : structure_initlapw1,
                 'LAPW1 in Parallel' : structure_lapw1_parallel, 
                 }
@@ -560,11 +560,11 @@ if __name__ == "__main__":
             print "structure name and structure path must be provided"
             raise getopt.GetoptError
 
-    #check berryPyConfiguration (based on if structure name or
+    #check config (based on if structure name or
     #structure path has been passed to berryPyRunAutomation.py)
     bAutomationErrorChk = True
     if checkConfig:
-        ConfigurationFiles = berryPyConfiguration.berryPyConfigAutomationList
+        ConfigurationFiles = config.berryPyConfigAutomationList
         for berryConfig in ConfigurationFiles:
             #check whether to automate
             if checkAuto:

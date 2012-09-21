@@ -8,7 +8,7 @@ shell and provide an abstract class with good exception handling.
 import sys,time
 import subprocess
 
-from berryPyConfiguration import BERRY_DEFAULT_CONSOLE_PREFIX as DEFAULT_PREFIX
+from config import BERRY_DEFAULT_CONSOLE_PREFIX as DEFAULT_PREFIX
 
 DEFAULT_EXECUTABLE_PATH = '/bin/bash'
 DEFAULT_BOOLEAN_SHELL = True

@@ -13,7 +13,7 @@ username = 'benzap'
 #######################################################
 
 #fix for location of python file locations when executing from the python commandline
-DEFAULT_BIN_PATH='/home/stud2/BenBerry_automagic/berrypi'
+DEFAULT_BIN_PATH='/home/stud2/SheikhProjects/BerryPI/'
 
 #Fix for python path to make sure it grabs the latest version
 DEFAULT_PYTHON_PATH='/home/stud2/.local/bin/python2.7 '
