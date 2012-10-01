@@ -80,7 +80,7 @@
 	
 * Tutorials
 ** Tutorial 1 - For Spontaneous polarization calculation
-	[[link][./tutorials/tutorial1/readme.txt]]
+	[[./tutorials/tutorial1/readme.txt]]
 ** Tutorial 2 - For Born Effective Charges 
-	[[link][./tutorials/tutorial2/readme.txt]]
+	[[./tutorials/tutorial2/readme.txt]]
 	
