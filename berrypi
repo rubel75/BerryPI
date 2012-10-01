@@ -162,7 +162,10 @@ def runAutomation(configFile):
         print DEFAULT_PREFIX + str(err)
         print DEFAULT_PREFIX + "ERROR: missing tags: " + str(err.errorTags)
         return False
-    blochBandSettings = [ 1, int(blochBandCalculation.getNumberOfBands()) ]
+    if configFile['Bloch Band']:
+	blochBandSettings = configFile['Bloch Band']
+    else:
+        blochBandSettings = [ 1, int(blochBandCalculation.getNumberOfBands()) ]
     print DEFAULT_PREFIX + "Number of bloch bands is {}".format(blochBandSettings)
 
     #create input list
@@ -432,7 +435,10 @@ if __name__ == "__main__":
 
         Runs the lapw1 command in parallel
 
+	--bloch-band=NUM:NUM, -bNUM:NUM
 
+	Used to manually set the bloch band for band by band decomposition. 
+	By default, it is parsing out the bloch band based on the number of total bands.
 
         Examples:
 
@@ -470,8 +476,8 @@ if __name__ == "__main__":
         
     try:
         opts, args = getopt.getopt(sys.argv[1:], 
-                                   "S:hvp:Pnk:l", 
-                                   ["help", "structure-path=", "structure-name=", 
+                                   "S:hvp:Pnk:lb:", 
+                                   ["help", "structure-path=", "structure-name=", "bloch-band=", 
                                     "no-auto", "kdiv=", "no-lapw1", "parallel", "verbose"])
     except getopt.GetoptError, err:
         # print help information and exit:
@@ -491,6 +497,7 @@ if __name__ == "__main__":
     structure_name = ''
     structure_path = ''
     structure_kmesh = config.DEFAULT_KMESH_DIVISIONS
+    structure_bloch = None
     structure_initlapw1 = config.DEFAULT_INCLUDE_LAPW1
     structure_lapw1_parallel = config.DEFAULT_INCLUDE_LAPW1_PARALLEL
     VERBOSE = False
@@ -527,6 +534,9 @@ if __name__ == "__main__":
         elif argName in ('-P', '--parallel'):
             structure_lapw1_parallel = True
 
+        elif argName in ('-b', '--bloch-band'):
+	    structure_bloch = [ int(i) for i in argValue.split(':') ]
+
         elif argName in ('-v', '--verbose'):
             VERBOSE = True
         else:
@@ -544,7 +554,7 @@ if __name__ == "__main__":
                 'Number of K-Points' : config.DEFAULT_NUMBER_OF_KPOINTS,
                 'K-Mesh Divisions' : structure_kmesh,
                 'K-Mesh Shift' : config.DEFAULT_KMESH_SHIFT, 
-                'Bloch Band' : (1,20), #different everytime, deprecated
+                'Bloch Band' : structure_bloch,
                 'Number of Wannier Functions' : config.DEFAULT_WANNIER_FUNCTIONS,
                 'Center Atom and Character' : config.DEFAULT_CENTER_ATOM_AND_CHARACTER,
                 'Perform LAPW1' : structure_initlapw1,

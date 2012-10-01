@@ -35,7 +35,7 @@ DEFAULT_KMESH_DIVISIONS = (10,10,10)
 DEFAULT_KMESH_SHIFT = 0 #Always 0
 
 #Enter minimal and maximal Bloch band,[n1 n2]:
-#DEFAULT_BLOCH_BAND = (1,20)
+DEFAULT_BLOCH_BAND = None
 
 
 #Enter number of Wannier functions,[n1]:
@@ -62,7 +62,7 @@ BERRY_EXIT_ON_ERROR = True
 BERRY_DEFAULT_CONSOLE_PREFIX = '[ BerryPi ] '
 
 #extension used for the file to store the polarized value output
-BERRY_FILE_EXTENSION = '.berryp'
+BERRY_FILE_EXTENSION = '.berrypi'
 
 ####
 
@@ -79,6 +79,7 @@ lattice0_config = {
     'Number of K-Points' : DEFAULT_NUMBER_OF_KPOINTS, #always use Default
     'K-Mesh Divisions' : (6,6,6), #X, Y, Z
     'K-Mesh Shift' : DEFAULT_KMESH_SHIFT, #always use Default
+    'Bloch Band Range' : DEFAULT_BLOCH_BAND,
     'Number of Wannier Functions' : DEFAULT_WANNIER_FUNCTIONS, #always use Default
     'Center Atom and Character' : DEFAULT_CENTER_ATOM_AND_CHARACTER, #always use Default
     'Perform LAPW1' : DEFAULT_INCLUDE_LAPW1,
@@ -91,6 +92,7 @@ ba_config = {
     'Number of K-Points' : DEFAULT_NUMBER_OF_KPOINTS, #always use Default
     'K-Mesh Divisions' : (10,10,9), #X, Y, Z
     'K-Mesh Shift' : DEFAULT_KMESH_SHIFT, #always use Default
+    'Bloch Band Range' : DEFAULT_BLOCH_BAND,
     'Number of Wannier Functions' : DEFAULT_WANNIER_FUNCTIONS, #always use Default
     'Center Atom and Character' : DEFAULT_CENTER_ATOM_AND_CHARACTER, #always use Default
     'Perform LAPW1' : DEFAULT_INCLUDE_LAPW1,
@@ -103,6 +105,7 @@ ba_test = {
     'Number of K-Points' : DEFAULT_NUMBER_OF_KPOINTS, #always use Default
     'K-Mesh Divisions' : (10,10,10), #X, Y, Z
     'K-Mesh Shift' : DEFAULT_KMESH_SHIFT, #always use Default
+    'Bloch Band Range' : DEFAULT_BLOCH_BAND,
     'Number of Wannier Functions' : DEFAULT_WANNIER_FUNCTIONS, #always use Default
     'Center Atom and Character' : DEFAULT_CENTER_ATOM_AND_CHARACTER, #always use Default
     'Perform LAPW1' : DEFAULT_INCLUDE_LAPW1, #False, #True --> include lapw1, False --> don't include lapw1
@@ -116,6 +119,7 @@ ba_test2 = {
     'Number of K-Points' : DEFAULT_NUMBER_OF_KPOINTS, #always use Default
     'K-Mesh Divisions' : (10,10,10), #X, Y, Z
     'K-Mesh Shift' : DEFAULT_KMESH_SHIFT, #always use Default
+    'Bloch Band Range' : DEFAULT_BLOCH_BAND,
     'Number of Wannier Functions' : DEFAULT_WANNIER_FUNCTIONS, #always use Default
     'Center Atom and Character' : DEFAULT_CENTER_ATOM_AND_CHARACTER, #always use Default
     'Perform LAPW1' : DEFAULT_INCLUDE_LAPW1,
