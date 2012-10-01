@@ -1,7 +1,6 @@
 * Installation
-  - make sure all the correct paths are set in your .bashrc. You need
-    to have paths to *mmn2pathphase.py*, *win2nnkp.py*, wein2k, w2w,
-    etc.
+  - Include paths to this folder within your ~/.bashrc file
+
 * Configuration
   configuration is done through the berryPyConfiguration.py file. You
   can either include new configurations in the berryPyConfiguration.py
@@ -26,7 +25,7 @@
 * File Descriptions
 ** berrypi
    The main file to run. It automates the 'entire' berry process
-** berryPySubmoduleProcess.py
+** submoduleProcess.py
    File used for general shell interaction through python.
 ** parsing.py
    Includes functions for parsing certain wien2k and w2w files. The
@@ -83,4 +82,9 @@
 	[[./tutorials/tutorial1]]
 ** Tutorial 2 - For Born Effective Charges 
 	[[./tutorials/tutorial2/]]
-	
+
+* Task list for future versions
+** TODO Fix broken links (idk why it's not working) [ ]
+** TODO Include fully functional verbose mode [ ]
+** TODO Include script to check if all of the correct dependencies are met [ ]
+** TODO Remove config.py configuration dictionary functionality (isn't very useful) [ ]
