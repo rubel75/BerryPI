@@ -24,7 +24,7 @@
   - WIEN2k 11.1
 
 * File Descriptions
-** berryPyRunAutomation.py
+** berrypi
    The main file to run. It automates the 'entire' berry process
 ** berryPySubmoduleProcess.py
    File used for general shell interaction through python.
