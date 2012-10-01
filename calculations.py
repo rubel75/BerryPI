@@ -17,6 +17,7 @@ import errorCheck as b_PyError
 import parsing as b_PyParse
 import numpy
 
+from collections import OrderedDict as orderedDict
 from config import BERRY_DEFAULT_CONSOLE_PREFIX as DEFAULT_PREFIX
 
 DEBUG = True
@@ -184,7 +185,7 @@ class MainCalculationContainer:
         #############################
         ###### Getting Values #######
         #############################
-        self._calculationValues = {}
+        self._calculationValues = orderedDict();
         
         #### *.struct handle
         # - determine name of atoms

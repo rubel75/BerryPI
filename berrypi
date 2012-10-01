@@ -60,7 +60,6 @@ def performCalculation(configFile):
         )
     #mainCalculation.prettyPrintCalculationValues()
     finalPolarizationValue = mainCalculation()
-   # print DEFAULT_PREFIX + "Total Polarization in C/m^2[-pi to +pi domain] : " + str(finalPolarizationValue)
     return mainCalculation
         
 
