@@ -1,6 +1,6 @@
 For Born Effective Charges 
 
-1. Change the current directory to ~/Help/GaAs/lambda1 
+1. Change the current directory to ./tutorial/tutorial2/lambda1 
 
 2. Run init_lapw -b -vxc 13 -ecut -8 -numk 230
 
@@ -24,11 +24,11 @@ Here “–p$(pwd)” means that BerryPI program is running for all the file in the cu
 
 Note: In the result 2 values of Total polarization is reported. This is to avoid pi warping complications. This will be explained later in this part of tutorial.
 
-6. Copy all file from lambda1 to lambda0 directory by “cp * ../lambda2” command
+6. Copy all file from lambda1 to lambda2 directory by “cp * ../lambda2” command
 
-7. Change the current directory to lamda2 “cd ../lambda2”
+7. Change the current directory to lambda2 “cd ../lambda2”
 
-8. Remove the lamdbda1.struct file. “rm lambda1.struct”
+8. Remove the lambda1.struct file. “rm lambda1.struct”
 
 9. Rename all lambda1. files to lambda2. files with
 “rename_files lambda1 lambda2” command
@@ -44,7 +44,7 @@ Or
 12. Run standard scf cycle again with “run_lapw” command.
 
 13. Run BerryPI again with 
-“python ~/SheikhProjects/BerryPI/berrypi –p$(pwd) –k6:6:6” command.
+“python berrypi –p$(pwd) –k6:6:6” command.
 
 14. Once the calculation is completed the result will be printed like this
 

@@ -1,7 +1,7 @@
 For Spontaneous polarization calculation
 
 
-1. Change the current directory to ~/Help/BaTiO3/lambda1 
+1. Change the current directory to ./tutorials/tutorial1/lambda1 
 
 2. Run init_lapw -b -vxc 13 -ecut -6 -numk 230
 
@@ -23,7 +23,7 @@ Here “–p$(pwd)” means that BerryPI program is running for all the file in the cu
 
 Note: In the result 2 values of Total polarization is reported. This is to avoid pi warping complications. This will be explained in detail in the second example file as here the final result is same in both the cases and will not affect the calculation of total polarization.3 values of polarization in both the cases represent polarization in X, Y and Z direction respectively.
 
-6. Copy all file from lambda1 to lambda0 directory by “cp * ../lambda0” command
+6. Copy all the files from lambda1 to lambda0 directory by “cp * ../lambda0” command
 
 7. Change the current directory to lamda0 “cd ../lambda0”
 
