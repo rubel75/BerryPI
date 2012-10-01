@@ -454,21 +454,37 @@ class MainCalculationContainer:
 	electronicphaseremapped=self.remappedberryphase()
 
 	print DEFAULT_PREFIX + "Ionic Phase in the unit of pi: "+str( ionicphase)
-	print DEFAULT_PREFIX + "Ionic Phase in the range -pi to +pi: "+str(ionicremapped)
-	print DEFAULT_PREFIX + "Ionic Polarizaion [C/m^2]: "+str( ionPolar)
+	print DEFAULT_PREFIX + "Ionic Phase remapped in the unit of pi [-pi to +pi]: "+str(ionicremapped)
+	print DEFAULT_PREFIX + "Ionic Polarizaion in C/m^2: "+str( ionPolar)
 
 	print DEFAULT_PREFIX + "Electronic Phase in the unit of pi: "+str(electronicphase)
-	print DEFAULT_PREFIX + "Electronic Phase in the range -pi to +pi: "+str(electronicphaseremapped)
-	print DEFAULT_PREFIX + "Electronic Polarization [C/m^2]: "+str(elecPolar)
+	print DEFAULT_PREFIX + "Electronic Phase remapped in the init of pi [-pi to +pi] : "+str(electronicphaseremapped)
+	print DEFAULT_PREFIX + "Electronic Polarization in C/m^2: "+str(elecPolar)
 
 	#Zipping  values together and summing them
+	ionicphase = [ i * 2 * math.pi for i in ionicphase ]
+	electronicphase = [ i * 2 * math.pi for i in electronicphase ]
         self._netPolarizationEnergy = zip(ionicphase, electronicphase)
 	self._netPolarizationEnergy = [sum(i) for i in self._netPolarizationEnergy ]
-	print DEFAULT_PREFIX + "Total Phase: "+str(self._netPolarizationEnergy)
+	self._netPolarizationEnergy= [i / ( 2 * math.pi) for i in self._netPolarizationEnergy ]	
+	self._netPolarizationEnergy= [i % 2 for i in self._netPolarizationEnergy ]
+	print DEFAULT_PREFIX + "Total Phase in the unit of pi: "+str(self._netPolarizationEnergy)
+
+
+	#polrization in 2pi modulo
+
+	self._netPolarizationEnergy1=self._netPolarizationEnergy
+	calcValues = self.calculationValues()
+        latticeConstants = calcValues['Lattice Constants']
+
+        ELEC_BY_VOL_CONST = self.ELEC_BY_VOL_CONST
+        self._netPolarizationEnergy1 = [ELEC_BY_VOL_CONST * bohrToMeters(i[0]) * i[1] for i in zip(latticeConstants, self._netPolarizationEnergy1) ]
+	print DEFAULT_PREFIX + "Total Polarization in C/m^2 [2pi modulo]: "+str(self._netPolarizationEnergy1)
+
 	#Correcting the phase domain between -pi and pi
 
 	self._netPolarizationEnergy = [ self.correctPhaseDomain(i) for i in self._netPolarizationEnergy ]
-	print DEFAULT_PREFIX + "Total Phase Remapped in between -pi to +pi: "+str(self._netPolarizationEnergy)
+	print DEFAULT_PREFIX + "Total Phase Remapped in the unit of pi [-pi to +pi]: "+str(self._netPolarizationEnergy)
 
 	#grab the calculation values
 	calcValues = self.calculationValues()
@@ -477,6 +493,7 @@ class MainCalculationContainer:
 	ELEC_BY_VOL_CONST = self.ELEC_BY_VOL_CONST
  	self._netPolarizationEnergy = [ELEC_BY_VOL_CONST * bohrToMeters(i[0]) * i[1] for i in zip(latticeConstants, self._netPolarizationEnergy) ]
 
+        print DEFAULT_PREFIX + "Total Polarization in C/m^2[-pi to +pi ] :"+str(self._netPolarizationEnergy)
         return self._netPolarizationEnergy
 
     def netPolarizationEnergy(self):

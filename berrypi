@@ -60,7 +60,7 @@ def performCalculation(configFile):
         )
     #mainCalculation.prettyPrintCalculationValues()
     finalPolarizationValue = mainCalculation()
-    print DEFAULT_PREFIX + "Final Polarization [C/m^2] : " + str(finalPolarizationValue)
+   # print DEFAULT_PREFIX + "Total Polarization in C/m^2[-pi to +pi domain] : " + str(finalPolarizationValue)
     return mainCalculation
         
 
@@ -396,16 +396,19 @@ def writeResult(configFile, mainCalculationObject):
 if __name__ == "__main__":
     def helpInfo():
         print '''
-        berryPyRunAutomation.py --structure-name=[NAME] --structure-path=[PATH] --no-auto
 
-        Note: Running berryPyRunAutomation.py as a standalone without
-        --structure-name (-S) or --structure-path (-p) will import and
-        use the configurations provided in the berryPyConfiguration.py
-        file
+        DEPENDENCIES:
+        - WIEN2k (tested against 11.1 Release 05/04/2011)
+        - WIEN2WANNIER (tested against 0.92)
+        - Python (tested against 2.7.3)
+        - NumPy (tested against 1.6.2)
 
-        --structure-name=[NAME], -S[NAME]
+        Once you have all the dependencies installed.
+        To run "BerryPI" after standard WIEN2k scf cycle run the following command
 
-        Provides a facility to include the structures name.
+        berrypi -p[PATH] -kNUM:NUM:NUM
+        OR
+        berrypi --structure-path=[PATH] --kdiv=NUM:NUM:NUM
 
         NOTE: Failure to also provide a path will result in an error
 
@@ -413,61 +416,54 @@ if __name__ == "__main__":
 
         Provides a facility to include the structures path.
 
-        NOTE: Failure to also provide a structure name will result in
-        an error
-
-        --no-auto, -n
-
-        Turns off automation of the berry py parsing commands and only
-        performs the final calculation on the given data
 
         --kdiv=NUM:NUM:NUM, -kNUM:NUM:NUM
 
-        Provides a new set of K Divisions for the configuration NOTE:
-        does not work on configurations passed into
-        berryPyConfiguration.py, only with configurations passed
-        through commandline (--structure-name, --structure-path)
+        Provides a new set of K Divisions for the configuration
+
+        Additional Switches
+
+        --no-auto, -n
+
+        It assumes that the electronic phase calculation has been performed 
+        before and all the required files are for computaion of polarization 
+        is present and it just calculate the polarization based on those data
+
+        --parallel, -P
+
+        Runs the lapw1 command in parallel
+
+
 
         Examples:
 
-        would like to run standalone and populate
-        berryPyConfiguration.py with several tasks:
 
-        $ berryPyRunAutomation.py
+        I have a structure and structure path is "/home/stud2/Help/BaTiO3/lambda1" I would like to provide
+        manually to the berrypi file with 10*10*10 size k mesh
+
+        $ berryi  --structure-path=/home/stud2/Help/BaTiO3/lambda1 --kdiv10:10:10
+          OR
+
+        $ berryi -p/home/stud2/Help/BaTiO3/lambda1 -k10:10:10
+
+        I would like to only calculate the polarization on a given
+        file without automation
+
+        $ berryi  --structure-path=/home/stud2/Help/BaTiO3/lambda1 --no-auto
+         OR
+        $ berrypi  -p/home/stud2/Help/BaTiO3/lambda1 -n
+          OR
+        $ berrypi --no-auto
+          OR
+        $ berrypi -n
+
 
         simulation is done without automation, but I would like to
         calculate the polarization of the files stored in
         berryPyConfiguration
 
-        $ berryPyRunAutomation.py --no-auto
-          OR
-        $ berryPyRunAutomation.py -n
 
-        I have a structure and structure path I would like to provide
-        manually to the berryPyRunAutomation.py file
-
-        $ berryPyRunAutomation.py --structure-name=lambda0 --structure-path=/home/benzap/Projects/piezo/tests/lambda0/
-          OR
-        $ berryPyRunAutomation.py -Slambda0 -p/home/benzap/Projects/piezo/tests/lambda0/
-
-        I would like to only calculate the polarization on a given
-        file without automation
-
-        $ berryPyRunAutomation.py -Slambda0 -p/home/benzap/Projects/piezo/tests/lambda0/ -n
-
-        Provide new kmesh values from the default value provided in
-        berryPyConfiguration.py X=5 divisions, Y=1 Division, Z=1
-        Division
-
-        $ berryPyRunAutomation.py -Slambda0 -p/home/benzap/Projects/piezo/tests/lambda0/ -n -k5:1:1
-       
-        --no-lapw1, -l
-
-        Prevents the automation from running the lapw1 part of the calculation 
-
-        --parallel, -P
-
-        Runs the lapw1 command in parallel
+      
         '''
         pass
 

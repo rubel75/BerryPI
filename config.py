@@ -132,7 +132,7 @@ ba_test2 = {
 
 #berryPyConfigAutomationList.append(lattice0_config)
 #berryPyConfigAutomationList.append(ba_config)
-berryPyConfigAutomationList.append(ba_test)
+#berryPyConfigAutomationList.append(ba_test)
 #berryPyConfigAutomationList.append(ba_test2)
 
 
