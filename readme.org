@@ -1,20 +1,38 @@
 * Installation
   - Include paths to this folder within your ~/.bashrc file
+  - Include required paths for DEFAULT_BIN_PATH and DEFAULT_PYTHON_PATH
 
 * Configuration
-  configuration is done through the berryPyConfiguration.py file. You
-  can either include new configurations in the berryPyConfiguration.py
-  file itself, or append the configurations into the
-  berryPyConfigAutomationList variable. 
+  configuration is done through the config.py file.
 
-  There is an example in berryPyConfiguration.py to work with.
+  currently, the paths for berrypi and for python are hardcoded within
+  this file due to the nature of the current users environment. This
+  should be changed in later developments to accomodate all users if
+  it is a requirement.
 
-  New:
+  Before running, DEFAULT_BIN_PATH and DEFAULT_PYTHON_PATH values
+  within config.py should be set to legitimate values
 
-  You can now run berrypi standalone and just provide
-  the structure path. It has also been modified to
-  only perform the last polarization calculation if you would like to
-  run your own simulation scripts.
+  DEFAULT_BIN_PATH - should be exactly the same as your BerryPi
+  directory root where all of the code is being stored.
+
+  example:
+
+  DEFAULT_BIN_PATH='~/share/BerryPI/'
+
+  DEFAULT_PYTHON_PATH - should be the path to the current python
+  distribution.  NOTE: please also include the python command which is
+  also being used, with a space. TODO: change this.
+
+  example:   NOTE: the space at the end of python2.7 (this is required) TODO: change this.
+
+  DEFAULT_PYTHON_PATH='/usr/bin/python2.7 '
+
+  for further configuration options when running berrypi, run 
+
+  berrypi -h
+
+  to get a list of prefix options.
 
 * Dependencies
   - WIEN2k (tested against 11.1 Release 05/04/2011)
