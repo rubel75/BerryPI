@@ -41,6 +41,14 @@
   - NumPy (tested against 1.6.2)
   
 * File Descriptions
+** win2nnkp.py
+   Generate the nearest neighbour list of k points
+** mmn2pathphase.py
+   Calculate the Berry phase for a particuler direction	
+*  Calculation of the Berry Phase
+   After getting pathphase(x,y,z), obtain each value is divided by PI Make
+   sure that the values are within the [0, 2*PI] ex. -3.2 == 0.8pi
+   normalizing.Then they are presented as Electronic phase/(2*pi) where they are
 ** berrypi
    The main file to run. It automates the 'entire' berry process
 ** submoduleProcess.py
@@ -59,41 +67,7 @@
 ** calculations.py
    Includes the necessary classes to carry out the remaining
    calculations at the end of the automation run
-* Calculation of the Berry Phase
-  - After getting pathphase(x,y,z), obtain each value divided PI Make
-    sure that the values are within the [0, 2*PI] ex. -3.2 == 0.8pi
-    normalizing
-  - sum(values) / num(values)
-  - Next, we need to calculate the eletronic polarization in the Z
-    direction Pel_z = electron charge(C) / (Volume (m^3 from bohr ^ 3) * berry Phase
-    (PI form) * Lattice vector(cz) (Z-direction in metres from bohr)
 
-    NOTE: might need to do a absolute (vector multiplication)
-
-  - Next, we need to calculate the eletronic polarization in the Y
-    direction Pel_y = electron charge(C) / (Volume (m^3 from bohr ^ 3) * berry Phase
-    (PI form) * Lattice vector (by) (Y-direction in metres from bohr) BR2_DIR in *.outputd
-
-  - etc.... x direction
-
-  - converting from bhor to m^3
-
-  - After we have calculated electron polarization, we calculate ionic
-    polarization Pion_z = electron charge(C) / Volume (m^3 from
-    bohr) * Lattice Constant (z direction in m from bohr) * (#valence
-    electrons in atom 1 * Z direction of atom 1) + ... + (#valence
-    electroncs in atoms 1 * Z direction of atom N)
-
-    NOTE: MULT atoms require you do the calculation for that
-    iteration * MULT + it's particular coordinates
-
-  - for *.outputst 
-    take total charge per spin (1) + total charge per spin (2) - total core-charge for each atom
-
-  - Pion_x, Pion_y....
-
-  - Next, we get the polarization by ionic polarization + the electron polarization
-    P_x = Pion_x + Pel_x .... etc
 	
 * Tutorials
 ** Tutorial 1 - For Spontaneous polarization calculation
