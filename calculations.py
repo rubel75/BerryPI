@@ -454,18 +454,18 @@ class MainCalculationContainer:
 	electronicphase=self.value_phaseMeanValues
 	electronicphaseremapped=self.remappedberryphase()
 
-	print DEFAULT_PREFIX + "Ionic Phase in the unit of pi: "+str( ionicphase)
-	self._calculationValues['Ionic Phase - Units of Pi'] = ionicphase
-	print DEFAULT_PREFIX + "Ionic Phase remapped in the unit of pi [-pi to +pi]: "+str(ionicremapped)
-	self._calculationValues['Ionic Phase - Units of Pi domain[-pi to +pi]'] = ionicremapped
+	print DEFAULT_PREFIX + "Ionic Phase in the unit of 2*pi: "+str( ionicphase)
+	self._calculationValues['Ionic Phase - Units of 2*pi'] = ionicphase
+	print DEFAULT_PREFIX + "Ionic Phase remapped in the unit of 2*pi [-pi to +pi]: "+str(ionicremapped)
+	self._calculationValues['Ionic Phase - Units of 2*pi domain[-pi to +pi]'] = ionicremapped
 	print DEFAULT_PREFIX + "Ionic Polarizaion in C/m^2: "+str( ionPolar)
 
 
-	print DEFAULT_PREFIX + "Electronic Phase in the unit of pi: "+str(electronicphase)
-	self._calculationValues['Electronic Phase - Units of Pi'] = electronicphase
+	print DEFAULT_PREFIX + "Electronic Phase in the unit of 2*pi: "+str(electronicphase)
+	self._calculationValues['Electronic Phase - Units of 2*pi'] = electronicphase
 
-	print DEFAULT_PREFIX + "Electronic Phase remapped in the init of pi [-pi to +pi] : "+str(electronicphaseremapped)
-	self._calculationValues['Electronic Phase - Units of Pi domain[-pi to +pi]'] = electronicphaseremapped
+	print DEFAULT_PREFIX + "Electronic Phase remapped in the init of 2*pi [-pi to +pi] : "+str(electronicphaseremapped)
+	self._calculationValues['Electronic Phase - Units of 2*Pi domain[-pi to +pi]'] = electronicphaseremapped
 
 	print DEFAULT_PREFIX + "Electronic Polarization in C/m^2: "+str(elecPolar)
 
@@ -476,8 +476,8 @@ class MainCalculationContainer:
 	self._netPolarizationEnergy = [sum(i) for i in self._netPolarizationEnergy ]
 	self._netPolarizationEnergy= [i / ( 2 * math.pi) for i in self._netPolarizationEnergy ]	
 	self._netPolarizationEnergy= [i % 2 for i in self._netPolarizationEnergy ]
-	print DEFAULT_PREFIX + "Total Phase in the unit of pi: "+str(self._netPolarizationEnergy)
-	self._calculationValues['Total Phase - Units of PI'] = self._netPolarizationEnergy
+	print DEFAULT_PREFIX + "Total Phase in the unit of 2*pi: "+str(self._netPolarizationEnergy)
+	self._calculationValues['Total Phase - Units of 2*pi'] = self._netPolarizationEnergy
 
 	#polrization in 2pi modulo
 
@@ -493,8 +493,8 @@ class MainCalculationContainer:
 	#Correcting the phase domain between -pi and pi
 
 	self._netPolarizationEnergy = [ self.correctPhaseDomain(i) for i in self._netPolarizationEnergy ]
-	print DEFAULT_PREFIX + "Total Phase Remapped in the unit of pi [-pi to +pi]: "+str(self._netPolarizationEnergy)
-	self._calculationValues['Total Phase in the domain[-pi to +pi]'] = self._netPolarizationEnergy
+	print DEFAULT_PREFIX + "Total Phase Remapped in the unit of 2*pi [-pi to +pi]: "+str(self._netPolarizationEnergy)
+	self._calculationValues['Total Phase in units of 2*pi in the domain[-pi to +pi]'] = self._netPolarizationEnergy
 
 	#grab the calculation values
 	calcValues = self.calculationValues()
