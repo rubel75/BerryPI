@@ -8,9 +8,9 @@ The atoms are in non-centrosymmetric arrangement due to their movement in Z dire
 
 1.1.2 Run the following command
 
-      $init_lapw -b -vxc 13 -ecut -6 -numk 230
+$init_lapw -b -vxc 13 -ecut -6 -numk 230
 
-This will initialize the calculation where "-vxc 13" stands for PBE-GGA as exchange correlation function."-ecut -6" means the separation  energy of -8 Ry has been chosen to separate core electron from valance electron. -numk 230" means that 230 k points has been chosen in Brillouin zone which generates 6*6*6 size k-mesh in the symmetric Brillouin zone
+This will initialize the calculation where "-vxc 13" stands for PBE-GGA as exchange correlation function."-ecut -6" means the separation  energy of -6 Ry has been chosen to separate core electron from valance electron. -numk 230" means that 230 k points has been chosen in Brillouin zone which generates 6*6*6 size k-mesh in the symmetric Brillouin zone
 
 1.1.3 Run the command
  
