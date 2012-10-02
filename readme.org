@@ -48,7 +48,7 @@
 *  Calculation of the Berry Phase
    After getting pathphase(x,y,z), obtain each value is divided by PI Make
    sure that the values are within the [0, 2*PI] ex. -3.2 == 0.8pi
-   normalizing.Then they are presented as Electronic phase/(2*pi) where they are
+   normalizing.Then they are presented as Electronic phase/(2*pi)
 ** berrypi
    The main file to run. It automates the 'entire' berry process
 ** submoduleProcess.py
