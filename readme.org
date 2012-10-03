@@ -32,7 +32,7 @@
 
   for further configuration options when running berrypi, run 
 
-  berrypi -h
+  python ~/BerryPI/berrypi -h
 
   to get a list of prefix options.
 

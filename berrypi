@@ -446,21 +446,30 @@ if __name__ == "__main__":
         I have a structure and structure path is "/home/stud2/Help/BaTiO3/lambda1" I would like to provide
         manually to the berrypi file with 10*10*10 size k mesh
 
-        $ berryi  --structure-path=/home/stud2/Help/BaTiO3/lambda1 --kdiv10:10:10
-          OR
+        $ python ~/BerriPI/ berrypi  --structure-path=/home/stud2/Help/BaTiO3/lambda1 --kdiv10:10:10
 
-        $ berryi -p/home/stud2/Help/BaTiO3/lambda1 -k10:10:10
+        OR
+
+        $ python ~/BerriPI/berrypi -p/home/stud2/Help/BaTiO3/lambda1 -k10:10:10
+
+ 	I would like to repeat the same calculation for the first two band (1 to 2)
+
+  	$ python ~/BerriPI/ berrypi  --structure-path=/home/stud2/Help/BaTiO3/lambda1 --kdiv10:10:10 --bloch-band1:2
+          
+	OR
+
+        $ python ~/BerriPI/berrypi -p/home/stud2/Help/BaTiO3/lambda1 -k10:10:10 -b1:2
 
         I would like to only calculate the polarization on a given
         file without automation
 
-        $ berryi  --structure-path=/home/stud2/Help/BaTiO3/lambda1 --no-auto
+        $ python ~/BerriPI/berrypi  --structure-path=/home/stud2/Help/BaTiO3/lambda1 --no-auto
          OR
-        $ berrypi  -p/home/stud2/Help/BaTiO3/lambda1 -n
+        $ python ~/BerriPI/berrypi  -p/home/stud2/Help/BaTiO3/lambda1 -n
           OR
-        $ berrypi --no-auto
+        $ python ~/BerriPI/berrypi --no-auto
           OR
-        $ berrypi -n
+        $ python ~/BerriPI/berrypi -n
 
 
         simulation is done without automation, but I would like to
