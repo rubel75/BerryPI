@@ -425,6 +425,11 @@ if __name__ == "__main__":
 
         Additional Switches
 
+	--bloch-band=NUM:NUM, -bNUM:NUM
+
+        Used to manually set the bloch band for band by band decomposition.
+        By default, it is parsing out the bloch band based on the number of total bands.
+
         --no-auto, -n
 
         It assumes that the electronic phase calculation has been performed 
@@ -433,48 +438,34 @@ if __name__ == "__main__":
 
         --parallel, -P
 
-        Runs the lapw1 command in parallel
-
-	--bloch-band=NUM:NUM, -bNUM:NUM
-
-	Used to manually set the bloch band for band by band decomposition. 
-	By default, it is parsing out the bloch band based on the number of total bands.
+        Enable parallel caulculation where it run "x lapw1" in parallel
 
         Examples:
 
 
-        I have a structure and structure path is "/home/stud2/Help/BaTiO3/lambda1" I would like to provide
+        I have a structure and structure path is "~/tutorial/tutorial2/lambda1 " I would like to provide
         manually to the berrypi file with 10*10*10 size k mesh
 
-        $ python ~/BerriPI/ berrypi  --structure-path=/home/stud2/Help/BaTiO3/lambda1 --kdiv10:10:10
+        $ python ~/BerryPI/berrypi  --structure-path=~/tutorial/tutorial2/lambda1  --kdiv=10:10:10
 
         OR
 
-        $ python ~/BerriPI/berrypi -p/home/stud2/Help/BaTiO3/lambda1 -k10:10:10
+        $ python ~/BerryPI/berrypi -p~/tutorial/tutorial2/lambda1  -k10:10:10
 
  	I would like to repeat the same calculation for the first two band (1 to 2)
 
-  	$ python ~/BerriPI/ berrypi  --structure-path=/home/stud2/Help/BaTiO3/lambda1 --kdiv10:10:10 --bloch-band1:2
+  	$ python ~/BerryPI/berrypi  --structure-path=~/tutorial/tutorial2/lambda1  --kdiv=10:10:10 --bloch-band=1:2
           
 	OR
 
-        $ python ~/BerriPI/berrypi -p/home/stud2/Help/BaTiO3/lambda1 -k10:10:10 -b1:2
+        $ python ~/BerryPI/berrypi -p~/tutorial/tutorial2/lambda1  -k10:10:10 -b1:2
 
         I would like to only calculate the polarization on a given
         file without automation
 
-        $ python ~/BerriPI/berrypi  --structure-path=/home/stud2/Help/BaTiO3/lambda1 --no-auto
+        $ python ~/BerryPI/berrypi  --structure-path=~/tutorial/tutorial2/lambda1  --no-auto
          OR
-        $ python ~/BerriPI/berrypi  -p/home/stud2/Help/BaTiO3/lambda1 -n
-          OR
-        $ python ~/BerriPI/berrypi --no-auto
-          OR
-        $ python ~/BerriPI/berrypi -n
-
-
-        simulation is done without automation, but I would like to
-        calculate the polarization of the files stored in
-        berryPyConfiguration
+        $ python ~/BerryPI/berrypi  -p~/tutorial/tutorial2/lambda1  -n
 
 
       
