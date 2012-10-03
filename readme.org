@@ -22,9 +22,9 @@
 
   DEFAULT_PYTHON_PATH - should be the path to the current python
   distribution.  NOTE: please also include the python command which is
-  also being used, with a space. TODO: change this.
+  also being used, with a space.
 
-  example:   NOTE: the space at the end of python2.7 (this is required) TODO: change this.
+  example:   NOTE: the space at the end of python2.7 (this is required).
 
   DEFAULT_PYTHON_PATH='/usr/bin/python2.7 '
 
@@ -75,8 +75,3 @@
 ** Tutorial 2 - For Born Effective Charges 
 	[[./tutorials/tutorial2/]]
 
-* Task list for future versions
-** TODO Fix broken links (idk why it's not working) [ ]
-** TODO Include fully functional verbose mode [ ]
-** TODO Include script to check if all of the correct dependencies are met [ ]
-** TODO Remove config.py configuration dictionary functionality (isn't very useful) [ ]
