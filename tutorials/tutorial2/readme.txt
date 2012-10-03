@@ -76,6 +76,8 @@ $ run_lapw
 
 2.8 Run BerryPI 
 
+$ python ~/BerryPI/berrypi –p$(pwd) –k6:6:6
+
 
 2.9 Once the calculation is completed the results will be printed like this
 [ BerryPi ] Total Phase in the unit of 2*pi [2*pi modulo]: [1.4444444467891686, 1.444444439721803, 1.0220961933526282] 
