@@ -454,8 +454,8 @@ class MainCalculationContainer:
 	electronicphase=self.value_phaseMeanValues
 	electronicphaseremapped=self.remappedberryphase()
 
-	print DEFAULT_PREFIX + "Ionic Phase in the unit of 2*pi: "+str( ionicphase)
-	self._calculationValues['Ionic Phase - Units of 2*pi'] = ionicphase
+	print DEFAULT_PREFIX + "Ionic Phase in the unit of 2*pi [2*pi modulo]: "+str( ionicphase)
+	self._calculationValues['Ionic Phase - Units of 2*pi [2*pi modulo]'] = ionicphase
 	print DEFAULT_PREFIX + "Ionic Phase remapped in the unit of 2*pi [-pi to +pi]: "+str(ionicremapped)
 	self._calculationValues['Ionic Phase - Units of 2*pi domain[-pi to +pi]'] = ionicremapped
 	print DEFAULT_PREFIX + "Ionic Polarizaion in C/m^2: "+str( ionPolar)

@@ -3,7 +3,7 @@
 For the calculation of Born effective charge of As in GaAs one of the 4 As atoms has been displaced along Z-axis form it’s equilibrium position by +0.01(lambda1) and -0.01(lambda2) in fractional coordinates.
 
 1 Case lambda1
-Calculation of polarization for state where the As atom has been displaced by +0.01 (fractional coordinate) from its equilibrium position.
+Calculation of total phase (sum of electronic and ionic phase) for state where the As atom has been displaced by +0.01 (fractional coordinate) from its equilibrium position.
 
 1.1 Change the current directory to ~/tutorial/tutorial2/lambda1 
 
@@ -19,7 +19,7 @@ $ run_lapw
 
 in order to optimize the electron density.
 
-Important: Do not use iterative diagonalization (-it switch) during the standard SCF cycle. This will give lead to polarization value.
+Important: Do not use iterative diagonalization (-it switch) during the standard SCF cycle. This will give lead to phase value.
 
 1.4 Run BerryPI using python 
  
@@ -34,13 +34,13 @@ Note: k-mesh in BerryPI should not necessarily be identical to that used in the 
 [ BerryPi ] Total Phase in the unit of 2*pi [2*pi modulo]: [1.4444444466908883, 1.4444444597055879, 0.9779037963902364] 
 [ BerryPi ] Total Phase Remapped in the unit of 2*pi [-pi to +pi]: [-0.5555555533091117, -0.5555555402944121, 0.9779037963902364]
 
-Here three total phase (sum of electronic and ionic phase)  values corresponds to X,Y and Z components of polarization, respectively. As the structure has only been perturbed in Z direction, only Z component of polarization has to be considered.  
+Here three total phase (sum of electronic and ionic phase)  values corresponds to X,Y and Z components of total phase, respectively. As the structure has only been perturbed in Z direction, only Z component of total phase has to be considered.  
 
 Note: The total phase has been reported twice for different pi wrapping approaches. In this particular case both the phase values are the identical which is generally may not be the case. 
 
 
 2 Case lambda2
-Calculation of polarization for state where the As atom has been displaced by -0.01 (fractional coordinate) from its equilibrium position.
+Calculation of total phase for state where the As atom has been displaced by -0.01 (fractional coordinate) from its equilibrium position.
 
 2.1 Copy all files from lambda1 to lambda2 directory
  
@@ -74,7 +74,6 @@ $ x dstart
 $ run_lapw
 
 2.8 Run BerryPI 
-
 
 2.9 Once the calculation is completed the results will be printed like this
 [ BerryPi ] Total Phase in the unit of 2*pi [2*pi modulo]: [1.4444444467891686, 1.444444439721803, 1.0220961933526282] 
