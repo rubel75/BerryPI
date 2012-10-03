@@ -19,7 +19,7 @@ $ run_lapw
 
 in order to optimize the electron density.
 
-Important: Do not use iterative diagonalization (-it switch) during the standard SCF cycle. This will give lead to phase value.
+Important: Do not use iterative diagonalization (-it switch) during the standard SCF cycle. This will give lead to inappropriate phase value.
 
 1.4 Run BerryPI using python 
  
