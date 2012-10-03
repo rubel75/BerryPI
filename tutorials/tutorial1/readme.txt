@@ -1,8 +1,7 @@
-      Calculation of Spontaneous Polarization in BaTiO3
-
-
+        Calculation of Spontaneous Polarization in BaTiO3
 
 For the calculation of spontaneous polarization of BaTiO3 two reference structures has been chosen. One is tetragonal non-centrosymmetric (lambda1) where the atoms has moved from the equilibrium centrosymmetric positions in Z direction and another structure is centrosymmetric structure where the atoms are all positioned in centrosymmetric positions.
+
 
 1 Case lambda1 (Non-centrosymmetric)
 The atoms are in a non-centrosymmetric arrangement due to their movement in Z direction
@@ -86,10 +85,9 @@ $ python ~/BerryPI/berrypi –p$(pwd) –k6:6:6
 Note: Different pi wrapping doesn’t affect the result in this case 
 
 
-
 3 Spontaneous polarization 
 Calculation of Spontaneous Polarization using the Z components of polarizations obtained in lambda1 and lambda0.The spontaneous polarization can be defined as the difference in Z component of polarization between the centrosymmetric P_z(lambda1). and non-centrosymmetric structure P_z(lambda0).
 
-P_s= P_z(lambda1)- P_z(lambda0)= 0.3114011170710158 C/m^2
+P_s= P_z(lambda1)- P_z(lambda0)= 0.31140111708550217-1.4486341471349937e-11= 0.3114011170710158 C/m^2
 
 Here only Z components of polarization is considered because the atoms in non-centrosymmetric structure are displaced only in Z direction relative to the centrosymmetric structure
