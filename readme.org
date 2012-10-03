@@ -24,9 +24,11 @@
   distribution.  NOTE: please also include the python command which is
   also being used, with a space.
 
-  example:   NOTE: the space at the end of python2.7 (this is required).
+  example:
 
   DEFAULT_PYTHON_PATH='/usr/bin/python2.7 '
+  
+  NOTE: the space at the end of python2.7 (this is required).
 
   for further configuration options when running berrypi, run 
 
