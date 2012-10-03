@@ -12,7 +12,7 @@ Calculation of total phase (sum of electronic and ionic phase) for state where t
 
 $ init_lapw -b -vxc 13 -ecut -6 -numk 230
 
-Here "-vxc 13" stands for PBE-GGA as exchange correlation function."-ecut -8" means the separation  energy of -6 Ry has been chosen to separate core electron from valance electron. “-numk 230" means that 230 k points has been chosen in Brillouion zone which generates 6*6*6 size k-mesh in the symmetric Brillouion zone
+Here "-vxc 13" stands for PBE-GGA as exchange correlation function."-ecut -6" means the separation  energy of -6 Ry has been chosen to separate core electron from valance electron. “-numk 230" means that 230 k points has been chosen in Brillouion zone which generates 6*6*6 size k-mesh in the symmetric Brillouion zone
 
 1.3 Execute WIEN2k scf calculation
  
