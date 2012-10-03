@@ -1,48 +1,46 @@
-    Calculation of Born effective charge of GaAs (Gallium Arsenide)
+         Calculation of Born effective charge of GaAs 
 
-For the calculation of Born effective charge of As in GaAs one of the 4 As atoms has been displaced form it’s equilibrium position by +0.01(lambda1) and -0.01(lambda2) where they both represents fractional coordinates.
+For the calculation of Born effective charge of As in GaAs one of the 4 As atoms has been displaced along Z-axis form it’s equilibrium position by +0.01(lambda1) and -0.01(lambda2) in fractional coordinates.
 
-1 lambda1
-Calculation of polarization for state where the As atom has been displaced by +0.01(fractional coordinate) from its equilibrium position.
+1 Case lambda1
+Calculation of polarization for state where the As atom has been displaced by +0.01 (fractional coordinate) from its equilibrium position.
 
 1.1 Change the current directory to ~/tutorial/tutorial2/lambda1 
 
-2.1.2 Perform WIEN2k initialization 
+1.2 Perform WIEN2k initialization 
 
-$ init_lapw -b -vxc 13 -ecut -8 -numk 230
+$ init_lapw -b -vxc 13 -ecut -6 -numk 230
 
-Here "-vxc 13" stands for PBE-GGA as exchange correlation function."-ecut -8" means the separation  energy of -8 Ry has been chosen to separate core electron from valance electron. “-numk 230" means that 230 k points has been chosen in Brillouion zone which generates 6*6*6 size k-mesh in the symmetric Brillouion zone
+Here "-vxc 13" stands for PBE-GGA as exchange correlation function."-ecut -8" means the separation  energy of -6 Ry has been chosen to separate core electron from valance electron. “-numk 230" means that 230 k points has been chosen in Brillouion zone which generates 6*6*6 size k-mesh in the symmetric Brillouion zone
 
 1.3 Execute WIEN2k scf calculation
  
 $ run_lapw
 
-in order to optimize electron density.
+in order to optimize the electron density.
 
-Important: Do not use iterative diagonalization (-it switch) during standard SCF cycle. This will give incorrect polarization value.
+Important: Do not use iterative diagonalization (-it switch) during the standard SCF cycle. This will give lead to polarization value.
 
 1.4 Run BerryPI using python 
  
 $ python ~/BerryPI/berrypi –p$(pwd) –k6:6:6
  
-Here “–p$(pwd)” means that BerryPI program is running for the case (GaAs) preserved in the current directory.
+Here “–p$(pwd)” means that BerryPI program is running for the case (GaAs) located in the current directory.
 “–k6:6:6” means the calculation is being done using 6*6*6 k-mesh in the full Brillouin zone (non symmetric) with a total of 216 k points.
 
 Note: k-mesh in BerryPI should not necessarily be identical to that used in the SCF cycle
 
 1.5 Once the calculation is completed the result will be printed like this
-[ BerryPi ] Total Polarization in C/m^2 [2pi modulo]
-:[0.7098546974245026, 0.7098547017401123, 0.4807039231832056]]
-[ BerryPi ] Total Polarization in C/m^2[-pi to +pi ] 
-:[-0.27302103729537935, -0.2730210329797696, 0.4807039231832056] 
+[ BerryPi ] Total Phase in the unit of 2*pi [2*pi modulo]: [1.4444444466908883, 1.4444444597055879, 0.9779037963902364] 
+[ BerryPi ] Total Phase Remapped in the unit of 2*pi [-pi to +pi]: [-0.5555555533091117, -0.5555555402944121, 0.9779037963902364]
 
-Here three total polarization values corresponds to X,Y and Z components of polarization respectively. As the structure has just been perturbed in Z direction, only Z component of polarization has to be considered.  
+Here three total phase (sum of electronic and ionic phase)  values corresponds to X,Y and Z components of polarization, respectively. As the structure has only been perturbed in Z direction, only Z component of polarization has to be considered.  
 
-Note: The total polarization has been reported twice for different pi wrapping complications. But in this particular case both the polarization values are the same which is generally may not be the case. This will be discussed later in this tutorial for the particular case where two polarization values are different and only one of them needs to be considered while using polarization value for further calculation.
+Note: The total phase has been reported twice for different pi wrapping approaches. In this particular case both the phase values are the identical which is generally may not be the case. 
 
 
-2 lambda2
-Calculation of polarization for state where the As atom has been displaced by -0.01(fractional coordinate) from its equilibrium position.
+2 Case lambda2
+Calculation of polarization for state where the As atom has been displaced by -0.01 (fractional coordinate) from its equilibrium position.
 
 2.1 Copy all files from lambda1 to lambda2 directory
  
@@ -56,20 +54,18 @@ $ cd ../lambda2
 
 $ rm lambda1.struct
 
-2.4 Rename all lambda1.* files to lambda2.* files with
+2.4 Rename all lambda1.* files to lambda2.* files 
 
-$rename_files lambda1 lambda2
+$ rename_files lambda1 lambda2
 
 
 2.5 Restore original k-mesh taking into account the symmetry 
 
 $ x kgen
 
-with 230 k points shifted 
+with 230 k-points (Shifted) 
 
-2.6 Run
- 
-$ Initialize the electron density according to new structure.
+2.6 Initialize the electron density according to new structure
  
 $ x dstart 
 
@@ -79,30 +75,21 @@ $ run_lapw
 
 2.8 Run BerryPI 
 
-$ python ~/BerryPI/berrypi –p$(pwd) –k6:6:6
 
 2.9 Once the calculation is completed the results will be printed like this
+[ BerryPi ] Total Phase in the unit of 2*pi [2*pi modulo]: [1.4444444467891686, 1.444444439721803, 1.0220961933526282] 
+[ BerryPi ] Total Phase Remapped in the unit of 2*pi [-pi to +pi]: [-0.5555555532108314, -0.555555560278197, -0.9779038066473718]
+Note: This time, the two reported phases (sum of electronic and ionic phase) are different from each other and only one of them needs to be considered as explained below.
 
-[ BerryPi ] Total Polarization in C/m^2 [2pi modulo]
-:[0.7098546978024558, 0.7098547017207987, 0.5021718070520651] 
-[ BerryPi ] Total Polarization in C/m^2[-pi to +pi ] 
-:[-0.27302103691742624, -0.2730210329990833, -0.4807039276678169] 
+3. Born effective charge
+Calculation of Born effective charge using Z component of total phase value obtained for lambda1 and lambda2 case. The Born effective charge can be calculated using the following formula,
 
-Note: Here too, the total polarization has been reported twice to avoid pi wrapping complications. But this time the two reported polarizations are different from each other and only one of them needs to be considered which is explained below.
-
-Calculation of Born effective charge with the obtained Z component polarizations for lambda1 and lambda2 state.The Born effective charge can be calculated using the following formula,
-
-Z*_zz=V/e * dP/du
+Z*_zz=(1/2*pi)*d_phi/d_rho 
 Where,
 Z*_zz is the born effective charge in Z direction for applied perturbation in Z direction.
-V is the simulation cell volume [in m^3]= 1.863369880984677e-28 m^3.
-e is the electronic charge [in C]= 1.60217646e-19 C
-dP is the difference in polarization between 2 structures[in C/m^2] =-0.021467883868859505 C/m^2
-du is displacement of atoms due to perturbation[in m]= 1.1423425476e-11 m
-Note: Here 2 values of polarization for both the cases are reported. When calculating difference in polarization has to be taken the difference in polarization which corresponds to smallest difference in phase which means smallest difference in polarization [see “BerryPI: A software for studying polarization of crystalline solids with WIEN2k density functional all-electron package” for more details].
-
-In this case two values of dP, -0.021467883868859505 C/m^2and 0.9614078508510224 C/m^2 can be found. But the smallest one is -0.021467883868859505 which corresponds to smallest different in total phase. Taking that value and putting those in the formula mentioned above will yield a Z*_zz of 
-~-2.18.
+d_phi is difference in total phase (sum of electronic and ionic phase) between the two structure(in the units of 2*pi)= -0.044192396962391856
+d_rho is the relative displacement of the particular atom(in fractional coordinate)= 0.02 
+Note: Here 2 values of total phase (sum of electronic and ionic phase) for both the cases are reported. When calculating the difference in total phase between two structures, one has to be careful of pi wrapping artifact. For example in this current study if the difference in phase is taken from the 2*pi modulo values this will lead to a phase difference of -0.044192396962391856. On the other hand if the difference is taken from –pi to +pi domain values this lead to a phase difference of 1.9558076030376081. It has be realized that both this difference values represents the difference between both the cases but they just consider different paths when the phase difference is considered in a 2*pi(360 degree) circle[see “BerryPI: A software for studying polarization of crystalline solids with WIEN2k density functional all-electron package” for more details]. Taking the biggest difference (1.9558076030376081) in phase will lead to inappropriate results. So while taking the difference in phase one has to take the smallest number which is -0.044192396962391856 in this case. This should also be taken care of while calculating the difference in polarization. In this particular case putting the smallest difference will lead to a born effective charge of -2.2096198481195928 for As.
 
 
 
