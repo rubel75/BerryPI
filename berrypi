@@ -379,18 +379,18 @@ def writeResult(configFile, mainCalculationObject):
     calcValues = mainCalculationObject.calculationValues()
 
     #grab elec polar and ion polar and write them to file
-    elecPolar = mainCalculationObject.electronPolarization()
-    calcValues['Electron Polarization [C/m^2]'] = elecPolar
+    #elecPolar = mainCalculationObject.electronPolarization()
+    #calcValues['Electron Polarization [C/m^2]'] = elecPolar
     
-    ionPolar = mainCalculationObject.ionPolarization()
-    calcValues['Ionic Polarization [C/m^2]'] = ionPolar
+    #ionPolar = mainCalculationObject.ionPolarization()
+    #calcValues['Ionic Polarization [C/m^2]'] = ionPolar
 
     #grab final value and store in file
-    totalPolar = mainCalculationObject.netPolarizationEnergy()
-    calcValues['Total Polarization [C/m^2]'] = totalPolar
+    #totalPolar = mainCalculationObject.netPolarizationEnergy()
+    #calcValues['Total Polarization [C/m^2]'] = totalPolar
 
-    string = "polarization: {}\n".format(totalPolar)
-    fileHandle.write(string)
+    #string = "polarization: {}\n".format(totalPolar)
+    #fileHandle.write(string)
 
     someString = json.dumps(calcValues, indent=4)
     fileHandle.write(someString)

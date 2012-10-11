@@ -194,17 +194,17 @@ class MainCalculationContainer:
         
         #### *.scf handle
         # - Cell Volume
-        self._calculationValues['Cell Volume'] = parser_scf_handle['Cell Volume']
-        self._calculationValues['Cell Volume (meters)'] = bohrToMeters(self._calculationValues['Cell Volume'],3)
+        self._calculationValues['Cell Volume in bohr^3'] = parser_scf_handle['Cell Volume']
+        self._calculationValues['Cell Volume in m^3'] = bohrToMeters(self._calculationValues['Cell Volume'],3)
         #### *.outputd handle
         # - BR2_DIR matrix (v_x, v_y, v_z)
         # - number of atoms in cell
         # - Lattice Constants (x,y,z)
-        self._calculationValues['Lattice Matrix'] = parser_outputd_handle['BR2_DIR Matrix']
-        self._calculationValues['Lattice Matrix (meters)'] = [[ bohrToMeters(i) for i in j ] for j in self._calculationValues['Lattice Matrix']]
+        self._calculationValues['Lattice Matrix in bohr'] = parser_outputd_handle['BR2_DIR Matrix']
+        self._calculationValues['Lattice Matrix in m'] = [[ bohrToMeters(i) for i in j ] for j in self._calculationValues['Lattice Matrix']]
         self._calculationValues['Number of Atoms in Unit Cell'] = parser_outputd_handle['Number of Atoms in Unit Cell']
-        self._calculationValues['Lattice Constants'] = parser_outputd_handle['Lattice Constants']
-        self._calculationValues['Lattice Constants (meters)'] = [ bohrToMeters(i) for i in self._calculationValues['Lattice Constants']]
+        self._calculationValues['Lattice Constants in bohr'] = parser_outputd_handle['Lattice Constants']
+        self._calculationValues['Lattice Constants in m'] = [ bohrToMeters(i) for i in self._calculationValues['Lattice Constants']]
 
         #### *.outputst handle
         # for each element:
