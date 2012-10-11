@@ -195,16 +195,16 @@ class MainCalculationContainer:
         #### *.scf handle
         # - Cell Volume
         self._calculationValues['Cell Volume in bohr^3'] = parser_scf_handle['Cell Volume']
-        self._calculationValues['Cell Volume in m^3'] = bohrToMeters(self._calculationValues['Cell Volume'],3)
+        self._calculationValues['Cell Volume in m^3'] = bohrToMeters(self._calculationValues['Cell Volume in bohr^3'],3)
         #### *.outputd handle
         # - BR2_DIR matrix (v_x, v_y, v_z)
         # - number of atoms in cell
         # - Lattice Constants (x,y,z)
         self._calculationValues['Lattice Matrix in bohr'] = parser_outputd_handle['BR2_DIR Matrix']
-        self._calculationValues['Lattice Matrix in m'] = [[ bohrToMeters(i) for i in j ] for j in self._calculationValues['Lattice Matrix']]
+        self._calculationValues['Lattice Matrix in m'] = [[ bohrToMeters(i) for i in j ] for j in self._calculationValues['Lattice Matrix in bohr']]
         self._calculationValues['Number of Atoms in Unit Cell'] = parser_outputd_handle['Number of Atoms in Unit Cell']
         self._calculationValues['Lattice Constants in bohr'] = parser_outputd_handle['Lattice Constants']
-        self._calculationValues['Lattice Constants in m'] = [ bohrToMeters(i) for i in self._calculationValues['Lattice Constants']]
+        self._calculationValues['Lattice Constants in m'] = [ bohrToMeters(i) for i in self._calculationValues['Lattice Constants in bohr']]
 
         #### *.outputst handle
         # for each element:
@@ -241,7 +241,7 @@ class MainCalculationContainer:
 
         #constants
         #electron charge / unit volume
-        self.ELEC_BY_VOL_CONST = ELECTRON_CHARGE / bohrToMeters(self._calculationValues['Cell Volume'], dimension = 3.)
+        self.ELEC_BY_VOL_CONST = ELECTRON_CHARGE / bohrToMeters(self._calculationValues['Cell Volume in bohr^3'], dimension = 3.)
         #perform necessary calculations
         self.determineElectronPolarization()
         self.determineIonPolarization()
@@ -271,10 +271,10 @@ class MainCalculationContainer:
         calcValues = self.calculationValues()
 
         ELEC_BY_VOL_CONST = self.ELEC_BY_VOL_CONST
-	latticeConstants = calcValues['Lattice Constants']
-        latticeMatrix_x = calcValues['Lattice Matrix'][0]
-        latticeMatrix_y = calcValues['Lattice Matrix'][1]
-        latticeMatrix_z = calcValues['Lattice Matrix'][2]
+	latticeConstants = calcValues['Lattice Constants in bohr']
+        latticeMatrix_x = calcValues['Lattice Matrix in bohr'][0]
+        latticeMatrix_y = calcValues['Lattice Matrix in bohr'][1]
+        latticeMatrix_z = calcValues['Lattice Matrix in bohr'][2]
         # split up lattice matrix into respective form
         #latticeMatrix_x = [ i[0] for i in calcValues['Lattice Matrix'] ]
         #latticeMatrix_y = [ i[1] for i in calcValues['Lattice Matrix'] ]
@@ -341,7 +341,7 @@ class MainCalculationContainer:
 
         ELEC_BY_VOL_CONST = self.ELEC_BY_VOL_CONST
 
-        latticeConstants = calcValues['Lattice Constants']
+        latticeConstants = calcValues['Lattice Constants in bohr']
 
         atomListing = calcValues['Atom Listing']
 
@@ -485,7 +485,7 @@ class MainCalculationContainer:
 
 	self._netPolarizationEnergy1=self._netPolarizationEnergy
 	calcValues = self.calculationValues()
-        latticeConstants = calcValues['Lattice Constants']
+        latticeConstants = calcValues['Lattice Constants in bohr']
 
         ELEC_BY_VOL_CONST = self.ELEC_BY_VOL_CONST
         self._netPolarizationEnergy1 = [ELEC_BY_VOL_CONST * bohrToMeters(i[0]) * i[1] for i in zip(latticeConstants, self._netPolarizationEnergy1) ]
@@ -500,7 +500,7 @@ class MainCalculationContainer:
 
 	#grab the calculation values
 	calcValues = self.calculationValues()
-	latticeConstants = calcValues['Lattice Constants']
+	latticeConstants = calcValues['Lattice Constants in bohr']
 	
 	ELEC_BY_VOL_CONST = self.ELEC_BY_VOL_CONST
  	self._netPolarizationEnergy = [ELEC_BY_VOL_CONST * bohrToMeters(i[0]) * i[1] for i in zip(latticeConstants, self._netPolarizationEnergy) ]
