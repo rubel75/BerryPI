@@ -79,15 +79,15 @@ rather bulding a unitcell with 8 atoms solve this issue because here the
 lattice vector correspond to cartesian direction
 
 * To Do
-** 
+** Solve for non collinear lattice vector
 Extendting the capability of "BerryPI" to be able to compute polrization
 for structures with non collinear lattice vectors
-**
+** Band by band decomposition check
 Perform band by band decomposition for a material and compare it 
 with polraization result which includes all the valance band
 (Band by band decomposition is already implemented in the software) 
 	
 * Tutorials
-** Tutorial 1 - For Spontaneous polarization calculation
-** Tutorial 2 - For Born Effective Charges
+** Tutorial 1 - For Spontaneous polarization calculation of BaTiO3	
+** Tutorial 2 - For Born Effective Charges of GaAs
 
