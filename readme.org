@@ -74,9 +74,10 @@
 ** 
 The program is not suitable for cases where the lattice vector 
 doesn't corresponds to cartesian direction
-example:For GaAs, computation shouldn't be performed with 2 atom basis
-rather bulding a unitcell with 8 atoms solve this issue because here the
-lattice vector correspond to cartesian direction
+(example:For GaAs, computation shouldn't be performed with 2 atom basis
+because here the lattice vectors doesn't correspond to cartesian direction,
+rather buildng a unitcell with 8 atoms solve this issue because here the
+lattice vector correspond to cartesian direction)
 
 * To Do
 ** Solve for non collinear lattice vector
