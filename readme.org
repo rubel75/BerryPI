@@ -71,16 +71,19 @@
    calculations at the end of the automation run
 
 * Limitation
-** The program is not suitable for cases where the lattice vector 
+** 
+The program is not suitable for cases where the lattice vector 
 doesn't corresponds to cartesian direction
 example:For GaAs, computation shouldn't be performed with 2 atom basis
 rather bulding a unitcell with 8 atoms solve this issue because here the
 lattice vector correspond to cartesian direction
 
 * To Do
-** Extendting the capability of "BerryPI" to be able to compute polrization
+** 
+Extendting the capability of "BerryPI" to be able to compute polrization
 for structures with non collinear lattice vectors
-**Perform band by band decomposition for a material and compare it 
+**
+Perform band by band decomposition for a material and compare it 
 with polraization result which includes all the valance band
 (Band by band decomposition is already implemented in the software) 
 	
