@@ -369,29 +369,34 @@ def writeResult(configFile, mainCalculationObject):
     fileHandle = open(filename, 'w')
     
     #intro to file
-    fileHandle.write("title: Output from berrypi\n")
-    string = "name: {}\n".format(configFile['Structure Name'])
+    fileHandle.write("BerryPI version 0.1\n\n")
+    fileHandle.write("BerryPI is a joint project between Thunder Bay Regional Research Institute and Lakehead University\n")
+    fileHandle.write("Suggested reference:\n   [1]'BerryPI: A software for studying polarization of crystalline solids with WIEN2k density functional all-electron package'\n   S.J.Ahmed, J.Kivinen, B.Zaporzan, L.Curiel, S.Pichardo, O.Rubel ,Comp. Phys. Commun.(2012) doi:10.1016/j.cpc.2012.10.028")
+    fileHandle.write("\nQuestions and comments are to be directed to\n  1.Dr. Oleg Rubel \n    Thunder Bay Regional Research institute\n    290 Munro Street, Thunder Bay, ON Canada P7A 7T1\n    Tel:+1 (807) 766-3350 \n    E-mail:rubelo@tbh.net\n    URL:http://www.tbrri.com/~orubel")	
+    fileHandle.write("\n  2.Dr. Samuel Pichardo \n    Thunder Bay Regional Research institute\n    980 Oliver Road, Thunder Bay, ON Canada P7B 6V4 \n    Tel:+1 (807) 766-3350 \n    E-mail:pichards@tbh.net\n    URL:http://www.proteus-mrighifu.net")
+    string = "\nDate: {}\n".format(time.ctime())
     fileHandle.write(string)
-    string = "date: {}\n".format(time.ctime())
+    string = "\nCase Name: {}\n".format(configFile['Structure Name'])
     fileHandle.write(string)
+
 
     #grab calculation values and write them to file
     calcValues = mainCalculationObject.calculationValues()
 
     #grab elec polar and ion polar and write them to file
-    elecPolar = mainCalculationObject.electronPolarization()
-    calcValues['Electron Polarization [C/m^2]'] = elecPolar
+    #elecPolar = mainCalculationObject.electronPolarization()
+    #calcValues['Electron Polarization [C/m^2]'] = elecPolar
     
-    ionPolar = mainCalculationObject.ionPolarization()
-    calcValues['Ionic Polarization [C/m^2]'] = ionPolar
+    #ionPolar = mainCalculationObject.ionPolarization()
+    #calcValues['Ionic Polarization [C/m^2]'] = ionPolar
 
     #grab final value and store in file
-    totalPolar = mainCalculationObject.netPolarizationEnergy()
-    calcValues['Total Polarization [C/m^2]'] = totalPolar
+    #totalPolar = mainCalculationObject.netPolarizationEnergy()
+    #calcValues['Total Polarization [C/m^2]'] = totalPolar
 
-    string = "polarization: {}\n".format(totalPolar)
-    fileHandle.write(string)
-
+    #string = "polarization: {}\n".format(totalPolar)
+    #fileHandle.write(string)
+    
     someString = json.dumps(calcValues, indent=4)
     fileHandle.write(someString)
 
@@ -425,6 +430,11 @@ if __name__ == "__main__":
 
         Additional Switches
 
+	--bloch-band=NUM:NUM, -bNUM:NUM
+
+        Used to manually set the bloch band for band by band decomposition.
+        By default, it is parsing out the bloch band based on the number of total bands.
+
         --no-auto, -n
 
         It assumes that the electronic phase calculation has been performed 
@@ -433,39 +443,34 @@ if __name__ == "__main__":
 
         --parallel, -P
 
-        Runs the lapw1 command in parallel
-
-	--bloch-band=NUM:NUM, -bNUM:NUM
-
-	Used to manually set the bloch band for band by band decomposition. 
-	By default, it is parsing out the bloch band based on the number of total bands.
+        Enable parallel caulculation where it run "x lapw1" in parallel
 
         Examples:
 
 
-        I have a structure and structure path is "/home/stud2/Help/BaTiO3/lambda1" I would like to provide
+        I have a structure and structure path is "~/tutorial/tutorial2/lambda1 " I would like to provide
         manually to the berrypi file with 10*10*10 size k mesh
 
-        $ berryi  --structure-path=/home/stud2/Help/BaTiO3/lambda1 --kdiv10:10:10
-          OR
+        $ python ~/BerryPI/berrypi  --structure-path=~/tutorial/tutorial2/lambda1  --kdiv=10:10:10
 
-        $ berryi -p/home/stud2/Help/BaTiO3/lambda1 -k10:10:10
+        OR
+
+        $ python ~/BerryPI/berrypi -p~/tutorial/tutorial2/lambda1  -k10:10:10
+
+ 	I would like to repeat the same calculation for the first two band (1 to 2)
+
+  	$ python ~/BerryPI/berrypi  --structure-path=~/tutorial/tutorial2/lambda1  --kdiv=10:10:10 --bloch-band=1:2
+          
+	OR
+
+        $ python ~/BerryPI/berrypi -p~/tutorial/tutorial2/lambda1  -k10:10:10 -b1:2
 
         I would like to only calculate the polarization on a given
         file without automation
 
-        $ berryi  --structure-path=/home/stud2/Help/BaTiO3/lambda1 --no-auto
+        $ python ~/BerryPI/berrypi  --structure-path=~/tutorial/tutorial2/lambda1  --no-auto
          OR
-        $ berrypi  -p/home/stud2/Help/BaTiO3/lambda1 -n
-          OR
-        $ berrypi --no-auto
-          OR
-        $ berrypi -n
-
-
-        simulation is done without automation, but I would like to
-        calculate the polarization of the files stored in
-        berryPyConfiguration
+        $ python ~/BerryPI/berrypi  -p~/tutorial/tutorial2/lambda1  -n
 
 
       
@@ -602,4 +607,9 @@ if __name__ == "__main__":
     
     
 
-    print " --- BerryPi Automation Complete --- "
+    print " --- BerryPI Computation Completed ---"
+    print "\nCompleted using BerryPI version 0.1"
+    print "\nBerryPI is a joint project between Thunder Bay Regional Research Institute and Lakehead University"
+    print "\nSuggested reference:\n   [1]'BerryPI: A software for studying polarization of crystalline solids with WIEN2k density functional all-electron package'\n       S.J.Ahmed, J.Kivinen, B.Zaporzan, L.Curiel, S.Pichardo, O.Rubel ,Comp. Phys. Commun.(2012) doi:10.1016/j.cpc.2012.10.028"	
+    print ("\nQuestions and comments are to be directed to\n  1.Dr. Oleg Rubel \n    Thunder Bay Regional Research institute\n    290 Munro Street, Thunder Bay, ON Canada P7A 7T1\n    Tel:+1 (807) 766-3350 \n    E-mail:rubelo@tbh.net\n    URL:http://www.tbrri.com/~orubel")
+    print ("\n  2.Dr. Samuel Pichardo \n    Thunder Bay Regional Research institute\n    980 Oliver Road, Thunder Bay, ON Canada P7B 6V4 \n    Tel:+1 (807) 766-3350 \n    E-mail:pichards@tbh.net\n    URL:http://www.proteus-mrighifu.net")

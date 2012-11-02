@@ -91,7 +91,7 @@ class MainStructParser(AbstractParser):
         else:
             atomListing.append(theText[atomLineIndex[-1]:indexSymmetryEnding])
 
-        ########################### Getting ugly
+        ###########################
         #make sure our MULT atom listings are included with the previous division
         ############################
         while True:

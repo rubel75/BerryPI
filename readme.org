@@ -1,3 +1,46 @@
+*Current Version
+BerryPI 0.1
+
+*Licensing Conditions
+Questions and comments are to be directed to  
+1.Dr. Oleg Rubel    
+  Thunder Bay Regional Research institute    
+  290 Munro Street, Thunder Bay, ON Canada P7A 7T1    
+  Tel:+1 (807) 766-3350   
+  E-mail:rubelo@tbh.net    
+  URL:http://www.tbrri.com/~orubel
+2.Dr. Samuel Pichardo    
+  Thunder Bay Regional Research institute    
+  980 Oliver Road, Thunder Bay, ON Canada P7B 6V4   
+  Tel:+1 (807) 766-3350    
+  E-mail:pichards@tbh.net   
+  URL:http://www.proteus-mrighifu.net 
+**MANDATORY TERMS AND CONDITIONS:
+
+I will adhere to the following conditions upon receipt of the program:
+
+   1. All title, ownership and rights to the program or to copies of it remain with the authors, irrespective of the ownership of the media on which the program resides.
+
+   2. I will not supply a copy of the code to anyone for any reason whatsoever. This in no way limits my making copies of the code for backup purposes, or for running on more than one computer system at my institution (it is a site license for the registered group). I will refer any request for copies of the program to the authors.
+
+   3. I will not incorporate any part of BerryPI into any other program system, without prior written permission of the authors.
+
+   4. I will keep intact all copyright notices.
+
+   5. I understand that the authors supply BerryPI and its documentation on an ``as is'' basis without any warranty, and thus with no additional responsibility or liability. 
+
+   6. In any publication in the scientific literature I will reference the program as follows:
+
+          [1]'BerryPI: A software for studying polarization of crystalline solids with WIEN2k density functional all-electron package'
+		      S.J.Ahmed, J.Kivinen, B.Zaporzan, L.Curiel, S.Pichardo, O.Rubel ,Comp. Phys. Commun.(2012) doi:10.1016/j.cpc.2012.10.028 
+
+   7. It is understood that modifications of the BerryPI code can lead to problems where the authors may not be able to help.
+      It would be appreciated if useful modifications or major extensions are reported to the authors.
+
+   8. I understand that support for running the program can not be provided in general, except on the basis of a joint project between the authors and the research partner.  
+
+
+
 * Installation
   - Include paths to this folder within your ~/.bashrc file
   - Include required paths for DEFAULT_BIN_PATH and DEFAULT_PYTHON_PATH
@@ -22,15 +65,17 @@
 
   DEFAULT_PYTHON_PATH - should be the path to the current python
   distribution.  NOTE: please also include the python command which is
-  also being used, with a space. TODO: change this.
+  also being used, with a space.
 
-  example:   NOTE: the space at the end of python2.7 (this is required) TODO: change this.
+  example:
 
   DEFAULT_PYTHON_PATH='/usr/bin/python2.7 '
+  
+  NOTE: the space at the end of python2.7 (this is required).
 
   for further configuration options when running berrypi, run 
 
-  berrypi -h
+  python ~/BerryPI/berrypi -h
 
   to get a list of prefix options.
 
@@ -68,15 +113,16 @@
    Includes the necessary classes to carry out the remaining
    calculations at the end of the automation run
 
+* Limitation
+The present version is restricted to cases when the lattice vectors correspond to cartesian directions. For example, the zinc-blend or NaCl structures should be regarded as an 8 atom cell instead of the conventional 2 atom basis.
+
+* To Do
+** Non collinear lattice vectors
+Extendting the capability of "BerryPI" to computing of polrization
+for structures with non collinear lattice vectors
+** Band by band decomposition
+Provide analysis of contribution from individual electronic bands (or their range) to the electronic polarization. The present version enables calculation of the Berry phase for a given band range (-b switch), but more testing need to be performed.
 	
 * Tutorials
-** Tutorial 1 - For Spontaneous polarization calculation
-	[[./tutorials/tutorial1]]
-** Tutorial 2 - For Born Effective Charges 
-	[[./tutorials/tutorial2/]]
-
-* Task list for future versions
-** TODO Fix broken links (idk why it's not working) [ ]
-** TODO Include fully functional verbose mode [ ]
-** TODO Include script to check if all of the correct dependencies are met [ ]
-** TODO Remove config.py configuration dictionary functionality (isn't very useful) [ ]
+** Tutorial 1 - For Spontaneous polarization calculation of BaTiO3	
+** Tutorial 2 - For Born Effective Charges of GaAs

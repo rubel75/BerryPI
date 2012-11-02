@@ -88,11 +88,6 @@ class PathphaseCalculation:
                                   )
         #print self.correctedValues
         return self.correctedValues
-#    def correctDomain(self)
-#	self.correctedValues = self.values[:]
-#	self.correctedValues += 2*numpy.pi
-#	self.correctedValues = numpy.unwrap(self.correctedValues)
-#	return self.correctedValues	
         
     def getValues(self):
         return self.values
@@ -194,17 +189,24 @@ class MainCalculationContainer:
         
         #### *.scf handle
         # - Cell Volume
-        self._calculationValues['Cell Volume'] = parser_scf_handle['Cell Volume']
-        self._calculationValues['Cell Volume (meters)'] = bohrToMeters(self._calculationValues['Cell Volume'],3)
+        self._calculationValues['Cell Volume in bohr^3'] = parser_scf_handle['Cell Volume']
+        self._calculationValues['Cell Volume in m^3'] = bohrToMeters(self._calculationValues['Cell Volume in bohr^3'],3)
         #### *.outputd handle
         # - BR2_DIR matrix (v_x, v_y, v_z)
         # - number of atoms in cell
         # - Lattice Constants (x,y,z)
-        self._calculationValues['Lattice Matrix'] = parser_outputd_handle['BR2_DIR Matrix']
-        self._calculationValues['Lattice Matrix (meters)'] = [[ bohrToMeters(i) for i in j ] for j in self._calculationValues['Lattice Matrix']]
+	laticematrix=parser_outputd_handle['BR2_DIR Matrix']
+	latticematrixa1=laticematrix[0]
+	self._calculationValues['Lattice Matrix a1 in bohr']=latticematrixa1
+	latticematrixa2=laticematrix[1]
+	self._calculationValues['Lattice Matrix a2 in bohr']=latticematrixa2
+	latticematrixa3=laticematrix[2]
+	self._calculationValues['Lattice Matrix a3 in bohr']=latticematrixa3
+        self._calculationValues['Lattice Matrix in bohr'] = parser_outputd_handle['BR2_DIR Matrix']
+        self._calculationValues['Lattice Matrix in m'] = [[ bohrToMeters(i) for i in j ] for j in self._calculationValues['Lattice Matrix in bohr']]
         self._calculationValues['Number of Atoms in Unit Cell'] = parser_outputd_handle['Number of Atoms in Unit Cell']
-        self._calculationValues['Lattice Constants'] = parser_outputd_handle['Lattice Constants']
-        self._calculationValues['Lattice Constants (meters)'] = [ bohrToMeters(i) for i in self._calculationValues['Lattice Constants']]
+        self._calculationValues['Lattice Constants in bohr'] = parser_outputd_handle['Lattice Constants']
+        self._calculationValues['Lattice Constants in m'] = [ bohrToMeters(i) for i in self._calculationValues['Lattice Constants in bohr']]
 
         #### *.outputst handle
         # for each element:
@@ -235,17 +237,18 @@ class MainCalculationContainer:
         value_phaseCorrectedValues = [ i.getCorrectedValues() for i in phaseObjects ]
 
         self.value_phaseMeanValues = value_phaseMeanValues = [ i.getMeanValue() for i in phaseObjects ]
-	#print value_phaseMeanValues
-
-        self._calculationValues['Phase Mean Values'] = value_phaseMeanValues
+	#print self.value_phaseMeanValues
 
         #constants
         #electron charge / unit volume
-        self.ELEC_BY_VOL_CONST = ELECTRON_CHARGE / bohrToMeters(self._calculationValues['Cell Volume'], dimension = 3.)
+        self.ELEC_BY_VOL_CONST = ELECTRON_CHARGE / bohrToMeters(self._calculationValues['Cell Volume in bohr^3'], dimension = 3.)
         #perform necessary calculations
         self.determineElectronPolarization()
         self.determineIonPolarization()
         self.calculateNetPolarizationEnergy()
+
+    def valuephaseMeanValues(self):
+	return self.value_phaseMeanValues
 
     def __call__(self):
         return self.netPolarizationEnergy()
@@ -269,12 +272,12 @@ class MainCalculationContainer:
         self._electronPolarization = []
 	self._ebyVandlatticeconstant = []
         calcValues = self.calculationValues()
-
+	berryphase = self.valuephaseMeanValues()
         ELEC_BY_VOL_CONST = self.ELEC_BY_VOL_CONST
-	latticeConstants = calcValues['Lattice Constants']
-        latticeMatrix_x = calcValues['Lattice Matrix'][0]
-        latticeMatrix_y = calcValues['Lattice Matrix'][1]
-        latticeMatrix_z = calcValues['Lattice Matrix'][2]
+	latticeConstants = calcValues['Lattice Constants in bohr']
+        latticeMatrix_x = calcValues['Lattice Matrix in bohr'][0]
+        latticeMatrix_y = calcValues['Lattice Matrix in bohr'][1]
+        latticeMatrix_z = calcValues['Lattice Matrix in bohr'][2]
         # split up lattice matrix into respective form
         #latticeMatrix_x = [ i[0] for i in calcValues['Lattice Matrix'] ]
         #latticeMatrix_y = [ i[1] for i in calcValues['Lattice Matrix'] ]
@@ -291,13 +294,13 @@ class MainCalculationContainer:
  	self._ebyVandlatticeconstant.append(ELEC_BY_VOL_CONST * bohrToMeters(latticeConstants[2]))
        
 
-	print  DEFAULT_PREFIX + "e/V*lattice constant"+str(self._ebyVandlatticeconstant)
+	print  DEFAULT_PREFIX + "e/V*lattice constant\n           "+str(self._ebyVandlatticeconstant)+"\n"
 	
 
 	###Electronic/Berry Phase Remapping in between -pi to +pi to calculate electronic Polrization	
-	remappedberryx=self.correctPhaseDomain( calcValues['Phase Mean Values'][0])
-	remappedberryy=self.correctPhaseDomain( calcValues['Phase Mean Values'][1])
-	remappedberryz=self.correctPhaseDomain( calcValues['Phase Mean Values'][2])
+	remappedberryx=self.correctPhaseDomain( berryphase[0])
+	remappedberryy=self.correctPhaseDomain( berryphase[1])
+	remappedberryz=self.correctPhaseDomain( berryphase[2])
 	self._berryremapped=[ remappedberryx, remappedberryy, remappedberryz ]
 
 
@@ -341,7 +344,7 @@ class MainCalculationContainer:
 
         ELEC_BY_VOL_CONST = self.ELEC_BY_VOL_CONST
 
-        latticeConstants = calcValues['Lattice Constants']
+        latticeConstants = calcValues['Lattice Constants in bohr']
 
         atomListing = calcValues['Atom Listing']
 
@@ -354,15 +357,20 @@ class MainCalculationContainer:
         for atom in atomListing:
             for i in range(atom['MULT']):
                 theElementName = atom['Element Name']
+		
                 if calcValues['Element Listing'].has_key(theElementName):
                     theElement = calcValues['Element Listing'][theElementName]
                     theValence = -theElement['Core Value'] + theElement['Spin Value 1'] + theElement['Spin Value 2']
                     xCoordinate = atom['X-Coord'][i]
                     yCoordinate = atom['Y-Coord'][i]
                     zCoordinate = atom['Z-Coord'][i]
+		 
 
                     #produce tuple from coordinates
                     coordinates = (xCoordinate, yCoordinate, zCoordinate)
+		    
+                    allinfo = [theElementName,theValence,coordinates]
+                    print str(allinfo)
 
                     #correct coordinates which are close to 1.0 between 
                     #(COORDINATE_CORRECTION_LOWER_BOUND,COORDINATE_CORRECTION_UPPER_BOUND)
@@ -454,20 +462,22 @@ class MainCalculationContainer:
 	electronicphase=self.value_phaseMeanValues
 	electronicphaseremapped=self.remappedberryphase()
 
-	print DEFAULT_PREFIX + "Ionic Phase in the unit of 2*pi [2*pi modulo]: "+str( ionicphase)
+	print DEFAULT_PREFIX + "Ionic Phase in the unit of 2*pi [2*pi modulo]:\n           "+str( ionicphase)+"\n"
 	self._calculationValues['Ionic Phase - Units of 2*pi [2*pi modulo]'] = ionicphase
-	print DEFAULT_PREFIX + "Ionic Phase remapped in the unit of 2*pi [-pi to +pi]: "+str(ionicremapped)
+	print DEFAULT_PREFIX + "Ionic Phase remapped in the unit of 2*pi [-pi to +pi]:\n           "+str(ionicremapped)+"\n"
 	self._calculationValues['Ionic Phase - Units of 2*pi domain[-pi to +pi]'] = ionicremapped
-	print DEFAULT_PREFIX + "Ionic Polarizaion in C/m^2: "+str( ionPolar)
+	print DEFAULT_PREFIX + "Ionic Polarizaion in C/m^2:\n           "+str( ionPolar)+"\n"
+	self._calculationValues['Ionic Polrization in C/m^2'] = ionPolar
 
 
-	print DEFAULT_PREFIX + "Electronic Phase in the unit of 2*pi: "+str(electronicphase)
-	self._calculationValues['Electronic Phase - Units of 2*pi'] = electronicphase
+	print DEFAULT_PREFIX + "Electronic Phase in the unit of 2*pi[2pi modulo]:\n            "+str(electronicphase)+"\n"
+	self._calculationValues['Electronic Phase - Units of 2*pi in the domain [0 to 2pi]'] = electronicphase
 
-	print DEFAULT_PREFIX + "Electronic Phase remapped in the init of 2*pi [-pi to +pi] : "+str(electronicphaseremapped)
+	print DEFAULT_PREFIX + "Electronic Phase remapped in the init of 2*pi [-pi to +pi]:\n           "+str(electronicphaseremapped)+"\n"
 	self._calculationValues['Electronic Phase - Units of 2*Pi domain[-pi to +pi]'] = electronicphaseremapped
 
-	print DEFAULT_PREFIX + "Electronic Polarization in C/m^2: "+str(elecPolar)
+	print DEFAULT_PREFIX + "Electronic Polarization in C/m^2:\n           "+str(elecPolar)+"\n"
+	self._calculationValues['Electronic Polrization in C/m^2'] = elecPolar
 
 	#Zipping  values together and summing them
 	ionicphase = [ i * 2 * math.pi for i in ionicphase ]
@@ -476,34 +486,34 @@ class MainCalculationContainer:
 	self._netPolarizationEnergy = [sum(i) for i in self._netPolarizationEnergy ]
 	self._netPolarizationEnergy= [i / ( 2 * math.pi) for i in self._netPolarizationEnergy ]	
 	self._netPolarizationEnergy= [i % 2 for i in self._netPolarizationEnergy ]
-	print DEFAULT_PREFIX + "Total Phase in the unit of 2*pi: "+str(self._netPolarizationEnergy)
-	self._calculationValues['Total Phase - Units of 2*pi'] = self._netPolarizationEnergy
+	print DEFAULT_PREFIX + "Total Phase in the unit of 2*pi[2pi modulo]:\n           "+str(self._netPolarizationEnergy)+"\n"
+	self._calculationValues['Total Phase - Units of 2*pi in the domain [0 to 2pi]'] = self._netPolarizationEnergy
 
 	#polrization in 2pi modulo
 
 	self._netPolarizationEnergy1=self._netPolarizationEnergy
 	calcValues = self.calculationValues()
-        latticeConstants = calcValues['Lattice Constants']
+        latticeConstants = calcValues['Lattice Constants in bohr']
 
         ELEC_BY_VOL_CONST = self.ELEC_BY_VOL_CONST
         self._netPolarizationEnergy1 = [ELEC_BY_VOL_CONST * bohrToMeters(i[0]) * i[1] for i in zip(latticeConstants, self._netPolarizationEnergy1) ]
-	print DEFAULT_PREFIX + "Total Polarization in C/m^2 [2pi modulo]: "+str(self._netPolarizationEnergy1)
+	print DEFAULT_PREFIX + "Total Polarization in C/m^2 [2pi modulo]:\n           "+str(self._netPolarizationEnergy1)+"\n"
 	self._calculationValues['Total Polarization in  C/m^2 in the domain[0 to 2pi]'] = self._netPolarizationEnergy1
 
 	#Correcting the phase domain between -pi and pi
 
 	self._netPolarizationEnergy = [ self.correctPhaseDomain(i) for i in self._netPolarizationEnergy ]
-	print DEFAULT_PREFIX + "Total Phase Remapped in the unit of 2*pi [-pi to +pi]: "+str(self._netPolarizationEnergy)
+	print DEFAULT_PREFIX + "Total Phase Remapped in the unit of 2*pi [-pi to +pi]:\n           "+str(self._netPolarizationEnergy)+"\n"
 	self._calculationValues['Total Phase in units of 2*pi in the domain[-pi to +pi]'] = self._netPolarizationEnergy
 
 	#grab the calculation values
 	calcValues = self.calculationValues()
-	latticeConstants = calcValues['Lattice Constants']
+	latticeConstants = calcValues['Lattice Constants in bohr']
 	
 	ELEC_BY_VOL_CONST = self.ELEC_BY_VOL_CONST
  	self._netPolarizationEnergy = [ELEC_BY_VOL_CONST * bohrToMeters(i[0]) * i[1] for i in zip(latticeConstants, self._netPolarizationEnergy) ]
 
-        print DEFAULT_PREFIX + "Total Polarization in C/m^2[-pi to +pi ] :"+str(self._netPolarizationEnergy)
+        print DEFAULT_PREFIX + "Total Polarization in C/m^2[-pi to +pi]:\n           "+str(self._netPolarizationEnergy)+"\n"
 	self._calculationValues['Total Polarization in C/m^2 in the domain[-pi to +pi]'] = self._netPolarizationEnergy
         return self._netPolarizationEnergy
 
