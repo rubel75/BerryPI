@@ -88,11 +88,6 @@ class PathphaseCalculation:
                                   )
         #print self.correctedValues
         return self.correctedValues
-#    def correctDomain(self)
-#	self.correctedValues = self.values[:]
-#	self.correctedValues += 2*numpy.pi
-#	self.correctedValues = numpy.unwrap(self.correctedValues)
-#	return self.correctedValues	
         
     def getValues(self):
         return self.values
@@ -200,6 +195,13 @@ class MainCalculationContainer:
         # - BR2_DIR matrix (v_x, v_y, v_z)
         # - number of atoms in cell
         # - Lattice Constants (x,y,z)
+	laticematrix=parser_outputd_handle['BR2_DIR Matrix']
+	latticematrixa1=laticematrix[0]
+	self._calculationValues['Lattice Matrix a1 in bohr']=latticematrixa1
+	latticematrixa2=laticematrix[1]
+	self._calculationValues['Lattice Matrix a2 in bohr']=latticematrixa2
+	latticematrixa3=laticematrix[2]
+	self._calculationValues['Lattice Matrix a3 in bohr']=latticematrixa3
         self._calculationValues['Lattice Matrix in bohr'] = parser_outputd_handle['BR2_DIR Matrix']
         self._calculationValues['Lattice Matrix in m'] = [[ bohrToMeters(i) for i in j ] for j in self._calculationValues['Lattice Matrix in bohr']]
         self._calculationValues['Number of Atoms in Unit Cell'] = parser_outputd_handle['Number of Atoms in Unit Cell']
@@ -235,9 +237,7 @@ class MainCalculationContainer:
         value_phaseCorrectedValues = [ i.getCorrectedValues() for i in phaseObjects ]
 
         self.value_phaseMeanValues = value_phaseMeanValues = [ i.getMeanValue() for i in phaseObjects ]
-	#print value_phaseMeanValues
-
-        self._calculationValues['Berry Phase Values'] = value_phaseMeanValues
+	#print self.value_phaseMeanValues
 
         #constants
         #electron charge / unit volume
@@ -246,6 +246,9 @@ class MainCalculationContainer:
         self.determineElectronPolarization()
         self.determineIonPolarization()
         self.calculateNetPolarizationEnergy()
+
+    def valuephaseMeanValues(self):
+	return self.value_phaseMeanValues
 
     def __call__(self):
         return self.netPolarizationEnergy()
@@ -269,7 +272,7 @@ class MainCalculationContainer:
         self._electronPolarization = []
 	self._ebyVandlatticeconstant = []
         calcValues = self.calculationValues()
-
+	berryphase = self.valuephaseMeanValues()
         ELEC_BY_VOL_CONST = self.ELEC_BY_VOL_CONST
 	latticeConstants = calcValues['Lattice Constants in bohr']
         latticeMatrix_x = calcValues['Lattice Matrix in bohr'][0]
@@ -295,9 +298,9 @@ class MainCalculationContainer:
 	
 
 	###Electronic/Berry Phase Remapping in between -pi to +pi to calculate electronic Polrization	
-	remappedberryx=self.correctPhaseDomain( calcValues['Berry Phase Values'][0])
-	remappedberryy=self.correctPhaseDomain( calcValues['Berry Phase Values'][1])
-	remappedberryz=self.correctPhaseDomain( calcValues['Berry Phase Values'][2])
+	remappedberryx=self.correctPhaseDomain( berryphase[0])
+	remappedberryy=self.correctPhaseDomain( berryphase[1])
+	remappedberryz=self.correctPhaseDomain( berryphase[2])
 	self._berryremapped=[ remappedberryx, remappedberryy, remappedberryz ]
 
 
@@ -354,15 +357,20 @@ class MainCalculationContainer:
         for atom in atomListing:
             for i in range(atom['MULT']):
                 theElementName = atom['Element Name']
+		
                 if calcValues['Element Listing'].has_key(theElementName):
                     theElement = calcValues['Element Listing'][theElementName]
                     theValence = -theElement['Core Value'] + theElement['Spin Value 1'] + theElement['Spin Value 2']
                     xCoordinate = atom['X-Coord'][i]
                     yCoordinate = atom['Y-Coord'][i]
                     zCoordinate = atom['Z-Coord'][i]
+		 
 
                     #produce tuple from coordinates
                     coordinates = (xCoordinate, yCoordinate, zCoordinate)
+		    
+                    allinfo = [theElementName,theValence,coordinates]
+                    print str(allinfo)
 
                     #correct coordinates which are close to 1.0 between 
                     #(COORDINATE_CORRECTION_LOWER_BOUND,COORDINATE_CORRECTION_UPPER_BOUND)

@@ -1,3 +1,46 @@
+*Current Version
+BerryPI 0.1
+
+*Licensing Conditions
+Questions and comments are to be directed to  
+1.Dr. Oleg Rubel    
+  Thunder Bay Regional Research institute    
+  290 Munro Street, Thunder Bay, ON Canada P7A 7T1    
+  Tel:+1 (807) 766-3350   
+  E-mail:rubelo@tbh.net    
+  URL:http://www.tbrri.com/~orubel
+2.Dr. Samuel Pichardo    
+  Thunder Bay Regional Research institute    
+  980 Oliver Road, Thunder Bay, ON Canada P7B 6V4   
+  Tel:+1 (807) 766-3350    
+  E-mail:pichards@tbh.net   
+  URL:http://www.proteus-mrighifu.net 
+**MANDATORY TERMS AND CONDITIONS:
+
+I will adhere to the following conditions upon receipt of the program:
+
+   1. All title, ownership and rights to the program or to copies of it remain with the authors, irrespective of the ownership of the media on which the program resides.
+
+   2. I will not supply a copy of the code to anyone for any reason whatsoever. This in no way limits my making copies of the code for backup purposes, or for running on more than one computer system at my institution (it is a site license for the registered group). I will refer any request for copies of the program to the authors.
+
+   3. I will not incorporate any part of BerryPI into any other program system, without prior written permission of the authors.
+
+   4. I will keep intact all copyright notices.
+
+   5. I understand that the authors supply BerryPI and its documentation on an ``as is'' basis without any warranty, and thus with no additional responsibility or liability. 
+
+   6. In any publication in the scientific literature I will reference the program as follows:
+
+          [1]'BerryPI: A software for studying polarization of crystalline solids with WIEN2k density functional all-electron package'
+		      S.J.Ahmed, J.Kivinen, B.Zaporzan, L.Curiel, S.Pichardo, O.Rubel ,Comp. Phys. Commun.(2012) doi:10.1016/j.cpc.2012.10.028 
+
+   7. It is understood that modifications of the BerryPI code can lead to problems where the authors may not be able to help.
+      It would be appreciated if useful modifications or major extensions are reported to the authors.
+
+   8. I understand that support for running the program can not be provided in general, except on the basis of a joint project between the authors and the research partner.  
+
+
+
 * Installation
   - Include paths to this folder within your ~/.bashrc file
   - Include required paths for DEFAULT_BIN_PATH and DEFAULT_PYTHON_PATH
