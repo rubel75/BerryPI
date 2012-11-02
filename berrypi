@@ -373,7 +373,7 @@ def writeResult(configFile, mainCalculationObject):
     fileHandle.write("BerryPI is a joint project between Thunder Bay Regional Research Institute and Lakehead University\n")
     fileHandle.write("Suggested reference:\n   [1]'BerryPI: A software for studying polarization of crystalline solids with WIEN2k density functional all-electron package'\n   S.J.Ahmed, J.Kivinen, B.Zaporzan, L.Curiel, S.Pichardo, O.Rubel ,Comp. Phys. Commun.(2012) doi:10.1016/j.cpc.2012.10.028")
     fileHandle.write("\nQuestions and comments are to be directed to\n  1.Dr. Oleg Rubel \n    Thunder Bay Regional Research institute\n    290 Munro Street, Thunder Bay, ON Canada P7A 7T1\n    Tel:+1 (807) 766-3350 \n    E-mail:rubelo@tbh.net\n    URL:http://www.tbrri.com/~orubel")	
-    fileHandle.write("\n  2.Dr. Samuel Pichardo \n    Thunder Bay Regional Research institute\n    980 Oliver Road, Thunder Bay, ON Canada P7B 6V4 \n    Tel:+1 (807) 766-3350 \n    E-mail:pichards@tbh.net\n    URL:http://www.proteus-mrighifu.net")
+    fileHandle.write("\n  2.Dr. Samuel Pichardo \n    Thunder Bay Regional Research institute\n    980 Oliver Road, Thunder Bay, ON Canada P7B 6V4 \n    Tel:+1 (807) 252-2914 \n    E-mail:pichards@tbh.net\n    URL:http://www.proteus-mrighifu.net")
     string = "\nDate: {}\n".format(time.ctime())
     fileHandle.write(string)
     string = "\nCase Name: {}\n".format(configFile['Structure Name'])
@@ -612,4 +612,4 @@ if __name__ == "__main__":
     print "\nBerryPI is a joint project between Thunder Bay Regional Research Institute and Lakehead University"
     print "\nSuggested reference:\n   [1]'BerryPI: A software for studying polarization of crystalline solids with WIEN2k density functional all-electron package'\n       S.J.Ahmed, J.Kivinen, B.Zaporzan, L.Curiel, S.Pichardo, O.Rubel ,Comp. Phys. Commun.(2012) doi:10.1016/j.cpc.2012.10.028"	
     print ("\nQuestions and comments are to be directed to\n  1.Dr. Oleg Rubel \n    Thunder Bay Regional Research institute\n    290 Munro Street, Thunder Bay, ON Canada P7A 7T1\n    Tel:+1 (807) 766-3350 \n    E-mail:rubelo@tbh.net\n    URL:http://www.tbrri.com/~orubel")
-    print ("\n  2.Dr. Samuel Pichardo \n    Thunder Bay Regional Research institute\n    980 Oliver Road, Thunder Bay, ON Canada P7B 6V4 \n    Tel:+1 (807) 766-3350 \n    E-mail:pichards@tbh.net\n    URL:http://www.proteus-mrighifu.net")
+    print ("\n  2.Dr. Samuel Pichardo \n    Thunder Bay Regional Research institute\n    980 Oliver Road, Thunder Bay, ON Canada P7B 6V4 \n    Tel:+1 (807) 252-2914 \n    E-mail:pichards@tbh.net\n    URL:http://www.proteus-mrighifu.net")
