@@ -3,3 +3,6 @@ BerryPI 0.1
 * [[https://github.com/spichardo/BerryPI/blob/dev-sheikh/licencing.txt][Licensing Conditions]]
 * [[https://github.com/spichardo/BerryPI/blob/dev-sheikh/Installation][Installation Guide]]
 * [[https://github.com/spichardo/BerryPI/zipball/dev-sheikh][Download the whole package here]]
+* Tutorials
+- [[https://github.com/spichardo/BerryPI/tree/master/tutorials/tutorial1][Tutorial 1 - For Spontaneous polarization calculation of BaTiO3]]
+- [[https://github.com/spichardo/BerryPI/tree/master/tutorials/tutorial2][Tutorial 2 - For Born Effective Charges of GaAs]]

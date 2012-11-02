@@ -83,6 +83,3 @@ for structures with non collinear lattice vectors
 ** Band by band decomposition
 Provide analysis of contribution from individual electronic bands (or their range) to the electronic polarization. The present version enables calculation of the Berry phase for a given band range (-b switch), but more testing need to be performed.
 	
-* Tutorials
-- [[https://github.com/spichardo/BerryPI/tree/master/tutorials/tutorial1][Tutorial 1 - For Spontaneous polarization calculation of BaTiO3]]	
-- [[https://github.com/spichardo/BerryPI/tree/master/tutorials/tutorial2][Tutorial 2 - For Born Effective Charges of GaAs]]
