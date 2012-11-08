@@ -5,7 +5,7 @@ BerryPI 0.1
 * [[https://github.com/spichardo/BerryPI/zipball/master][Download the whole package here]]
 * Citation
         BerryPI: A software for studying polarization of crystalline solids with WIEN2k density functional all-electron package'
-        S.J. Ahmed, J. Kivinen, B. Zaporzan, L. Curiel, S. Pichardo, O. Rubel, Comp. Phys. Commun. (2012) doi:10.1016/j.cpc.2012.10.028 ([[http://www.tbrri.com/~orubel/publications/accepted/CPC-D-12-00451.pdf][pdf]])
+        S.J. Ahmed, J. Kivinen, B. Zaporzan, L. Curiel, S. Pichardo, O. Rubel, Comp. Phys. Commun. (2012) doi:10.1016/j.cpc.2012.10.028 ([[http://www.sciencedirect.com/science/article/pii/S0010465512003712?v=s5][Full Text]])
 * Tutorials
 - [[https://github.com/spichardo/BerryPI/tree/master/tutorials/tutorial1][Tutorial 1 - For Spontaneous polarization calculation of BaTiO3]]
 - [[https://github.com/spichardo/BerryPI/tree/master/tutorials/tutorial2][Tutorial 2 - For Born Effective Charges of GaAs]]
