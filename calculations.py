@@ -247,6 +247,8 @@ class MainCalculationContainer:
         self.determineIonPolarization()
         self.calculateNetPolarizationEnergy()
 
+
+#Berry/Electrcnic phase value in [0 to 2] range
     def valuephaseMeanValues(self):
 	return self.value_phaseMeanValues
 
@@ -294,9 +296,17 @@ class MainCalculationContainer:
  	self._ebyVandlatticeconstant.append(ELEC_BY_VOL_CONST * bohrToMeters(latticeConstants[2]))
        
 
-	print  DEFAULT_PREFIX + "e/V*lattice constant\n           "+str(self._ebyVandlatticeconstant)+"\n"
-	
+	#print  DEFAULT_PREFIX + "e/V*lattice constant\n           "+str(self._ebyVandlatticeconstant)+"\n"
 
+
+	###Electronic Polarization in [-1 to +1] range
+	electronpolar2pix =  berryphase[0] * ELEC_BY_VOL_CONST * bohrToMeters(latticeConstants[0])
+	electronpolar2piy =  berryphase[1] * ELEC_BY_VOL_CONST * bohrToMeters(latticeConstants[1])
+        electronpolar2piz =  berryphase[2] * ELEC_BY_VOL_CONST * bohrToMeters(latticeConstants[2])
+
+	self._electronpolar2pi = [ electronpolar2pix, electronpolar2piy, electronpolar2piz ]
+
+  
 	###Electronic/Berry Phase Remapping in between -pi to +pi to calculate electronic Polrization	
 	remappedberryx=self.correctPhaseDomain( berryphase[0])
 	remappedberryy=self.correctPhaseDomain( berryphase[1])
@@ -315,14 +325,21 @@ class MainCalculationContainer:
             )
         #### DONE ####
         return self._electronPolarization
-    
+#Electron polrization in [0 to 2] range
+
+    def electronpolar2pi(self):
+	return self._electronpolar2pi
+
+
+#Berry/electronic phase in [-1 to +1] range  
     def remappedberryphase(self):	
-	return self._berryremapped
-	print self.remappedberryphase	
+	return self._berryremapped	
 
     def ebyVlatticeconstant(self):		
 	return self._ebyVandlatticeconstant	
 
+
+#Electron polrization in [-1 to +1 range]
     def electronPolarization(self):
         return self._electronPolarization
 
@@ -347,7 +364,6 @@ class MainCalculationContainer:
         latticeConstants = calcValues['Lattice Constants in bohr']
 
         atomListing = calcValues['Atom Listing']
-
         #produce a tuple pair which includes the valence electrons and
         #the coordinates for each element
         calcIonValues = [] # (coordinates(x,y,z), valence value)
@@ -363,14 +379,13 @@ class MainCalculationContainer:
                     theValence = -theElement['Core Value'] + theElement['Spin Value 1'] + theElement['Spin Value 2']
                     xCoordinate = atom['X-Coord'][i]
                     yCoordinate = atom['Y-Coord'][i]
-                    zCoordinate = atom['Z-Coord'][i]
-		 
+                    zCoordinate = atom['Z-Coord'][i] 
 
                     #produce tuple from coordinates
                     coordinates = (xCoordinate, yCoordinate, zCoordinate)
-		    
-                    allinfo = [theElementName,theValence,coordinates]
-                    print str(allinfo)
+        #            self._calcIonValues=[0,0,0]		    
+        #            self._calcIonValues.append(theElementName,theValence,coordinates)
+                     
 
                     #correct coordinates which are close to 1.0 between 
                     #(COORDINATE_CORRECTION_LOWER_BOUND,COORDINATE_CORRECTION_UPPER_BOUND)
@@ -381,30 +396,37 @@ class MainCalculationContainer:
                        # else: return x
                   #  coordinates = map(correctCoordinates, coordinates)
                   #  append to calcIonValues list
-                    calcIonValues.append((coordinates, theValence))
+                    calcIonValues.append((theElementName,coordinates, theValence))
                 else:
                     print DEFAULT_PREFIX + 'ERROR: Missing element in element list'
                     print DEFAULT_PREFIX + theElementName
                     print DEFAULT_PREFIX + calcValues['Element List']
                     print DEFAULT_PREFIX + 'Exiting....'
                     sys.exit(1)
-                    
+        self._calcIonValues = calcIonValues
+
         #### CALCULATION ####
         xPolarIon, yPolarIon, zPolarIon = (0., 0., 0.)
 
         #coordinates were converted from bohr
-        for iCoord, iValence in calcIonValues:
+         
+        for element,iCoord, iValence in calcIonValues:
             xPolarIon += iCoord[0] * iValence
             yPolarIon += iCoord[1] * iValence
             zPolarIon += iCoord[2] * iValence
-        #    print DEFAULT_PREFIX + " Coord (x,y,z) - Valence - " + str(((iCoord[0],iCoord[1],iCoord[2]),(iValence)))
-        #    print DEFAULT_PREFIX + " Coord * Valence (x,y,z) - " + str((xPolarIon,yPolarIon,zPolarIon))
 	#Correction of Polarion to 2pi domain As it should not be negetive so no negetive correction function was added
 	topPi=2
 	xPolarionCorrected=xPolarIon%topPi
 	yPolarionCorrected=yPolarIon%topPi
         zPolarionCorrected=zPolarIon%topPi
 	self._ionicphase=[ xPolarionCorrected, yPolarionCorrected, zPolarionCorrected ]
+
+       #IONIC Polarization in 2 PI range
+        ionpolx = xPolarionCorrected * ELEC_BY_VOL_CONST * bohrToMeters(latticeConstants[0]) 
+	ionpoly = yPolarionCorrected * ELEC_BY_VOL_CONST * bohrToMeters(latticeConstants[1])
+	ionpolz = zPolarionCorrected * ELEC_BY_VOL_CONST * bohrToMeters(latticeConstants[2])    
+        self._ionicpolar2pi = [ ionpolx, ionpoly, ionpolz] 
+
 	
 	# Remapping of Ionic Phase in -pi to +pi for Ionic Polarization 
 	xPolrionmapped= self.correctPhaseDomain(xPolarionCorrected)
@@ -425,12 +447,30 @@ class MainCalculationContainer:
         ######## END ########
         return self._ionPolarization
 
+#Valance Electron
+    def valance(self):
+	return self._calcIonValues
+
+
+#Ionic Phase in 2Pi modulo 
     def ionicphase(self):
 	return self._ionicphase
+   
+
+#Ionic Phase in [-1 to +1] range
     def mappedionic(self):
 	return self._mappedionic
+
+#Ionic Polrization in [0 to 2] range
+
+    def ionicpolar2pi(self):
+	return self._ionicpolar2pi
+#Ionic Polarization in [-1 to +1] range
     def ionPolarization(self):
         return self._ionPolarization
+
+
+
 
     def correctPhaseDomain(self,phaseValue):
         '''
@@ -462,22 +502,6 @@ class MainCalculationContainer:
 	electronicphase=self.value_phaseMeanValues
 	electronicphaseremapped=self.remappedberryphase()
 
-	print DEFAULT_PREFIX + "Ionic Phase in the unit of 2*pi [2*pi modulo]:\n           "+str( ionicphase)+"\n"
-	self._calculationValues['Ionic Phase - Units of 2*pi [2*pi modulo]'] = ionicphase
-	print DEFAULT_PREFIX + "Ionic Phase remapped in the unit of 2*pi [-pi to +pi]:\n           "+str(ionicremapped)+"\n"
-	self._calculationValues['Ionic Phase - Units of 2*pi domain[-pi to +pi]'] = ionicremapped
-	print DEFAULT_PREFIX + "Ionic Polarizaion in C/m^2:\n           "+str( ionPolar)+"\n"
-	self._calculationValues['Ionic Polrization in C/m^2'] = ionPolar
-
-
-	print DEFAULT_PREFIX + "Electronic Phase in the unit of 2*pi[2pi modulo]:\n            "+str(electronicphase)+"\n"
-	self._calculationValues['Electronic Phase - Units of 2*pi in the domain [0 to 2pi]'] = electronicphase
-
-	print DEFAULT_PREFIX + "Electronic Phase remapped in the init of 2*pi [-pi to +pi]:\n           "+str(electronicphaseremapped)+"\n"
-	self._calculationValues['Electronic Phase - Units of 2*Pi domain[-pi to +pi]'] = electronicphaseremapped
-
-	print DEFAULT_PREFIX + "Electronic Polarization in C/m^2:\n           "+str(elecPolar)+"\n"
-	self._calculationValues['Electronic Polrization in C/m^2'] = elecPolar
 
 	#Zipping  values together and summing them
 	ionicphase = [ i * 2 * math.pi for i in ionicphase ]
@@ -486,10 +510,10 @@ class MainCalculationContainer:
 	self._netPolarizationEnergy = [sum(i) for i in self._netPolarizationEnergy ]
 	self._netPolarizationEnergy= [i / ( 2 * math.pi) for i in self._netPolarizationEnergy ]	
 	self._netPolarizationEnergy= [i % 2 for i in self._netPolarizationEnergy ]
-	print DEFAULT_PREFIX + "Total Phase in the unit of 2*pi[2pi modulo]:\n           "+str(self._netPolarizationEnergy)+"\n"
-	self._calculationValues['Total Phase - Units of 2*pi in the domain [0 to 2pi]'] = self._netPolarizationEnergy
 
-	#polrization in 2pi modulo
+        #Total Phase in [0 to 2]
+        self._totalphase2pi=self._netPolarizationEnergy
+
 
 	self._netPolarizationEnergy1=self._netPolarizationEnergy
 	calcValues = self.calculationValues()
@@ -497,15 +521,15 @@ class MainCalculationContainer:
 
         ELEC_BY_VOL_CONST = self.ELEC_BY_VOL_CONST
         self._netPolarizationEnergy1 = [ELEC_BY_VOL_CONST * bohrToMeters(i[0]) * i[1] for i in zip(latticeConstants, self._netPolarizationEnergy1) ]
-	print DEFAULT_PREFIX + "Total Polarization in C/m^2 [2pi modulo]:\n           "+str(self._netPolarizationEnergy1)+"\n"
-	self._calculationValues['Total Polarization in  C/m^2 in the domain[0 to 2pi]'] = self._netPolarizationEnergy1
 
 	#Correcting the phase domain between -pi and pi
 
 	self._netPolarizationEnergy = [ self.correctPhaseDomain(i) for i in self._netPolarizationEnergy ]
-	print DEFAULT_PREFIX + "Total Phase Remapped in the unit of 2*pi [-pi to +pi]:\n           "+str(self._netPolarizationEnergy)+"\n"
-	self._calculationValues['Total Phase in units of 2*pi in the domain[-pi to +pi]'] = self._netPolarizationEnergy
+        
+       # Total Phase [-1 to +1]
+        self._totalphaseneg1to1 = self._netPolarizationEnergy
 
+        
 	#grab the calculation values
 	calcValues = self.calculationValues()
 	latticeConstants = calcValues['Lattice Constants in bohr']
@@ -513,12 +537,28 @@ class MainCalculationContainer:
 	ELEC_BY_VOL_CONST = self.ELEC_BY_VOL_CONST
  	self._netPolarizationEnergy = [ELEC_BY_VOL_CONST * bohrToMeters(i[0]) * i[1] for i in zip(latticeConstants, self._netPolarizationEnergy) ]
 
-        print DEFAULT_PREFIX + "Total Polarization in C/m^2[-pi to +pi]:\n           "+str(self._netPolarizationEnergy)+"\n"
-	self._calculationValues['Total Polarization in C/m^2 in the domain[-pi to +pi]'] = self._netPolarizationEnergy
         return self._netPolarizationEnergy
 
+#Total Phase [0 to 2] range
+    def totalphase2pi(self):
+	return self._totalphase2pi
+
+#Total Phase [+1 to -1] range
+
+    def totalphaseneg1to1(self):
+	return self._totalphaseneg1to1	
+
+
+#Total Polarization [-1 to +1] range
     def netPolarizationEnergy(self):
         return self._netPolarizationEnergy
+
+
+#Total Polarization [0 to 2] range
+    def netpolarization2pi(self):
+	return self._netPolarizationEnergy1
+
+
 
 # local functions
 def bohrToMeters(value, dimension = 1):
@@ -537,7 +577,18 @@ if __name__ == "__main__":
         file_outputst = './tests/testStruct.outputst',
         )
     mainCalculation.prettyPrintCalculationValues()
+    print mainCalculation.valuephaseMeanValues()
+    print mainCalculation.electronpolar2pi()
+    print mainCalculation.remappedberryphase
     print mainCalculation.electronPolarization()
+    print mainCalculation.ionicphase()	
+    print mainCalculation.ionicpolar2pi()
+    print mainCalculation.mappedionic()
     print mainCalculation.ionPolarization()
+    print mainCalculation.totalphase2pi()
+    print mainCalculation.totalphaseneg1to1()
+    print mainCalculation.netPolarizationEnergy()
+    print mainCalculation.netpolarization2pi()
+    print mainCalculation.valance()	 
     print mainCalculation()
     blochBandCalculation = CalculateNumberOfBands('./tests/testStruct.scf')

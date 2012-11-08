@@ -32,8 +32,14 @@ Here “–p$(pwd)” means that BerryPI program is running for the case (GaAs) locate
 Note: k-mesh in BerryPI should not necessarily be identical to that used in the SCF cycle
 
 1.5 Once the calculation is completed the result will be printed like this
-[ BerryPi ] Total Phase in the unit of 2*pi [2*pi modulo]: [1.4444444466908883, 1.4444444597055879, 0.9779037963902364] 
-[ BerryPi ] Total Phase Remapped in the unit of 2*pi [-pi to +pi]: [-0.5555555533091117, -0.5555555402944121, 0.9779037963902364]
+
+               ---PHASES/2*PI IN [0 to 2]RANGE---
+
+ TOTAL PHASE/(2*PI):       [1.4444444466908883, 1.4444444597055879, 0.9779037963902364]
+
+              ---PHASES/2*PI IN [-1 to +1]RANGE---
+
+TOTAL PHASE/(2*PI):        [-0.5555555533091117, -0.5555555402944121, 0.9779037963902364]
 
 Here three total phase (sum of electronic and ionic phase)  values corresponds to X,Y and Z components of total phase, respectively. As the structure has only been perturbed in Z direction, only Z component of total phase has to be considered.  
 
@@ -79,8 +85,14 @@ $ run_lapw
 $ python ~/BerryPI/berrypi –p$(pwd) –k6:6:6
 
 2.9 Once the calculation is completed the results will be printed like this
-[ BerryPi ] Total Phase in the unit of 2*pi [2*pi modulo]: [1.4444444467891686, 1.444444439721803, 1.0220961933526282] 
-[ BerryPi ] Total Phase Remapped in the unit of 2*pi [-pi to +pi]: [-0.5555555532108314, -0.555555560278197, -0.9779038066473718]
+               ---PHASES/2*PI IN [0 to 2]RANGE---
+
+ TOTAL PHASE/(2*PI):        [1.4444444467891686, 1.444444439721803, 1.0220961933526282]
+
+              ---PHASES/2*PI IN [-1 to +1]RANGE---
+
+TOTAL PHASE/(2*PI):        [-0.5555555532108314, -0.555555560278197, -0.9779038066473718]
+
 Note: This time, the two reported phases (sum of electronic and ionic phase) are different from each other and only one of them needs to be considered as explained below.
 
 

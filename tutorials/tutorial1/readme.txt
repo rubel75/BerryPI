@@ -32,8 +32,15 @@ Here “–p$(pwd)” means that BerryPI program is running for the case (BaTiO3) loca
 Note: k-mesh in BerryPI should not necessarily be identical to that used in the SCF cycle
 
 1.5 Once the calculation is completed the result will be printed like this
- [ BerryPi ] Total Polarization in C/m^2 [2pi modulo]: [1.4055711762420265e-11, 1.3912588500369445e-11, 0.31140111708550217]
- [ BerryPi ] Total Polarization in C/m^2[-pi to +pi ] :[1.4055711762420265e-11, 1.3912588500369445e-11, 0.31140111708550217]
+
+               ---POLARIZATION IN C/m^2 FOR [0 to 2] PHASE/2PI RANGE---
+
+  TOTAL POLARIZATION:        [1.4055711762420265e-11, 1.3912588500369445e-11, 0.31140111708550217]
+
+              ---POLARIZATION IN C/m^2 FOR [-1 to +1] PHASE/2PI RANGE---
+
+  TOTAL POLARIZATION:        [1.4055711762420265e-11, 1.3912588500369445e-11, 0.31140111708550217]
+
 Here three total polarization values corresponds to X,Y and Z components of polarization,respectively.
 
 Note: The total polarization has been reported twice for different pi wrapping appraches. In this particular case both the polarization values are the identical which is generally may not be the case. Such case will be discussed in tutorial 2.
@@ -79,8 +86,13 @@ $ python ~/BerryPI/berrypi –p$(pwd) –k6:6:6
 
 2.9 Once the calculation is completed the results will be printed like this
 
-[ BerryPi ] Total Polarization in C/m^2 [2pi modulo]: :[1.390378584176154e-11, 1.3821906276378503e-11, 1.4486341471349937e-11]
-[ BerryPi ] Total Polarization in C/m^2[-pi to +pi domain] :[1.390378584176154e-11, 1.3821906276378503e-11, 1.4486341471349937e-11]] 
+               ---POLARIZATION IN C/m^2 FOR [0 to 2] PHASE/2PI RANGE---
+
+  TOTAL POLARIZATION:        [1.390378584176154e-11, 1.3821906276378503e-11, 1.4486341471349937e-11]
+
+              ---POLARIZATION IN C/m^2 FOR [-1 to +1] PHASE/2PI RANGE---
+
+  TOTAL POLARIZATION:        [1.390378584176154e-11, 1.3821906276378503e-11, 1.4486341471349937e-11]]
 
 Note: Different pi wrapping doesn’t affect the result in this case 
 

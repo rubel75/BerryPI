@@ -379,26 +379,150 @@ def writeResult(configFile, mainCalculationObject):
     string = "\nCase Name: {}\n".format(configFile['Structure Name'])
     fileHandle.write(string)
 
-
     #grab calculation values and write them to file
     calcValues = mainCalculationObject.calculationValues()
+   
+   #Berry Phase [0 to 2]
+    berry2pi = mainCalculationObject.valuephaseMeanValues()
+ 
+   #Eletron Pollarization [0 to 2]
 
-    #grab elec polar and ion polar and write them to file
-    #elecPolar = mainCalculationObject.electronPolarization()
-    #calcValues['Electron Polarization [C/m^2]'] = elecPolar
+    electronpolar2pi =  mainCalculationObject.electronpolar2pi()
+
+   #BerryPhase [-1 to +1]
+    berryneg1to1 = mainCalculationObject.remappedberryphase()
+
+
+   #Electronic Polarization [ +1 to -1]
+    electronpolarneg1to1 = mainCalculationObject.electronPolarization()
+
+
+   #Ionic Phase [0 to 2]
+    ionphase2pi = mainCalculationObject.ionicphase()
+
+   #Ionic Polarization [0 to 2]
+    ionpolar2pi = mainCalculationObject.ionicpolar2pi()
+
+   #Ionic Phase [-1 to +1]
+    ionphaseneg1to1 = mainCalculationObject.mappedionic()
+
+
+   #Ionic Polarization
+    ionpolarneg1to1 = mainCalculationObject.ionPolarization()
+
+   #Total Phase [0 to 2]
+    totalphase2pi = mainCalculationObject.totalphase2pi()
+
+   #Total Phase [-1 to +1]
+    totalphaseneg1to1 = mainCalculationObject.totalphaseneg1to1()
+
+   #Total Polarization [0 to 2]
+    totalpolar2pi = mainCalculationObject.netpolarization2pi()
+
+   #Total Polarization [-1 to +1 ]
+    totalpolarneg1to1=mainCalculationObject.netPolarizationEnergy()
+   
+   #Valance ion info
+    valanceinfo = mainCalculationObject.valance()
     
-    #ionPolar = mainCalculationObject.ionPolarization()
-    #calcValues['Ionic Polarization [C/m^2]'] = ionPolar
 
-    #grab final value and store in file
-    #totalPolar = mainCalculationObject.netPolarizationEnergy()
-    #calcValues['Total Polarization [C/m^2]'] = totalPolar
-
-    #string = "polarization: {}\n".format(totalPolar)
-    #fileHandle.write(string)
+    fileHandle.write('                                   ---LATTICE CONSTANTS IN Bohr---\n\t\t\t')
+    #for constant in calcValues['Lattice Constants in bohr']:
+    for i in calcValues['Lattice Constants in bohr']:
     
+        a=str(i)+"\t"
+	fileHandle.write(a)
+	
+    fileHandle.write('\n\n                                          ----ATOM INFO---\n')
+    for iName, iCoord, iValence in valanceinfo:
+	fileHandle.write('                 ELEMENT: ' + iName +"\t")
+	fileHandle.write('NO OF VALANCE ELECTRONS:\t'+str(iValence)+"\n")
+	fileHandle.write('      REDUCED COORDINATE: ')
+	for i in iCoord:
+	    a=str(i)
+            fileHandle.write(a +"\t")
+        fileHandle.write('\n\n\n')	
+    fileHandle.write('                                  ---BERRYPI COMPUTATION---\n')
+    print DEFAULT_PREFIX +"                                         ---BERRYPI COMPUTATION---\n"
+    fileHandle.write('\n\n                                 ---PHASES/2*PI IN [0 to 2]RANGE---\n')
+    print "\n\n                                 ---PHASES/2*PI IN [0 to 2]RANGE---\n"
+    fileHandle.write('     IONIC PHASE/(2*PI):\t')
+    print "     IONIC PHASE/(2*PI):         " +str(ionphase2pi)
+    for i in ionphase2pi:
+        a=str(i)+"\t"
+        fileHandle.write(a)
+    fileHandle.write('\nELECTRONIC PHASE/(2*PI):\t')
+    print "\nELECTRONIC PHASE/(2*PI):         "+str(berry2pi)
+    for i in berry2pi:
+        a=str(i)+"\t"
+        fileHandle.write(a)
+    fileHandle.write('\n     TOTAL PHASE/(2*PI):\t')
+    print "\n     TOTAL PHASE/(2*PI):         " + str(totalphase2pi)
+    for i in totalphase2pi:
+        a=str(i)+"\t"
+        fileHandle.write(a)
+    fileHandle.write('\n\n                         ---POLARIZATION IN C/m^2 FOR [0 to 2] PHASE/2PI RANGE---\n')
+    print "\n\n                         ---POLARIZATION IN C/m^2 FOR [0 to 2] PHASE/2PI RANGE---\n"
+    fileHandle.write('     IONIC POLARIZATION:\t')
+    print "     IONIC POLARIZATION:\t"+str(ionpolar2pi)
+    for i in ionpolar2pi:
+        a=str(i)+"\t"
+        fileHandle.write(a)
+    fileHandle.write('\nELECTRONIC POLARIZATION:\t')
+    print "\nELECTRONIC POLARIZATION:\t" +str(electronpolar2pi)
+    for i in electronpolar2pi:
+        a=str(i)+"\t"
+        fileHandle.write(a)
+    fileHandle.write('\n     TOTAL POLARIZATION:\t')
+    print "\n     TOTAL POLARIZATION:\t"+str(totalpolar2pi)
+    for i in totalpolar2pi:
+        a=str(i)+"\t"
+        fileHandle.write(a)
+	
+    fileHandle.write('\n\n                                 ---PHASES/2*PI IN [-1 to +1]RANGE---\n')
+    print "\n\n                                 ---PHASES/2*PI IN [-1 to +1]RANGE---\n"
+    fileHandle.write('     IONIC PHASE/(2*PI):\t')
+    print "     IONIC PHASE/(2*PI):\t" +str(ionphaseneg1to1)
+    for i in ionphaseneg1to1:
+        a=str(i)+"\t"
+        fileHandle.write(a)
+
+    fileHandle.write('\nELECTRONIC PHASE/(2*PI):\t')
+    print "\nELECTRONIC PHASE/(2*PI):\t" +str(berryneg1to1)
+    for i in berryneg1to1:
+        a=str(i)+"\t"
+        fileHandle.write(a)
+    fileHandle.write('\n     TOTAL PHASE/(2*PI):\t')
+    print "\n     TOTAL PHASE/(2*PI):\t" +str(totalphaseneg1to1)
+    for i in totalphaseneg1to1:
+        a=str(i)+"\t"
+        fileHandle.write(a)
+    fileHandle.write('\n\n                         ---POLARIZATION IN C/m^2 FOR [-1 to +1] PHASE/2PI RANGE---\n')
+    print "\n\n                         ---POLARIZATION IN C/m^2 FOR [-1 to +1] PHASE/2PI RANGE---\n"
+    fileHandle.write('     IONIC POLARIZATION:\t')
+    print "     IONIC POLARIZATION:\t" +str(ionpolarneg1to1)
+    for i in ionpolarneg1to1:
+        a=str(i)+"\t"
+        fileHandle.write(a)
+    fileHandle.write('\nELECTRONIC POLARIZATION:\t')
+    print "\nELECTRONIC POLARIZATION:\t" +str(electronpolarneg1to1)
+    for i in electronpolarneg1to1:
+        a=str(i)+"\t"
+        fileHandle.write(a)
+    fileHandle.write('\n     TOTAL POLARIZATION:\t')
+    print "\n     TOTAL POLARIZATION:\t" +str(totalpolarneg1to1)
+    for i in totalpolarneg1to1:
+        a=str(i)+"\t"
+        fileHandle.write(a)
+
+ 
+    #json version of our code
     someString = json.dumps(calcValues, indent=4)
-    fileHandle.write(someString)
+    filename_json = os.path.join(configFile['Structure Path'], configFile['Structure Name'] + BERRY_FILE_EXTENSION + ".json")
+    fileHandle_json = open(filename_json, 'w')
+    fileHandle_json.write(someString)
+    #someString = json.dumps(calcValues, indent=4)
+    #fileHandle.write(someString)
 
 if __name__ == "__main__":
     def helpInfo():
@@ -607,7 +731,7 @@ if __name__ == "__main__":
     
     
 
-    print " --- BerryPI Computation Completed ---"
+    #print " --- BerryPI Computation Completed ---"
     print "\nCompleted using BerryPI version 0.1"
     print "\nBerryPI is a joint project between Thunder Bay Regional Research Institute and Lakehead University"
     print "\nSuggested reference:\n   [1]'BerryPI: A software for studying polarization of crystalline solids with WIEN2k density functional all-electron package'\n       S.J.Ahmed, J.Kivinen, B.Zaporzan, L.Curiel, S.Pichardo, O.Rubel ,Comp. Phys. Commun.(2012) doi:10.1016/j.cpc.2012.10.028"	
