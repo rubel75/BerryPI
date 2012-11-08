@@ -5,9 +5,17 @@ BerryPI 0.1
 * [[https://github.com/spichardo/BerryPI/zipball/master][Download the whole package here]]
 * Citation
         BerryPI: A software for studying polarization of crystalline solids with WIEN2k density functional all-electron package'
-        S.J.Ahmed, J.Kivinen, B.Zaporzan, L.Curiel, S.Pichardo, O.Rubel ,Comp. Phys. Commun.(2012) doi:10.1016/j.cpc.2012.10.028
+        S.J. Ahmed, J. Kivinen, B. Zaporzan, L. Curiel, S. Pichardo, O. Rubel, Comp. Phys. Commun. (2012) doi:10.1016/j.cpc.2012.10.028 ([[http://www.tbrri.com/~orubel/publications/accepted/CPC-D-12-00451.pdf][pdf]])
 * Tutorials
 - [[https://github.com/spichardo/BerryPI/tree/master/tutorials/tutorial1][Tutorial 1 - For Spontaneous polarization calculation of BaTiO3]]
 - [[https://github.com/spichardo/BerryPI/tree/master/tutorials/tutorial2][Tutorial 2 - For Born Effective Charges of GaAs]]
 
+* Limitation
+The present version is restricted to cases when the lattice vectors correspond to cartesian directions. For example, the zinc-blend or NaCl structures should be regarded as an 8 atom cell instead of the conventional 2 atom basis.
 
+* To Do
+- Non collinear lattice vectors: Extendting the capability of "BerryPI" to computing of polrization for structures with non collinear lattice vectors
+
+
+- Band by band decomposition: Provide analysis of contribution from individual electronic bands (or their range) to the electronic polarization. The present version enables calculation of the Berry phase for a given band range (-b switch), but more testing need to be performed.
+        
