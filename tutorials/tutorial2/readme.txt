@@ -35,11 +35,11 @@ Note: k-mesh in BerryPI should not necessarily be identical to that used in the 
 
                ---PHASES/2*PI IN [0 to 2]RANGE---
 
- TOTAL PHASE/(2*PI):       [1.4444444466908883, 1.4444444597055879, 0.9779037963902364]
+TOTAL PHASE/(2*PI):  [1.4444444466908883, 1.4444444597055879, 0.9779037963902364]
 
               ---PHASES/2*PI IN [-1 to +1]RANGE---
 
-TOTAL PHASE/(2*PI):        [-0.5555555533091117, -0.5555555402944121, 0.9779037963902364]
+TOTAL PHASE/(2*PI):  [-0.5555555533091117, -0.5555555402944121, 0.9779037963902364]
 
 Here three total phase (sum of electronic and ionic phase)  values corresponds to X,Y and Z components of total phase, respectively. As the structure has only been perturbed in Z direction, only Z component of total phase has to be considered.  
 
