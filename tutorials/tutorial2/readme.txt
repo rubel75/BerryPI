@@ -35,11 +35,11 @@ Note: k-mesh in BerryPI should not necessarily be identical to that used in the 
 
                     ---PHASES/2*PI IN [0 to 2]RANGE---
 
-TOTAL PHASE/(2*PI):  [1.4444444466908883, 1.4444444597055879, 0.9779037963902364]
+TOTAL PHASE/(2*PI):  [0.99999999991459032, 1.0000000091132539, 0.97814709926563959]
 
                    ---PHASES/2*PI IN [-1 to +1]RANGE---
  
-TOTAL PHASE/(2*PI):  [-0.5555555533091117, -0.5555555402944121, 0.9779037963902364]
+TOTAL PHASE/(2*PI):  [0.99999999991459032, -0.99999999088674607, 0.97814709926563959]
 
 Here three total phase (sum of electronic and ionic phase)  values corresponds to X,Y and Z components of total phase, respectively. As the structure has only been perturbed in Z direction, only Z component of total phase has to be considered.  
 
@@ -87,11 +87,11 @@ $ python ~/BerryPI/berrypi –p$(pwd) –k6:6:6
 2.9 Once the calculation is completed the results will be printed like this
                ---PHASES/2*PI IN [0 to 2]RANGE---
 
- TOTAL PHASE/(2*PI):        [1.4444444467891686, 1.444444439721803, 1.0220961933526282]
+ TOTAL PHASE/(2*PI):        [1.0000000009195591, 1.0000000089644974, 1.0218558597965477]
 
               ---PHASES/2*PI IN [-1 to +1]RANGE---
 
-TOTAL PHASE/(2*PI):        [-0.5555555532108314, -0.555555560278197, -0.9779038066473718]
+TOTAL PHASE/(2*PI):        [-0.9999999990804409, -0.99999999103550263, -0.97814414020345231]
 
 Note: This time, the two reported phases (sum of electronic and ionic phase) are different from each other and only one of them needs to be considered as explained below.
 
@@ -102,13 +102,13 @@ Calculation of Born effective charge using Z component of total phase value obta
 Z*_zz=(1/2*pi)*d_phi/d_rho 
 Where,
 Z*_zz is the born effective charge in Z direction for applied perturbation in Z direction.
-d_phi is difference in total phase (sum of electronic and ionic phase) between the two structure(in the units of 2*pi)= 0.9779037963902364-1.0220961933526282= -0.044192396962391856 (in the units of 2*pi)
+d_phi is difference in total phase (sum of electronic and ionic phase) between the two structure(in the units of 2*pi)= 0.97814709926563959-1.0218558597965477= -0.04370876053090811(in the units of 2*pi)
 d_rho is the relative displacement of the particular atom(in fractional coordinate)= 0.01—(-0.01)= 0.02
 
 So, 
-Z*_zz=(1/2*pi)* (-0.044192396962391856*2*pi)/0.02= -2.2096198481195928
+Z*_zz=(1/2*pi)* (-0.04370876053090811*2*pi)/0.02= -2.1854380265454054
 
-Note: Here 2 values of total phase (sum of electronic and ionic phase) for both the cases are reported. When calculating the difference in total phase between two structures, one has to be careful of pi wrapping artifact. For example in this current study if the difference in phase is taken from the 2*pi modulo values this will lead to a phase difference of -0.044192396962391856. On the other hand if the difference is taken from –pi to +pi domain values this lead to a phase difference of 1.9558076030376081. It has be realized that both this difference values represents the difference between both the cases but they just consider different paths when the phase difference is considered in a 2*pi(360 degree) circle[see “BerryPI: A software for studying polarization of crystalline solids with WIEN2k density functional all-electron package” for more details]. Taking the biggest difference (1.9558076030376081) in phase will lead to inappropriate results. So while taking the difference in phase one has to take the smallest number which is -0.044192396962391856 in this case. This should also be taken care of while calculating the difference in polarization. In this particular case putting the smallest difference will lead to a born effective charge of -2.2096198481195928 for As.
+Note: Here 2 values of total phase (sum of electronic and ionic phase) for both the cases are reported. When calculating the difference in total phase between two structures, one has to be careful of pi wrapping artifact. For example in this current study if the difference in phase is taken from the 2*pi modulo values this will lead to a phase difference of -0.04370876053090811. On the other hand if the difference is taken from –pi to +pi domain values this lead to a phase difference of 1.956291239469092. It has be realized that both this difference values represents the difference between both the cases but they just consider different paths when the phase difference is considered in a 2*pi(360 degree) circle[see “BerryPI: A software for studying polarization of crystalline solids with WIEN2k density functional all-electron package” for more details]. Taking the biggest difference (1.956291239469092) in phase will lead to inappropriate results. So while taking the difference in phase one has to take the smallest number which is -0.04370876053090811 in this case. This should also be taken care of while calculating the difference in polarization. In this particular case putting the smallest difference will lead to a born effective charge of -2.1854380265454054 for As.
 
 
 

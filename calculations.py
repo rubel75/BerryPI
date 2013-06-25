@@ -33,7 +33,7 @@ BOHR_CONSTANT = 5.29e-11
 
 #value which determines the bounds 
 #of zeroing our 2pi values
-GAMMA_ZEROING_VALUE = 0.000001
+GAMMA_ZEROING_VALUE = 0.1
 
 COORDINATE_CORRECTION_UPPER_BOUND = 1.0
 COORDINATE_CORRECTION_LOWER_BOUND = 0.8
@@ -52,7 +52,7 @@ class PathphaseCalculation:
         self.values = arguments['values']
         self.correctDomain() #produces correct domain in self.correctedValues
         self.meanValue = (sum(self.correctedValues) / len(self.correctedValues)) / (self.topDomain/2)
-	#print self.meanValue
+#	print self.meanValue
     def correctDomain(self):
         '''
         Correct the domain of the pathphase values so that they lie
@@ -64,30 +64,36 @@ class PathphaseCalculation:
 
         #use modulo 2PI to maintain a consistent domain
         self.correctedValues = [ (i + (2 *numpy.pi)) % topDomain for i in self.correctedValues ]
+	
+        
 
-#	self.correctedValues = [ numpy.unwrap(i) for i in self.correctedValues ]
+        self.correctedValues=numpy.unwrap(self.correctedValues)
+
+
+	#self.correctedValues = [ numpy.unwrap(i) for i in self.correctedValues ]
         #function to add topDomain when value is less than zero
-        def correctNegation(x):
-            if x < 0: return x + topDomain
-            else: return x
-        self.correctedValues = map(
-                                   correctNegation,
-                                   self.correctedValues
-                                   )
+       # def correctNegation(x):
+       #     if x < 0: return x + topDomain
+        #    else: return x
+        #self.correctedValues = map(
+         #                          correctNegation,
+          #                         self.correctedValues
+           #                        )
 
         #correct for 2*pi values which should be
         #zero
-        def correctToZero(x):
-            if x > (self.topDomain - GAMMA_ZEROING_VALUE):
-                return 0.
-            else:
-                return x
-        self.correctedValues = map(
-                                   correctToZero,
-                                   self.correctedValues
-                                  )
+        #def correctToZero(x):
+         #   if x > (self.topDomain - GAMMA_ZEROING_VALUE):
+          #     z = 2* math.pi - x
+           #    return z
+            #else:
+             #  return x
+        #self.correctedValues = map(
+         #                          correctToZero,
+          #                         self.correctedValues
+           #                       )
         #print self.correctedValues
-        return self.correctedValues
+        #return self.correctedValues
         
     def getValues(self):
         return self.values
@@ -416,6 +422,7 @@ class MainCalculationContainer:
             zPolarIon += iCoord[2] * iValence
 	#Correction of Polarion to 2pi domain As it should not be negetive so no negetive correction function was added
 	topPi=2
+#	print xPolarIon,yPolarIon,zPolarIon
 	xPolarionCorrected=xPolarIon%topPi
 	yPolarionCorrected=yPolarIon%topPi
         zPolarionCorrected=zPolarIon%topPi

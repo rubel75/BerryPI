@@ -59,7 +59,7 @@ DEFAULT_INCLUDE_LAPW1_PARALLEL = False
 BERRY_EXIT_ON_ERROR = True
 
 #prefix displayed in the terminal
-BERRY_DEFAULT_CONSOLE_PREFIX = '[ BerryPi ] '
+BERRY_DEFAULT_CONSOLE_PREFIX = '[ BerryPI ] '
 
 #extension used for the file to store the polarized value output
 BERRY_FILE_EXTENSION = '.berrypi'

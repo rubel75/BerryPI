@@ -147,6 +147,26 @@ def runAutomation(configFile):
         return False
 
 
+
+    #cp $filename.klist $filename.klist_w90
+    shell_pathphase_y_copy = b_PySubProcess.VirtualShellInstance(
+        'cp',
+        str(structureName)+'.klist',
+        str(structureName)+'.klist_w90',
+        )
+
+    try:
+        shell_pathphase_y_copy()
+    except subprocess.CalledProcessError, err:
+        print DEFAULT_PREFIX + "ERROR: in automation of " + str(structureName)
+        print DEFAULT_PREFIX + "ERROR --> " + shell_pathphase_y_move.getCommandString()
+        print str(err)
+        return False
+
+
+
+
+
     #Start working with w2w
     #write_w2win $filename
 
@@ -734,6 +754,6 @@ if __name__ == "__main__":
     #print " --- BerryPI Computation Completed ---"
     print "\nCompleted using BerryPI version 0.1"
     print "\nBerryPI is a joint project between Thunder Bay Regional Research Institute and Lakehead University"
-    print "\nSuggested reference:\n   [1]'BerryPI: A software for studying polarization of crystalline solids with WIEN2k density functional all-electron package'\n       S.J.Ahmed, J.Kivinen, B.Zaporzan, L.Curiel, S.Pichardo, O.Rubel,Comp. Phys. Commun.(2012) doi:10.1016/j.cpc.2012.10.028"	
-    print ("\nQuestions and comments are to be directed to\n  1.Dr. Oleg Rubel \n    Thunder Bay Regional Research institute\n    290 Munro Street, Thunder Bay, ON Canada P7A 7T1\n    Tel:+1 (807) 766-3350 \n    E-mail:rubelo@tbh.net\n    URL:http://www.tbrri.com/~orubel")
-    print ("\n  2.Dr. Samuel Pichardo \n    Thunder Bay Regional Research institute\n    980 Oliver Road, Thunder Bay, ON Canada P7B 6V4 \n    Tel:+1 (807) 252-2914 \n    E-mail:pichards@tbh.net\n    URL:http://www.proteus-mrighifu.net")
+    print "\nSuggested reference:\n  S.J.Ahmed, J.Kivinen, B.Zaporzan, L.Curiel, S.Pichardo, O.Rubel,Comp. Phys. Commun. 184, 647 (2013)"	
+    print ("\nQuestions and comments are to be directed to\n  1.Dr. Oleg Rubel \n    Lakehead University\n          and\n    Thunder Bay Regional Research institute\n    290 Munro Street, Thunder Bay, ON Canada P7A 7T1\n    Tel:+1 (807) 766-3350 \n    E-mail:rubelo@tbh.net\n    URL:http://www.tbrri.com/~orubel")
+    print ("\n  2.Dr. Samuel Pichardo \n    Lakehead University\n          and\n    Sunnybrook Health Science Centre\n    2075 Bayview Avenue, Toronto, ON Canada M4N 3M5 \n    Tel:+1 (416) 480-6100 Ext:6156\n    E-mail:spichard@lakeheadu.ca\n    URL:http://www.proteus-mrighifu.net")
