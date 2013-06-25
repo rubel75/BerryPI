@@ -1,5 +1,5 @@
 * Current Version
-BerryPI 0.1
+BerryPI 1.0
 * [[https://github.com/spichardo/BerryPI/blob/master/licencing.txt][Licensing Conditions]]
 * [[https://github.com/spichardo/BerryPI/blob/master/Installation][Installation Guide]]
 * [[https://github.com/spichardo/BerryPI/archive/master.tar.gz][Download the whole package here]]
