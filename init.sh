@@ -38,55 +38,31 @@ echo "######################################################################"
 #Procedures
 get_berrypi_path()
 {
-	echo "Where is your BerryPI Path?"
-	echo "Is this the path? $DIR"
-
 	loopvar=1
-	while [ $loopvar == 1 ]; do
-		read -p "(Y/n)?" choice
-		case "$choice" in
-		y|Y)
-			BERRYPIDIR="$DIR/berrypi"
-			echo "Checking $BERRYPIDIR" 
+	BERRYPIDIR="$DIR/berrypi" #Check to see if this is the default directory
+	if [ -f $BERRYPIDIR ]; then
+		echo "BerryPI directory found"
+		echo "Continuing..."
+		loopvar=0
+	else
+		echo "Where is your BerryPI Path?"
+
+		while [ $loopvar == 1 ]; do 
+			echo "Enter the directory where file berrypi resides: "
+			read USERPATH
+	
+			BERRYPIDIR="$USERPATH/berrypi"
 			if [ -f $BERRYPIDIR ]; then 
 				echo "BerryPI directory provided is correct" 
 				echo "Continuing..."
 				loopvar=0 
-			else 
-				echo "BerryPI directory specified is incorrect" 
-			fi  
-		;;
-		n|N)
-			while [ $loopvar == 1 ]; do 
-				echo "Enter the directory where file berrypi resides: "
-				read USERPATH
-			
-
-				#if [ "$USERPATH"=="q" || "$USERPATH" == "Q" ]; then #This doesn't work
-				#	exit
-				#fi
-
-				BERRYPIDIR="$USERPATH/berrypi"
-				if [ -f $BERRYPIDIR ]; then 
-					echo "BerryPI directory provided is correct" 
-					echo "Continuing..."
-					loopvar=0 
-				else
-					echo "BerryPI directory specified is incorrect"
-					echo "Format(/subdirs/berrydir) ex: /home/user/Desktop"
-				
-				fi
-
-			done
-		;;
-		q|Q)
-			exit 
-		;;
-		*) 
-			echo "invalid command \"$choice\""
-		;;
-		esac
-	done
+			else
+				echo "BerryPI directory specified is incorrect"
+				echo "Format(/subdir/berrydir) ex: /home/user/Desktop"
+		
+			fi
+		done	
+	fi
 }
 #
 
