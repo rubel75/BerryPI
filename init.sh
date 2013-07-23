@@ -14,22 +14,22 @@ echo "######################################################################"
 PYTHONVER=$(python -c 'import sys; print ".".join(map(str,sys.version_info[:3]))')
 SOURCE="${BASH_SOURCE[0]}"
 while [ -h "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symlink
-  TARGET="$(readlink "$SOURCE")"
-  if [[ $SOURCE == /* ]]; then
-    echo "SOURCE '$SOURCE' is an absolute symlink to '$TARGET'"
-    SOURCE="$TARGET"
-  else
-    DIR="$( dirname "$SOURCE" )"
-    echo "SOURCE '$SOURCE' is a relative symlink to '$TARGET' (relative to '$DIR')"
-    SOURCE="$DIR/$TARGET" # if $SOURCE was a relative symlink, we need to resolve it relative to the path where the symlink file was located
-  fi
+	TARGET="$(readlink "$SOURCE")"
+	if [[ $SOURCE == /* ]]; then
+		echo "SOURCE '$SOURCE' is an absolute symlink to '$TARGET'"
+		SOURCE="$TARGET"
+	else
+		DIR="$( dirname "$SOURCE" )"
+		echo "SOURCE '$SOURCE' is a relative symlink to '$TARGET' (relative to '$DIR')"
+		SOURCE="$DIR/$TARGET" # if $SOURCE was a relative symlink, we need to resolve it relative to the path where the symlink file was located
+	fi
 done
 
 echo "SOURCE: '$SOURCE'"
 RDIR="$( dirname "$SOURCE" )"
 DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 if [ "$DIR" != "$RDIR" ]; then
-  echo "DIR: '$RDIR' resolves to '$DIR'"
+	echo "DIR: '$RDIR' resolves to '$DIR'"
 fi
 echo "DIR: '$DIR'"
 echo "Python Version: $PYTHONVER"
@@ -40,8 +40,8 @@ echo "######################################################################"
 get_berrypi_path()
 {
 	loopvar=1
-	BERRYPIDIR="$DIR/berrypi" #Check to see if this is the default directory
-	if [ -f $BERRYPIDIR ]; then
+	BERRYPIDIR="$DIR" #Check to see if this is the default directory
+	if [ -f "$BERRYPIDIR/berrypi" ]; then
 		echo "BerryPI directory found"
 		echo "Continuing..."
 		loopvar=0
@@ -52,8 +52,8 @@ get_berrypi_path()
 			echo "Enter the directory where file berrypi resides: "
 			read USERPATH
 	
-			BERRYPIDIR="$USERPATH/berrypi"
-			if [ -f $BERRYPIDIR ]; then 
+			BERRYPIDIR="$USERPATH"
+			if [ -f "$BERRYPIDIR/berrypi" ]; then 
 				echo "BerryPI directory provided is correct" 
 				echo "Continuing..."
 				loopvar=0 
@@ -102,7 +102,8 @@ get_python_path()
 		read -p "(Y/n)?" choice
   		case "$choice" in
   		y|Y) 
-			sudo apt-get install python2.7 #May not work on all linux distros but hopefully all debian distros
+			#sudo apt-get install python2.7 #May not work on all linux distros but hopefully all debian distros
+			yum install python2.7
 			if [ -f "/usr/bin/python2.7" ]; then
 				PYTHONDIR="/usr/bin/python2.7"
 				echo "Python 2.7 directory found"
@@ -136,7 +137,8 @@ check_numpy_exists()
   		case "$choice" in
   		y|Y) 
 			
-			sudo apt-get install python-numpy #May not work on all linux distros but hopefully all debian distros
+			#sudo apt-get install python-numpy #May not work on all linux distros but hopefully all debian distros
+			yum install python-numpy
 			if [-d "usr/lib/python2.7/dist-packages/numpy" ]; then
 				echo "A NumPy directory exists"
 				echo "Continuing..."
@@ -162,6 +164,42 @@ get_python_path
 check_numpy_exists
 
 echo "Initialization finished"
+echo "Updating Config.py"
+
+file="$BERRYPIDIR/config.py"
+
+
+
+if [ -f "$file" ]; then
+	loopvar=1
+	linenum=0
+	incval=1
+	while IFS= read -r line
+	do	
+		linenum=$(( $linenum + $incval ))
+
+		if [[ "$line" == *"DEFAULT_BIN_PATH="* ]];then
+			#sed -i '$linenum s/ DEFAULT_BIN_PATH=.* / DEFAULT_BIN_PATH='$BERRYPIDIR' /' $file
+			#sed '$linenum d'
+			OLD="'DEFAULT_BIN_PATH='"
+			NEW="DEFAULT_BIN_PATH='$BERRYPIDIR'"
+			#sed ''$linenum' s/.*/'$NEW'/' $file
+			sed -i ''$linenum' c\'$NEW'' $file
+			
+		fi
+
+		if [[ "$line" == *"DEFAULT_PYTHON_PATH="* ]];then
+				#sed -i '$linenum s/ DEFAULT_BIN_PATH=.* / DEFAULT_BIN_PATH='$BERRYPIDIR' /' $file
+				#sed '$linenum d'
+				OLD="'DEFAULT_BIN_PATH='"
+				NEW="DEFAULT_PYTHON_PATH='$PYTHONDIR'"
+				#sed ''$linenum' s/.*/'$NEW'/' $file
+				sed -i ''$linenum' c\'$NEW'' $file
+			
+		fi
+	done <"$file"
+fi
+
 
 
 
