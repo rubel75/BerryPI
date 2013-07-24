@@ -6,7 +6,7 @@ For the calculation of spontaneous polarization of BaTiO3 two reference structur
 1 Case lambda1 (Non-centrosymmetric)
 The atoms are in a non-centrosymmetric arrangement due to their movement in Z direction
 
-1.1 Change the current directory to ~/tutorial/tutorial2/lambda1 
+1.1 Change the current directory to ~/tutorial/tutorial1/lambda1 
 
 1.2 Perform WIEN2k initialization
 
