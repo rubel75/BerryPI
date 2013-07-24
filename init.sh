@@ -131,28 +131,54 @@ check_numpy_exists()
 	else
 		echo "No NumPy directory found"
 		echo "BerryPI will fail to run without NumPy"
-		echo "Would you like to attempt to install NumPy?"
 		
-		read -p "(Y/n)?" choice
-  		case "$choice" in
-  		y|Y) 
-			
-			#sudo apt-get install python-numpy #May not work on all linux distros but hopefully all debian distros
-			yum install python-numpy
-			if [-d "usr/lib/python2.7/dist-packages/numpy" ]; then
-				echo "A NumPy directory exists"
+		skipinstall=0
+		loopvar=1
+		while [ $loopvar == 1 ]; do 
+			echo -e "Enter the directory where NumPy resides:\n('S' to skip) \n "
+			read  USERPATH
+
+			if [ $USERPATH == "S" ];then
+				loopvar=0
+
+			NUMPYDIR="$USERPATH/numpy"
+			elif [ -d $NUMPYDIR ]; then 
+				echo "Numpy directory provided is correct"
 				echo "Continuing..."
+				loopvar=0
+				skipinstall=1 
 			else
-				echo "NumPy was unable to be intalled"
-				exit 1
+				echo "Numpy directory specified is incorrect"
+				echo "Format(/subdir/Numpydir) ex: /home/user/Desktop"
 			fi
-		;;
-		n|N)
-			echo "BerryPI initialization can not continue"
-			echo "Aborted"
-			exit 1	
-		;;
-		esac
+		done	
+		
+
+		if [ $skipinstall == 0 ];then
+		
+			echo "Would you like to attempt to install NumPy?"
+		
+			read -p "(Y/n)?" choice
+	  		case "$choice" in
+	  		y|Y) 
+			
+				#sudo apt-get install python-numpy #May not work on all linux distros but hopefully all debian distros
+				yum install python-numpy
+				if [-d "usr/lib/python2.7/dist-packages/numpy" ]; then
+					echo "A NumPy directory exists"
+					echo "Continuing..."
+				else
+					echo "NumPy was unable to be intalled"
+					exit 1
+				fi
+			;;
+			n|N)
+				echo "BerryPI initialization can not continue"
+				echo "Aborted"
+				exit 1	
+			;;
+			esac
+		fi
 	fi
 }
 
@@ -179,22 +205,14 @@ if [ -f "$file" ]; then
 		linenum=$(( $linenum + $incval ))
 
 		if [[ "$line" == *"DEFAULT_BIN_PATH="* ]];then
-			#sed -i '$linenum s/ DEFAULT_BIN_PATH=.* / DEFAULT_BIN_PATH='$BERRYPIDIR' /' $file
-			#sed '$linenum d'
-			OLD="'DEFAULT_BIN_PATH='"
 			NEW="DEFAULT_BIN_PATH='$BERRYPIDIR'"
-			#sed ''$linenum' s/.*/'$NEW'/' $file
 			sed -i ''$linenum' c\'$NEW'' $file
 			
 		fi
 
 		if [[ "$line" == *"DEFAULT_PYTHON_PATH="* ]];then
-				#sed -i '$linenum s/ DEFAULT_BIN_PATH=.* / DEFAULT_BIN_PATH='$BERRYPIDIR' /' $file
-				#sed '$linenum d'
-				OLD="'DEFAULT_BIN_PATH='"
-				NEW="DEFAULT_PYTHON_PATH='$PYTHONDIR'"
-				#sed ''$linenum' s/.*/'$NEW'/' $file
-				sed -i ''$linenum' c\'$NEW'' $file
+			NEW="DEFAULT_PYTHON_PATH='$PYTHONDIR'"
+			sed -i ''$linenum' c\'$NEW'' $file
 			
 		fi
 	done <"$file"
