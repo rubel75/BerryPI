@@ -221,7 +221,7 @@ def runAutomation(configFile):
 
     #win2nnkp.py $filename
     shell_win2nnkp = b_PySubProcess.VirtualShellInstance(
-        DEFAULT_PYTHON_PATH + DEFAULT_BIN_PATH + 'win2nnkp.py', str(structureName),
+        DEFAULT_PYTHON_PATH +" "+ DEFAULT_BIN_PATH + 'win2nnkp.py', str(structureName),
         )
     try:
         shell_win2nnkp()
@@ -284,7 +284,7 @@ def runAutomation(configFile):
     #python ./mmn2pathphase.py $filename x
     #TODO incorporate in file itself
     shell_pathphase_x_command = b_PySubProcess.VirtualShellInstance(
-        DEFAULT_PYTHON_PATH + DEFAULT_BIN_PATH + 'mmn2pathphase.py', str(structureName), 'x',
+        DEFAULT_PYTHON_PATH +" "+DEFAULT_BIN_PATH + 'mmn2pathphase.py', str(structureName), 'x',
         )
     try:
         shell_pathphase_x_command()
@@ -311,7 +311,7 @@ def runAutomation(configFile):
     #python ./mmn2pathphase.py $filename y
     #TODO incorporate in file itself
     shell_pathphase_y_command = b_PySubProcess.VirtualShellInstance(
-        DEFAULT_PYTHON_PATH + DEFAULT_BIN_PATH + 'mmn2pathphase.py', str(structureName), 'y',
+        DEFAULT_PYTHON_PATH +" "+DEFAULT_BIN_PATH + 'mmn2pathphase.py', str(structureName), 'y',
         )
     try:
         shell_pathphase_y_command()
@@ -340,7 +340,7 @@ def runAutomation(configFile):
     #python ./mmn2pathphase.py $filename z
     #TODO incorporate in file itself
     shell_pathphase_z_command = b_PySubProcess.VirtualShellInstance(
-        DEFAULT_PYTHON_PATH + DEFAULT_BIN_PATH + 'mmn2pathphase.py', str(structureName), 'z',
+        DEFAULT_PYTHON_PATH +" "+ DEFAULT_BIN_PATH + 'mmn2pathphase.py', str(structureName), 'z',
         )
     
     try:
