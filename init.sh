@@ -33,13 +33,43 @@ if [ "$DIR" != "$RDIR" ]; then
 fi
 echo "DIR: '$DIR'"
 echo "Python Version initially found: $PYTHONVER"
-which w2w >/dev/null 2>&1
-if [ $? == 0 ]; then
-	echo "w2w detected"
+
+WIENVAR=1
+W2WVAR=1
+
+
+$WIENROOT >/dev/null 2>&1
+WIENVAR=$?
+$W2WROOT >/dev/null 2>&1
+W2WVAR=$?
+
+
+
+if [ $WIENVAR == 126 ]; then
+	echo "WIEN2k detected"
 else
-	echo "w2w not detected. BerryPI will not run without W2WANNIER."
-	echo "Initialization aborted"
-	exit 1
+	which WIEN2K >/dev/null 2>&1 #second attempt to atleast find any aknowledgement of WEIN2K
+	if [ $? == 0 ]; then
+		echo "WIEN2k detected"
+	else
+		echo "WIEN2K not detected. BerryPI will not run without WIEN2K."
+		echo "Initialization aborted"
+		exit 1
+	fi
+	
+fi
+
+if [ $W2WVAR == 126 ]; then
+	echo "W2WANNIER detected"
+else
+	which w2w 
+	if [ $? == 0 ]; then
+		echo "w2w detected"
+	else
+		echo "w2w not detected. BerryPI will not run without W2WANNIER."
+		echo "Initialization aborted"
+		exit 1
+	fi
 fi
 echo "######################################################################"
 #
