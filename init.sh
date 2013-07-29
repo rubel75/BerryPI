@@ -32,7 +32,15 @@ if [ "$DIR" != "$RDIR" ]; then
 	echo "DIR: '$RDIR' resolves to '$DIR'"
 fi
 echo "DIR: '$DIR'"
-echo "Python Version: $PYTHONVER"
+echo "Python Version initially found: $PYTHONVER"
+which w2w >/dev/null 2>&1
+if [ $? == 0 ]; then
+	echo "w2w detected"
+else
+	echo "w2w not detected. BerryPI will not run without W2WANNIER."
+	echo "Initialization aborted"
+	exit 1
+fi
 echo "######################################################################"
 #
 
@@ -91,7 +99,7 @@ get_python_path()
 					loopvar=0 
 				else
 					echo "Python 2.7 directory specified is incorrect"
-					echo "Format(/subdir/pythondir) ex: /home/user/Desktop"
+					echo "Format(/subdir/pythondir/python) ex: /usr/bin/python2.7"
 		
 				fi
 			done	
@@ -137,19 +145,20 @@ check_numpy_exists()
 		while [ $loopvar == 1 ]; do 
 			echo -e "Enter the directory where NumPy resides:\n('S' to skip) \n "
 			read  USERPATH
-
+			
+			NUMPYDIR="$USERPATH/version.pyc"
 			if [ $USERPATH == "S" ];then
 				loopvar=0
 
-			NUMPYDIR="$USERPATH/numpy"
-			elif [ -d $NUMPYDIR ]; then 
+			
+			elif [ -f $NUMPYDIR ]; then 
 				echo "Numpy directory provided is correct"
 				echo "Continuing..."
 				loopvar=0
 				skipinstall=1 
 			else
 				echo "Numpy directory specified is incorrect"
-				echo "Format(/subdir/Numpydir) ex: /home/user/Desktop"
+				echo "Format(/subdir/Numpydir/) ex: /usr/lib/python2.7/dist-packages/numpy/"
 			fi
 		done	
 		
@@ -182,6 +191,9 @@ check_numpy_exists()
 	fi
 }
 
+
+	
+
 #
 
 #Main
@@ -194,8 +206,6 @@ echo "Updating Config.py"
 
 file="$BERRYPIDIR/config.py"
 
-
-
 if [ -f "$file" ]; then
 	loopvar=1
 	linenum=0
@@ -205,7 +215,7 @@ if [ -f "$file" ]; then
 		linenum=$(( $linenum + $incval ))
 
 		if [[ "$line" == *"DEFAULT_BIN_PATH="* ]];then
-			NEW="DEFAULT_BIN_PATH='$BERRYPIDIR'"
+			NEW="DEFAULT_BIN_PATH='$BERRYPIDIR/'"
 			sed -i ''$linenum' c\'$NEW'' $file
 			
 		fi
@@ -217,6 +227,36 @@ if [ -f "$file" ]; then
 		fi
 	done <"$file"
 fi
+
+file="$HOME/.bashrc"
+echo "Updating '$file'"
+ispaths=0
+if [ -f "$file" ]; then
+	loopvar=1
+	linenum=0
+	incval=1
+	while IFS= read -r line
+	do	
+		linenum=$(( $linenum + $incval ))
+
+		if [[ "$line" == *"# --- BERRYPI START ---"* ]];then
+			ispaths=1
+			sed -i ''$(( $linenum + $incval ))' c\''export BERRYPI_PATH='$BERRYPIDIR'' $file
+			sed -i ''$(( $linenum + $incval + $incval ))' c\''export BERRYPI_PYTHON='$PYTHONDIR'' $file
+			sed -i ''$(( $linenum + $incval + $incval + $incval ))' c\''alias berrypi="${BERRYPI_PYTHON} ${BERRYPI_PATH}/berrypi"' $file
+		fi
+
+	done <"$file"
+fi
+
+if [ $ispaths == 0 ]; then
+	echo '# --- BERRYPI START ---' >> $file
+	echo 'export BERRYPI_PATH='$BERRYPIDIR'' >> $file
+	echo 'export BERRYPI_PYTHON='$PYTHONDIR'' >> $file
+	echo 'alias berrypi="${BERRYPI_PYTHON} ${BERRYPI_PATH}/berrypi"' >> $file
+	echo '# --- BERRYPI END ---' >> $file
+fi
+
 
 
 
