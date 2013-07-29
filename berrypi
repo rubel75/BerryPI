@@ -19,801 +19,791 @@ from config import BERRY_FILE_EXTENSION, DEFAULT_BIN_PATH, DEFAULT_PYTHON_PATH
 
 
 def changeToWorkingDirectory(path):
-    os.chdir(path)
+	os.chdir(path)
 
 def performCalculation(configFile):
-    '''
-    Pass a config file to it in order to perform the final calculation
-    on the simulation. Returns the main calculation as the class object
-    '''
-    #first, check to see if the folder contains all of the necessary files
-    structurePath = configFile['Structure Path']
-    changeToWorkingDirectory(configFile['Structure Path'])
-    structName = configFile['Structure Name']
-    print DEFAULT_PREFIX + "Performing main calculation on " + structName
-    structFileExtensions = {
-        'struct' : '.struct',
-        'scf' : '.scf',
-        'outputd' : '.outputd',
-        'outputst' : '.outputst',
-        'pathphase-x' : '-x.pathphase',
-        'pathphase-y' : '-y.pathphase',
-        'pathphase-z' : '-z.pathphase',
-        }
-    for extension in structFileExtensions.values():
-        tempFilename = structName + extension
-        #TODO change to a logging system
-        print(DEFAULT_PREFIX + "Checking existance of {}").format(tempFilename)
-        if not b_PyError.fileExists(tempFilename):
-            print( DEFAULT_PREFIX + "{} does not exist, cannot finish calculation").format(tempFilename)
-        else: print DEFAULT_PREFIX + '-- OK'
+	'''
+	Pass a config file to it in order to perform the final calculation
+	on the simulation. Returns the main calculation as the class object
+	'''
+	#first, check to see if the folder contains all of the necessary files
+	structurePath = configFile['Structure Path']
+	changeToWorkingDirectory(configFile['Structure Path'])
+	structName = configFile['Structure Name']
+	print DEFAULT_PREFIX + "Performing main calculation on " + structName
+	structFileExtensions = {
+		'struct' : '.struct',
+		'scf' : '.scf',
+		'outputd' : '.outputd',
+		'outputst' : '.outputst',
+		'pathphase-x' : '-x.pathphase',
+		'pathphase-y' : '-y.pathphase',
+		'pathphase-z' : '-z.pathphase',
+		}
+	for extension in structFileExtensions.values():
+		tempFilename = structName + extension
+		#TODO change to a logging system
+		print(DEFAULT_PREFIX + "Checking existance of {}").format(tempFilename)
+		if not b_PyError.fileExists(tempFilename):
+			print( DEFAULT_PREFIX + "{} does not exist, cannot finish calculation").format(tempFilename)
+		else: print DEFAULT_PREFIX + '-- OK'
 
-    #perform the main calculation
-    mainCalculation = b_PyCalc.MainCalculationContainer(
-        file_pathphase_x = structName + structFileExtensions['pathphase-x'],
-        file_pathphase_y = structName + structFileExtensions['pathphase-y'],
-        file_pathphase_z = structName + structFileExtensions['pathphase-z'],
-        file_struct = structName + structFileExtensions['struct'],
-        file_scf = structName + structFileExtensions['scf'],
-        file_outputd = structName + structFileExtensions['outputd'],
-        file_outputst = structName + structFileExtensions['outputst'],
-        )
-    #mainCalculation.prettyPrintCalculationValues()
-    finalPolarizationValue = mainCalculation()
-    return mainCalculation
-        
+	#perform the main calculation
+	mainCalculation = b_PyCalc.MainCalculationContainer(
+		file_pathphase_x = structName + structFileExtensions['pathphase-x'],
+		file_pathphase_y = structName + structFileExtensions['pathphase-y'],
+		file_pathphase_z = structName + structFileExtensions['pathphase-z'],
+		file_struct = structName + structFileExtensions['struct'],
+		file_scf = structName + structFileExtensions['scf'],
+		file_outputd = structName + structFileExtensions['outputd'],
+		file_outputst = structName + structFileExtensions['outputst'],
+		)
+	#mainCalculation.prettyPrintCalculationValues()
+	finalPolarizationValue = mainCalculation()
+	return mainCalculation
+	
 
 def runAutomation(configFile):
-    '''
-    Runs the automation process. When a command fails, returns False,
-    otherwise it returns True. This allows for several automation
-    processes to be batched.
-    '''
-    print(DEFAULT_PREFIX + "Starting BerryPi Automation for {}").format(configFile['Structure Name'])
-    
-    #get the starting directory and switch to it
-    oldCurrentWorkingDirectory = os.getcwd()
-    newWorkingDirectory = configFile['Structure Path']
-    changeToWorkingDirectory(newWorkingDirectory)
-    #ensure background env is also in the right directory
-    os.system('cd ' + newWorkingDirectory)
-    print DEFAULT_PREFIX + 'new working directory: ' + newWorkingDirectory
-    
-    #check to make sure certain files exist
-    structureName = configFile['Structure Name']
+	'''
+	Runs the automation process. When a command fails, returns False,
+	otherwise it returns True. This allows for several automation
+	processes to be batched.
+	'''
+	print(DEFAULT_PREFIX + "Starting BerryPi Automation for {}").format(configFile['Structure Name'])
 
-    tempFileName = structureName + '.struct'
-    if not b_PyError.fileExists(tempFileName):
-        string = DEFAULT_PREFIX + str(tempFileName)
-        string += ' does not exist'
-        print string
-        return False
+	#get the starting directory and switch to it
+	oldCurrentWorkingDirectory = os.getcwd()
+	newWorkingDirectory = configFile['Structure Path']
+	changeToWorkingDirectory(newWorkingDirectory)
+	#ensure background env is also in the right directory
+	os.system('cd ' + newWorkingDirectory)
+	print DEFAULT_PREFIX + 'new working directory: ' + newWorkingDirectory
 
-    #remove the broyd file
-    #$rm $filename.broyd*  
-    tempFileName = structureName + '.broyd*'
-    broydRemoval = b_PySubProcess.VirtualShellInstance('rm -f ' + tempFileName)
-    broydRemoval()
+	#check to make sure certain files exist
+	structureName = configFile['Structure Name']
 
-    bRunLapw = False
-    if bRunLapw:
-        #wien2k initialization
-        #$init_lapw -b -rkmax 6 -numk 1
-        shell_init_lapw = b_PySubProcess.VirtualShellInstance(
-            'init_lapw', '-b', '-rkmax 6', '-numk 1',
-            )
-        shell_init_lapw()
+	tempFileName = structureName + '.struct'
+	if not b_PyError.fileExists(tempFileName):
+		string = DEFAULT_PREFIX + str(tempFileName)
+		string += ' does not exist'
+		print string
+		return False
 
-        #run_lapw
-        shell_run_lapw = b_PySubProcess.VirtualShellInstance(
-            'run_lapw',
-            )
-        shell_run_lapw()
-    else:
-        print DEFAULT_PREFIX + "skipping 'init_lapw and run_lapw'"
+	#remove the broyd file
+	#$rm $filename.broyd*  
+	tempFileName = structureName + '.broyd*'
+	broydRemoval = b_PySubProcess.VirtualShellInstance('rm -f ' + tempFileName)
+	broydRemoval()
 
-    #copy file
-    #cp $filename.struct $filename.ksym
-    fileNameSrc = structureName + '.struct'
-    fileNameDest = structureName + '.ksym'
-    shutil.copy(fileNameSrc, fileNameDest)
-    print(DEFAULT_PREFIX + "Copied " + fileNameSrc + " to " + fileNameDest)
+	bRunLapw = False
+	if bRunLapw:
+		#wien2k initialization
+		#$init_lapw -b -rkmax 6 -numk 1
+		shell_init_lapw = b_PySubProcess.VirtualShellInstance(
+			'init_lapw', '-b', '-rkmax 6', '-numk 1',
+			)
+		shell_init_lapw()
 
-    #Start working with wien2k. eww
-    #x kgen -fbz
+		#run_lapw
+		shell_run_lapw = b_PySubProcess.VirtualShellInstance(
+			'run_lapw',
+			)
+		shell_run_lapw()
+	else:
+		print DEFAULT_PREFIX + "skipping 'init_lapw and run_lapw'"
 
-    #get our input parameters from the configuration file
-    numKpoints = configFile['Number of K-Points']
-    numKDivisions = configFile['K-Mesh Divisions']
-    kShift = configFile['K-Mesh Shift']
+	#copy file
+	#cp $filename.struct $filename.ksym
+	fileNameSrc = structureName + '.struct'
+	fileNameDest = structureName + '.ksym'
+	shutil.copy(fileNameSrc, fileNameDest)
+	print(DEFAULT_PREFIX + "Copied " + fileNameSrc + " to " + fileNameDest)
 
-    #input is a string per line representation of each input for that particular file
-    inputListing = [str(numKpoints),
-                    reduce(lambda i,j: str(i) + ' ' + str(j), numKDivisions),
-                    kShift,
-                    ]    
-    
-    #requires input
-    shell_x_kgen = b_PySubProcess.VirtualShellInstance(
-        'x', 'kgen', '-fbz',
-        input=inputListing,
-        )
-    try:
-        shell_x_kgen.run()
-    except subprocess.CalledProcessError, err:
-        print DEFAULT_PREFIX + "ERROR: in automation of " + str(structureName) 
-        print DEFAULT_PREFIX + "ERROR --> " + shell_x_kgen.getCommandString()
-        print str(err)
-        return False
+	#Start working with wien2k. eww
+	#x kgen -fbz
 
+	#get our input parameters from the configuration file
+	numKpoints = configFile['Number of K-Points']
+	numKDivisions = configFile['K-Mesh Divisions']
+	kShift = configFile['K-Mesh Shift']
 
+	#input is a string per line representation of each input for that particular file
+	inputListing = [str(numKpoints),
+					reduce(lambda i,j: str(i) + ' ' + str(j), numKDivisions),
+					kShift,
+					]    
 
-    #cp $filename.klist $filename.klist_w90
-    shell_pathphase_y_copy = b_PySubProcess.VirtualShellInstance(
-        'cp',
-        str(structureName)+'.klist',
-        str(structureName)+'.klist_w90',
-        )
-
-    try:
-        shell_pathphase_y_copy()
-    except subprocess.CalledProcessError, err:
-        print DEFAULT_PREFIX + "ERROR: in automation of " + str(structureName)
-        print DEFAULT_PREFIX + "ERROR --> " + shell_pathphase_y_move.getCommandString()
-        print str(err)
-        return False
+	#requires input
+	shell_x_kgen = b_PySubProcess.VirtualShellInstance(
+		'x', 'kgen', '-fbz',
+		input=inputListing,
+		)
+	try:
+		shell_x_kgen.run()
+	except subprocess.CalledProcessError, err:
+		print DEFAULT_PREFIX + "ERROR: in automation of " + str(structureName) 
+		print DEFAULT_PREFIX + "ERROR --> " + shell_x_kgen.getCommandString()
+		print str(err)
+		return False
 
 
 
+	#cp $filename.klist $filename.klist_w90
+	shell_pathphase_y_copy = b_PySubProcess.VirtualShellInstance(
+		'cp',
+		str(structureName)+'.klist',
+		str(structureName)+'.klist_w90',
+		)
+
+	try:
+		shell_pathphase_y_copy()
+	except subprocess.CalledProcessError, err:
+		print DEFAULT_PREFIX + "ERROR: in automation of " + str(structureName)
+		print DEFAULT_PREFIX + "ERROR --> " + shell_pathphase_y_move.getCommandString()
+		print str(err)
+		return False
 
 
-    #Start working with w2w
-    #write_w2win $filename
 
-    #get our input parameters from the configuration file
-    numWannierFunctions = configFile['Number of Wannier Functions']
-    centerAtomAndCharacter = configFile['Center Atom and Character']
 
-    #Calculation to get the actual blochBand
-    try:
-        blochBandCalculation = b_PyCalc.CalculateNumberOfBands(structureName + '.scf')
-    except b_PyError.ParseError, err:
-        print DEFAULT_PREFIX + "ERROR: in automation of " + str(structureName) 
-        print DEFAULT_PREFIX + str(err)
-        print DEFAULT_PREFIX + "ERROR: missing tags: " + str(err.errorTags)
-        return False
-    if configFile['Bloch Band']:
-	blochBandSettings = configFile['Bloch Band']
-    else:
-        blochBandSettings = [ 1, int(blochBandCalculation.getNumberOfBands()) ]
-    print DEFAULT_PREFIX + "Number of bloch bands is {}".format(blochBandSettings)
 
-    #create input list
-    inputListing = [
-        reduce(lambda i,j: str(i) + ' ' + str(j), blochBandSettings),
-        str(numWannierFunctions),
-        str(centerAtomAndCharacter),
-        ]
-    
-    shell_write_w2win = b_PySubProcess.VirtualShellInstance(
-        'write_w2win', str(structureName),
-        input=inputListing,
-        )
-    try:
-        shell_write_w2win.run()
-    except subprocess.CalledProcessError, err:
-        print DEFAULT_PREFIX + "ERROR: in automation of " + str(structureName) 
-        print DEFAULT_PREFIX + "ERROR --> " + shell_write_w2win.getCommandString()
-        print str(err)
-        return False
-        
-    #write_win $filename
-    shell_write_win = b_PySubProcess.VirtualShellInstance(
-        'write_win', str(structureName),
-        )
-    try:
-        shell_write_win()
-    except subprocess.CalledProcessError, err:
-        print DEFAULT_PREFIX + "ERROR: in automation of " + str(structureName) 
-        print DEFAULT_PREFIX + "ERROR --> " + shell_write_win.getCommandString()
-        print str(err)
-        return False
+	#Start working with w2w
+	#write_w2win $filename
 
-    #win2nnkp.py $filename
-    shell_win2nnkp = b_PySubProcess.VirtualShellInstance(
-        DEFAULT_PYTHON_PATH +" "+ DEFAULT_BIN_PATH + 'win2nnkp.py', str(structureName),
-        )
-    try:
-        shell_win2nnkp()
-    except subprocess.CalledProcessError, err:
-        print DEFAULT_PREFIX + "ERROR: in automation of " + str(structureName) 
-        print DEFAULT_PREFIX + "ERROR --> " + shell_win2nnkp.getCommandString()
-        print str(err)
-        return False
+	#get our input parameters from the configuration file
+	numWannierFunctions = configFile['Number of Wannier Functions']
+	centerAtomAndCharacter = configFile['Center Atom and Character']
 
-    #write_w2wdef $filename
-    shell_write_w2wdef = b_PySubProcess.VirtualShellInstance(
-        'write_w2wdef', str(structureName),
-        )
-    try:
-        shell_write_w2wdef()
-    except subprocess.CalledProcessError, err:
-        print DEFAULT_PREFIX + "ERROR: in automation of " + str(structureName) 
-        print DEFAULT_PREFIX + "ERROR --> " + shell_write_w2wdef.getCommandString()
-        print str(err)
-        return False
+	#Calculation to get the actual blochBand
+	try:
+		blochBandCalculation = b_PyCalc.CalculateNumberOfBands(structureName + '.scf')
+	except b_PyError.ParseError, err:
+		print DEFAULT_PREFIX + "ERROR: in automation of " + str(structureName) 
+		print DEFAULT_PREFIX + str(err)
+		print DEFAULT_PREFIX + "ERROR: missing tags: " + str(err.errorTags)
+		return False
+	if configFile['Bloch Band']:
+		blochBandSettings = configFile['Bloch Band']
+	else:
+		blochBandSettings = [ 1, int(blochBandCalculation.getNumberOfBands()) ]
+	print DEFAULT_PREFIX + "Number of bloch bands is {}".format(blochBandSettings)
 
-    bXLAPW = configFile['Perform LAPW1']
-    bXLAPW_PARALLEL = configFile['LAPW1 in Parallel']
+	#create input list
+	inputListing = [
+		reduce(lambda i,j: str(i) + ' ' + str(j), blochBandSettings),
+		str(numWannierFunctions),
+		str(centerAtomAndCharacter),
+		]
 
-    if bXLAPW:
-    #x lapw1
-        if bXLAPW_PARALLEL:
-            shell_x_lapw1 = b_PySubProcess.VirtualShellInstance(
-                'x', 'lapw1', '-p',
-	    )
-            print DEFAULT_PREFIX + "Running lapw1 in parallel"
+	shell_write_w2win = b_PySubProcess.VirtualShellInstance(
+		'write_w2win', str(structureName),
+		input=inputListing,
+		)
+	try:
+		shell_write_w2win.run()
+	except subprocess.CalledProcessError, err:
+		print DEFAULT_PREFIX + "ERROR: in automation of " + str(structureName) 
+		print DEFAULT_PREFIX + "ERROR --> " + shell_write_w2win.getCommandString()
+		print str(err)
+		return False
+		
+	#write_win $filename
+	shell_write_win = b_PySubProcess.VirtualShellInstance(
+		'write_win', str(structureName),
+		)
+	try:
+		shell_write_win()
+	except subprocess.CalledProcessError, err:
+		print DEFAULT_PREFIX + "ERROR: in automation of " + str(structureName) 
+		print DEFAULT_PREFIX + "ERROR --> " + shell_write_win.getCommandString()
+		print str(err)
+		return False
 
-        else:
-            shell_x_lapw1 = b_PySubProcess.VirtualShellInstance(
-                'x', 'lapw1',
-            )
+	#win2nnkp.py $filename
+	shell_win2nnkp = b_PySubProcess.VirtualShellInstance(
+		DEFAULT_PYTHON_PATH +" "+ DEFAULT_BIN_PATH + 'win2nnkp.py', str(structureName),
+		)
+	try:
+		shell_win2nnkp()
+	except subprocess.CalledProcessError, err:
+		print DEFAULT_PREFIX + "ERROR: in automation of " + str(structureName) 
+		print DEFAULT_PREFIX + "ERROR --> " + shell_win2nnkp.getCommandString()
+		print str(err)
+		return False
 
-        try:
-            shell_x_lapw1()
-        except subprocess.CalledProcessError, err:
-            print DEFAULT_PREFIX + "ERROR: in automation of " + str(structureName) 
-            print DEFAULT_PREFIX + "ERROR --> " + shell_x_lapw1.getCommandString()
-            print str(err)
-            return False
-    else:
-        print DEFAULT_PREFIX + "Skipping 'x lapw1'"
- 
-    #w2w $filename
-    shell_w2w = b_PySubProcess.VirtualShellInstance(
-        'w2w', str(structureName),
-        )
-    try:
-        shell_w2w()
-    except subprocess.CalledProcessError, err:
-        print DEFAULT_PREFIX + "ERROR: in automation of " + str(structureName) 
-        print DEFAULT_PREFIX + "ERROR --> " + shell_w2w.getCommandString()
-        print str(err)
-        return False
+	#write_w2wdef $filename
+	shell_write_w2wdef = b_PySubProcess.VirtualShellInstance(
+		'write_w2wdef', str(structureName),
+		)
+	try:
+		shell_write_w2wdef()
+	except subprocess.CalledProcessError, err:
+		print DEFAULT_PREFIX + "ERROR: in automation of " + str(structureName) 
+		print DEFAULT_PREFIX + "ERROR --> " + shell_write_w2wdef.getCommandString()
+		print str(err)
+		return False
 
-    #python ./mmn2pathphase.py $filename x
-    #TODO incorporate in file itself
-    shell_pathphase_x_command = b_PySubProcess.VirtualShellInstance(
-        DEFAULT_PYTHON_PATH +" "+DEFAULT_BIN_PATH + 'mmn2pathphase.py', str(structureName), 'x',
-        )
-    try:
-        shell_pathphase_x_command()
-    except subprocess.CalledProcessError, err:
-        print DEFAULT_PREFIX + "ERROR: in automation of " + str(structureName) 
-        print DEFAULT_PREFIX + "ERROR --> " + shell_pathphase_x_command.getCommandString()
-        print str(err)
-        return False
+	bXLAPW = configFile['Perform LAPW1']
+	bXLAPW_PARALLEL = configFile['LAPW1 in Parallel']
 
-    #mv $filename.pathphase $filename-x.pathphase
-    shell_pathphase_x_move = b_PySubProcess.VirtualShellInstance(
-        'mv',
-        str(structureName)+'.pathphase',
-        str(structureName)+'-x.pathphase',
-        )
-    try:
-        shell_pathphase_x_move()
-    except subprocess.CalledProcessError, err:
-        print DEFAULT_PREFIX + "ERROR: in automation of " + str(structureName) 
-        print DEFAULT_PREFIX + "ERROR --> " + shell_pathphase_x_move.getCommandString()
-        print str(err)
-        return False
-    
-    #python ./mmn2pathphase.py $filename y
-    #TODO incorporate in file itself
-    shell_pathphase_y_command = b_PySubProcess.VirtualShellInstance(
-        DEFAULT_PYTHON_PATH +" "+DEFAULT_BIN_PATH + 'mmn2pathphase.py', str(structureName), 'y',
-        )
-    try:
-        shell_pathphase_y_command()
-    except subprocess.CalledProcessError, err:
-        print DEFAULT_PREFIX + "ERROR: in automation of " + str(structureName) 
-        print DEFAULT_PREFIX + "ERROR --> " + shell_pathphase_y_command.getCommandString()
-        print str(err)
-        return False
+	if bXLAPW:
+	#x lapw1
+		if bXLAPW_PARALLEL:
+			shell_x_lapw1 = b_PySubProcess.VirtualShellInstance(
+				'x', 'lapw1', '-p',
+		)
+			print DEFAULT_PREFIX + "Running lapw1 in parallel"
 
-    
-    #mv $filename.pathphase $filename-y.pathphase
-    shell_pathphase_y_move = b_PySubProcess.VirtualShellInstance(
-        'mv',
-        str(structureName)+'.pathphase',
-        str(structureName)+'-y.pathphase',
-        )
-    
-    try:
-        shell_pathphase_y_move()
-    except subprocess.CalledProcessError, err:
-        print DEFAULT_PREFIX + "ERROR: in automation of " + str(structureName) 
-        print DEFAULT_PREFIX + "ERROR --> " + shell_pathphase_y_move.getCommandString()
-        print str(err)
-        return False
-        
-    #python ./mmn2pathphase.py $filename z
-    #TODO incorporate in file itself
-    shell_pathphase_z_command = b_PySubProcess.VirtualShellInstance(
-        DEFAULT_PYTHON_PATH +" "+ DEFAULT_BIN_PATH + 'mmn2pathphase.py', str(structureName), 'z',
-        )
-    
-    try:
-        shell_pathphase_z_command()
-    except subprocess.CalledProcessError, err:
-        print DEFAULT_PREFIX + "ERROR: in automation of " + str(structureName) 
-        print DEFAULT_PREFIX + "ERROR --> " + shell_pathphase_z_command.getCommandString()
-        print str(err)
-        return False
+		else:
+			shell_x_lapw1 = b_PySubProcess.VirtualShellInstance(
+				'x', 'lapw1',
+			)
 
-    #mv $filename.pathphase $filename-z.pathphase
-    shell_pathphase_z_move = b_PySubProcess.VirtualShellInstance(
-        'mv',
-        str(structureName)+'.pathphase',
-        str(structureName)+'-z.pathphase',
-        )
-    
-    try:
-        shell_pathphase_z_move()
-    except subprocess.CalledProcessError, err:
-        print DEFAULT_PREFIX + "ERROR: in automation of " + str(structureName) 
-        print DEFAULT_PREFIX + "ERROR --> " + shell_pathphase_z_move.getCommandString()
-        print DEFAULT_PREFIX + str(err)
-        print DEFAULT_PREFIX + "Ending..."
-        return False
+		try:
+			shell_x_lapw1()
+		except subprocess.CalledProcessError, err:
+			print DEFAULT_PREFIX + "ERROR: in automation of " + str(structureName) 
+			print DEFAULT_PREFIX + "ERROR --> " + shell_x_lapw1.getCommandString()
+			print str(err)
+			return False
+	else:
+		print DEFAULT_PREFIX + "Skipping 'x lapw1'"
 
-    print DEFAULT_PREFIX + "Finished Running Automation Stage for " + structureName
-    #done automation, calculation performed in berryPyCalculation.py
-    return True
+	#w2w $filename
+	shell_w2w = b_PySubProcess.VirtualShellInstance(
+		'w2w', str(structureName),
+		)
+	try:
+		shell_w2w()
+	except subprocess.CalledProcessError, err:
+		print DEFAULT_PREFIX + "ERROR: in automation of " + str(structureName) 
+		print DEFAULT_PREFIX + "ERROR --> " + shell_w2w.getCommandString()
+		print str(err)
+		return False
+
+	#python ./mmn2pathphase.py $filename x
+	#TODO incorporate in file itself
+	shell_pathphase_x_command = b_PySubProcess.VirtualShellInstance(
+		DEFAULT_PYTHON_PATH +" "+DEFAULT_BIN_PATH + 'mmn2pathphase.py', str(structureName), 'x',
+		)
+	try:
+		shell_pathphase_x_command()
+	except subprocess.CalledProcessError, err:
+		print DEFAULT_PREFIX + "ERROR: in automation of " + str(structureName) 
+		print DEFAULT_PREFIX + "ERROR --> " + shell_pathphase_x_command.getCommandString()
+		print str(err)
+		return False
+
+	#mv $filename.pathphase $filename-x.pathphase
+	shell_pathphase_x_move = b_PySubProcess.VirtualShellInstance(
+		'mv',
+		str(structureName)+'.pathphase',
+		str(structureName)+'-x.pathphase',
+		)
+	try:
+		shell_pathphase_x_move()
+	except subprocess.CalledProcessError, err:
+		print DEFAULT_PREFIX + "ERROR: in automation of " + str(structureName) 
+		print DEFAULT_PREFIX + "ERROR --> " + shell_pathphase_x_move.getCommandString()
+		print str(err)
+		return False
+
+	#python ./mmn2pathphase.py $filename y
+	#TODO incorporate in file itself
+	shell_pathphase_y_command = b_PySubProcess.VirtualShellInstance(
+		DEFAULT_PYTHON_PATH +" "+DEFAULT_BIN_PATH + 'mmn2pathphase.py', str(structureName), 'y',
+		)
+	try:
+		shell_pathphase_y_command()
+	except subprocess.CalledProcessError, err:
+		print DEFAULT_PREFIX + "ERROR: in automation of " + str(structureName) 
+		print DEFAULT_PREFIX + "ERROR --> " + shell_pathphase_y_command.getCommandString()
+		print str(err)
+		return False
+
+
+	#mv $filename.pathphase $filename-y.pathphase
+	shell_pathphase_y_move = b_PySubProcess.VirtualShellInstance(
+		'mv',
+		str(structureName)+'.pathphase',
+		str(structureName)+'-y.pathphase',
+		)
+
+	try:
+		shell_pathphase_y_move()
+	except subprocess.CalledProcessError, err:
+		print DEFAULT_PREFIX + "ERROR: in automation of " + str(structureName) 
+		print DEFAULT_PREFIX + "ERROR --> " + shell_pathphase_y_move.getCommandString()
+		print str(err)
+		return False
+		
+	#python ./mmn2pathphase.py $filename z
+	#TODO incorporate in file itself
+	shell_pathphase_z_command = b_PySubProcess.VirtualShellInstance(
+		DEFAULT_PYTHON_PATH +" "+ DEFAULT_BIN_PATH + 'mmn2pathphase.py', str(structureName), 'z',
+		)
+
+	try:
+		shell_pathphase_z_command()
+	except subprocess.CalledProcessError, err:
+		print DEFAULT_PREFIX + "ERROR: in automation of " + str(structureName) 
+		print DEFAULT_PREFIX + "ERROR --> " + shell_pathphase_z_command.getCommandString()
+		print str(err)
+		return False
+
+	#mv $filename.pathphase $filename-z.pathphase
+	shell_pathphase_z_move = b_PySubProcess.VirtualShellInstance(
+		'mv',
+		str(structureName)+'.pathphase',
+		str(structureName)+'-z.pathphase',
+		)
+
+	try:
+		shell_pathphase_z_move()
+	except subprocess.CalledProcessError, err:
+		print DEFAULT_PREFIX + "ERROR: in automation of " + str(structureName) 
+		print DEFAULT_PREFIX + "ERROR --> " + shell_pathphase_z_move.getCommandString()
+		print DEFAULT_PREFIX + str(err)
+		print DEFAULT_PREFIX + "Ending..."
+		return False
+
+	print DEFAULT_PREFIX + "Finished Running Automation Stage for " + structureName
+	#done automation, calculation performed in berryPyCalculation.py
+	return True
 
 def writeResult(configFile, mainCalculationObject):
-    '''
-    Writes the calculated polarization value along with the
-    information used to calculate it to a file defined by the
-    structures name and the extension defined by
-    BERRY_FILE_EXTENSION
-    
-    Requires the main calculation object to be passed to it which
-    is returned from the "performCalculation" function in this
-    file
-    '''
+	'''
+	Writes the calculated polarization value along with the
+	information used to calculate it to a file defined by the
+	structures name and the extension defined by
+	BERRY_FILE_EXTENSION
 
-    #construct filename from structure name and path
-    filename = os.path.join(configFile['Structure Path'], configFile['Structure Name'] + BERRY_FILE_EXTENSION)
-    print DEFAULT_PREFIX + "Writing to file: " + filename
-    fileHandle = open(filename, 'w')
-    
-    #intro to file
-    fileHandle.write("BerryPI version 1.0\n\n")
-    fileHandle.write("BerryPI is a joint project between Thunder Bay Regional Research Institute and Lakehead University\n")
-    fileHandle.write("\nSuggested reference:\n  S.J.Ahmed, J.Kivinen, B.Zaporzan, L.Curiel, S.Pichardo, O.Rubel,Comp. Phys. Commun. 184, 647 (2013)")
-    fileHandle.write("\nQuestions and comments are to be directed to\n  1.Dr. Oleg Rubel \n    Lakehead University\n          and\n    Thunder Bay Regional Research institute\n    290 Munro Street, Thunder Bay, ON Canada P7A 7T1\n    Tel:+1 (807) 766-3350 \n    E-mail:rubelo@tbh.net\n    URL:http://www.tbrri.com/~orubel")	
-    fileHandle.write("\n  2.Dr. Samuel Pichardo \n    Lakehead University\n          and\n    Sunnybrook Health Science Centre\n    2075 Bayview Avenue, Toronto, ON Canada M4N 3M5 \n    Tel:+1 (416) 480-6100 Ext:6156\n    E-mail:spichard@lakeheadu.ca\n    URL:http://www.proteus-mrighifu.net")
-    string = "\nDate: {}\n".format(time.ctime())
-    fileHandle.write(string)
-    string = "\nCase Name: {}\n".format(configFile['Structure Name'])
-    fileHandle.write(string)
-
-    #grab calculation values and write them to file
-    calcValues = mainCalculationObject.calculationValues()
-   
-    #Valance ion info
-    valanceinfo = mainCalculationObject.valance()
-
-   #Extended information output
-
-    phaseValues = mainCalculationObject.getPhasevalues()
-    phaseConsistentDomainValues = mainCalculationObject.getPhaseConsistentDomainValues()
-    phaseCorrectedValues = mainCalculationObject.getPhaseCorrectedValues()
-    phaseMeanValues = mainCalculationObject.valuephaseMeanValues()#Same as berry2pi/Electronic Phase [0 to 2]
-
-   #Final BerryPI Calculations
-   #Ionic Phase [0 to 2]
-    ionphase2pi = mainCalculationObject.ionicphase()	
-   #Berry Phase [0 to 2]
-    berry2pi = mainCalculationObject.valuephaseMeanValues()
-   #Total Phase [0 to 2]
-    totalphase2pi = mainCalculationObject.totalphase2pi()
-
-   
-   #Eletron Pollarization [0 to 2]
-    electronpolar2pi =  mainCalculationObject.electronpolar2pi()
-   #Ionic Polarization [0 to 2]
-    ionpolar2pi = mainCalculationObject.ionicpolar2pi()
-   #Total Polarization [0 to 2]
-    totalpolar2pi = mainCalculationObject.netpolarization2pi()
-
-
-   #Ionic Phase [-1 to +1]
-    ionphaseneg1to1 = mainCalculationObject.mappedionic()
-   #BerryPhase [-1 to +1]
-    berryneg1to1 = mainCalculationObject.remappedberryphase()
-   #Total Phase [-1 to +1]
-    totalphaseneg1to1 = mainCalculationObject.totalphaseneg1to1()
-
-
-   #Ionic Polarization
-    ionpolarneg1to1 = mainCalculationObject.ionPolarization()
-   #Electronic Polarization [ +1 to -1]
-    electronpolarneg1to1 = mainCalculationObject.electronPolarization()
-   #Total Polarization [-1 to +1 ]
-    totalpolarneg1to1=mainCalculationObject.netPolarizationEnergy()
-   
-  
-   
-    fileHandle.write('                                   ---LATTICE CONSTANTS IN Bohr---\n\t\t\t')
-    #for constant in calcValues['Lattice Constants in bohr']:
-    for i in calcValues['Lattice Constants in bohr']:
-    
-        a=str(i)+"\t"
-	fileHandle.write(a)
+	Requires the main calculation object to be passed to it which
+	is returned from the "performCalculation" function in this
+	file
+	'''
 	
-    fileHandle.write('\n\n                                          ----ATOM INFO---\n')
-    for iName, iCoord, iValence in valanceinfo:
-	fileHandle.write('                 ELEMENT: ' + iName +"\t")
-	fileHandle.write('NO OF VALANCE ELECTRONS:\t'+str(iValence)+"\n")
-	fileHandle.write('      REDUCED COORDINATE: ')
-	for i in iCoord:
-	    a=str(i)
-            fileHandle.write(a +"\t")
-        fileHandle.write('\n\n\n')	
-    fileHandle.write('                                  ---BERRYPI COMPUTATION---\n')
-    print DEFAULT_PREFIX +"                                         ---BERRYPI COMPUTATION---\n"
-    fileHandle.write('\n\n                                 ---PHASES/2*PI IN [0 to 2]RANGE---\n')
-    print "\n\n                                 ---PHASES/2*PI IN [0 to 2]RANGE---\n"
-    fileHandle.write('     IONIC PHASE/(2*PI):\t')
-    print "     IONIC PHASE/(2*PI):         " +str(ionphase2pi)
-    for i in ionphase2pi:
-        a=str(i)+"\t"
-        fileHandle.write(a)
-    fileHandle.write('\nELECTRONIC PHASE/(2*PI):\t')
-    print "\nELECTRONIC PHASE/(2*PI):         "+str(berry2pi)
-    for i in berry2pi:
-        a=str(i)+"\t"
-        fileHandle.write(a)
-    fileHandle.write('\n     TOTAL PHASE/(2*PI):\t')
-    print "\n     TOTAL PHASE/(2*PI):         " + str(totalphase2pi)
-    for i in totalphase2pi:
-        a=str(i)+"\t"
-        fileHandle.write(a)
-    fileHandle.write('\n\n                         ---POLARIZATION IN C/m^2 FOR [0 to 2] PHASE/2PI RANGE---\n')
-    print "\n\n                         ---POLARIZATION IN C/m^2 FOR [0 to 2] PHASE/2PI RANGE---\n"
-    fileHandle.write('     IONIC POLARIZATION:\t')
-    print "     IONIC POLARIZATION:\t"+str(ionpolar2pi)
-    for i in ionpolar2pi:
-        a=str(i)+"\t"
-        fileHandle.write(a)
-    fileHandle.write('\nELECTRONIC POLARIZATION:\t')
-    print "\nELECTRONIC POLARIZATION:\t" +str(electronpolar2pi)
-    for i in electronpolar2pi:
-        a=str(i)+"\t"
-        fileHandle.write(a)
-    fileHandle.write('\n     TOTAL POLARIZATION:\t')
-    print "\n     TOTAL POLARIZATION:\t"+str(totalpolar2pi)
-    for i in totalpolar2pi:
-        a=str(i)+"\t"
-        fileHandle.write(a)
-	
-    fileHandle.write('\n\n                                 ---PHASES/2*PI IN [-1 to +1]RANGE---\n')
-    print "\n\n                                 ---PHASES/2*PI IN [-1 to +1]RANGE---\n"
-    fileHandle.write('     IONIC PHASE/(2*PI):\t')
-    print "     IONIC PHASE/(2*PI):\t" +str(ionphaseneg1to1)
-    for i in ionphaseneg1to1:
-        a=str(i)+"\t"
-        fileHandle.write(a)
-
-    fileHandle.write('\nELECTRONIC PHASE/(2*PI):\t')
-    print "\nELECTRONIC PHASE/(2*PI):\t" +str(berryneg1to1)
-    for i in berryneg1to1:
-        a=str(i)+"\t"
-        fileHandle.write(a)
-    fileHandle.write('\n     TOTAL PHASE/(2*PI):\t')
-    print "\n     TOTAL PHASE/(2*PI):\t" +str(totalphaseneg1to1)
-    for i in totalphaseneg1to1:
-        a=str(i)+"\t"
-        fileHandle.write(a)
-    fileHandle.write('\n\n                         ---POLARIZATION IN C/m^2 FOR [-1 to +1] PHASE/2PI RANGE---\n')
-    print "\n\n                         ---POLARIZATION IN C/m^2 FOR [-1 to +1] PHASE/2PI RANGE---\n"
-    fileHandle.write('     IONIC POLARIZATION:\t')
-    print "     IONIC POLARIZATION:\t" +str(ionpolarneg1to1)
-    for i in ionpolarneg1to1:
-        a=str(i)+"\t"
-        fileHandle.write(a)
-    fileHandle.write('\nELECTRONIC POLARIZATION:\t')
-    print "\nELECTRONIC POLARIZATION:\t" +str(electronpolarneg1to1)
-    for i in electronpolarneg1to1:
-        a=str(i)+"\t"
-        fileHandle.write(a)
-    fileHandle.write('\n     TOTAL POLARIZATION:\t')
-    print "\n     TOTAL POLARIZATION:\t" +str(totalpolarneg1to1)
-    for i in totalpolarneg1to1:
-        a=str(i)+"\t"
-        fileHandle.write(a)
-
-    print "\n"
-    #Extended output
-    print DEFAULT_PREFIX +"                                         ---BERRYPI EXTENDED COMPUTATION OUTPUT---\n"
-    print "\n\n                                 ---PHASES/2*PI IN [0 to 2]RANGE---\n"
-    print "                 \t pass   |\tx        |\t  y         |\t  z"
-    print "          PHASE VALUES:"
-    
-    valuex = phaseValues[0]['values']
-    valuey = phaseValues[1]['values']
-    valuez = phaseValues[2]['values']
-
-    for j in range(len(valuex)):
-	if j+1 < 10:
-		print "                  \t    "+str(j+1)+"   | "+str([valuex[j],valuey[j],valuez[j]])
-	elif j+1< 100:
-		print "                  \t    "+str(j+1)+"  | "+str([valuex[j],valuey[j],valuez[j]])
-	elif j+1 < 1000:
-		print "                  \t    "+str(j+1)+" | "+str([valuex[j],valuey[j],valuez[j]])
-	else:
-		print "                  \t    "+str(j+1)+"| "+str([valuex[j],valuey[j],valuez[j]]) 
+	def ExtendedPrint(values):
+		valuex = values[0]
+		valuey = values[1]
+		valuez = values[2]
 		
+		for j in range(len(valuex)):
+			if j+1 < 10:
+				print "                  \t    "+str(j+1)+"   | "+str([valuex[j],valuey[j],valuez[j]])
+			elif j+1< 100:
+				print "                  \t    "+str(j+1)+"  | "+str([valuex[j],valuey[j],valuez[j]])
+			elif j+1 < 1000:
+				print "                  \t    "+str(j+1)+" | "+str([valuex[j],valuey[j],valuez[j]])
+			else:
+				print "                  \t    "+str(j+1)+"| "+str([valuex[j],valuey[j],valuez[j]]) 
+		print "\n"
 
-    print "\n"
+	#construct filename from structure name and path
+	filename = os.path.join(configFile['Structure Path'], configFile['Structure Name'] + BERRY_FILE_EXTENSION)
+	print DEFAULT_PREFIX + "Writing to file: " + filename
+	fileHandle = open(filename, 'w')
 
-    print "  PHASE CORRECT DOMAIN:"
-    
-    valuex = phaseConsistentDomainValues[0]
-    valuey = phaseConsistentDomainValues[1]
-    valuez = phaseConsistentDomainValues[2]
+	#intro to file
+	fileHandle.write("BerryPI version 1.0\n\n")
+	fileHandle.write("BerryPI is a joint project between Thunder Bay Regional Research Institute and Lakehead University\n")
+	fileHandle.write("\nSuggested reference:\n  S.J.Ahmed, J.Kivinen, B.Zaporzan, L.Curiel, S.Pichardo, O.Rubel,Comp. Phys. Commun. 184, 647 (2013)")
+	fileHandle.write("\nQuestions and comments are to be directed to\n  1.Dr. Oleg Rubel \n    Lakehead University\n          and\n    Thunder Bay Regional Research institute\n    290 Munro Street, Thunder Bay, ON Canada P7A 7T1\n    Tel:+1 (807) 766-3350 \n    E-mail:rubelo@tbh.net\n    URL:http://www.tbrri.com/~orubel")	
+	fileHandle.write("\n  2.Dr. Samuel Pichardo \n    Lakehead University\n          and\n    Sunnybrook Health Science Centre\n    2075 Bayview Avenue, Toronto, ON Canada M4N 3M5 \n    Tel:+1 (416) 480-6100 Ext:6156\n    E-mail:spichard@lakeheadu.ca\n    URL:http://www.proteus-mrighifu.net")
+	string = "\nDate: {}\n".format(time.ctime())
+	fileHandle.write(string)
+	string = "\nCase Name: {}\n".format(configFile['Structure Name'])
+	fileHandle.write(string)
 
-    for j in range(len(valuex)):
-	if j+1 < 10:
-		print "                  \t    "+str(j+1)+"   | "+str([valuex[j],valuey[j],valuez[j]])
-	elif j+1< 100:
-		print "                  \t    "+str(j+1)+"  | "+str([valuex[j],valuey[j],valuez[j]])
-	elif j+1 < 1000:
-		print "                  \t    "+str(j+1)+" | "+str([valuex[j],valuey[j],valuez[j]])
-	else:
-		print "                  \t    "+str(j+1)+"|  "+str([valuex[j],valuey[j],valuez[j]]) 
-    print "\n"
-   
-    print "PHASE CORRECTED VALUES:"
-    
-    valuex = phaseCorrectedValues[0]
-    valuey = phaseCorrectedValues[1]
-    valuez = phaseCorrectedValues[2]
+	#grab calculation values and write them to file
+	calcValues = mainCalculationObject.calculationValues()
 
-    for j in range(len(valuex)):
-	if j+1 < 10:
-		print "                  \t    "+str(j+1)+"   | "+str([valuex[j],valuey[j],valuez[j]])
-	elif j+1< 100:
-		print "                  \t    "+str(j+1)+"  | "+str([valuex[j],valuey[j],valuez[j]])
-	elif j+1 < 1000:
-		print "                  \t    "+str(j+1)+" | "+str([valuex[j],valuey[j],valuez[j]])
-	else:
-		print "                  \t    "+str(j+1)+"| "+str([valuex[j],valuey[j],valuez[j]]) 
-    print "\n"
-   
+	#Valance ion info
+	valanceinfo = mainCalculationObject.valance()
+
+	#Extended information output
+
+	phaseValues = mainCalculationObject.getPhasevalues()
+	phaseConsistentDomainValues = mainCalculationObject.getPhaseConsistentDomainValues()
+	phaseCorrectedValues = mainCalculationObject.getPhaseCorrectedValues()
+	phaseMeanValues = mainCalculationObject.valuephaseMeanValues()#Same as berry2pi/Electronic Phase [0 to 2]
+
+	#electronpolar2pi = mainCalculationObject.electronpolar2pi()
+	remappedberry = mainCalculationObject.remappedberryphase()
+	electronPolarization = mainCalculationObject.electronPolarization()
+
+	#Final BerryPI Calculations
+	#Ionic Phase [0 to 2]
+	ionphase2pi = mainCalculationObject.ionicphase()	
+	#Berry Phase [0 to 2]
+	berry2pi = mainCalculationObject.valuephaseMeanValues()
+	#Total Phase [0 to 2]
+	totalphase2pi = mainCalculationObject.totalphase2pi()
 
 
-   
-    #json version of our code
-    someString = json.dumps(calcValues, indent=4)
-    filename_json = os.path.join(configFile['Structure Path'], configFile['Structure Name'] + BERRY_FILE_EXTENSION + ".json")
-    fileHandle_json = open(filename_json, 'w')
-    fileHandle_json.write(someString)
-    #someString = json.dumps(calcValues, indent=4)
-    #fileHandle.write(someString)
+	#Eletron Pollarization [0 to 2]
+	electronpolar2pi =  mainCalculationObject.electronpolar2pi()
+	#Ionic Polarization [0 to 2]
+	ionpolar2pi = mainCalculationObject.ionicpolar2pi()
+	#Total Polarization [0 to 2]
+	totalpolar2pi = mainCalculationObject.netpolarization2pi()
+
+
+	#Ionic Phase [-1 to +1]
+	ionphaseneg1to1 = mainCalculationObject.mappedionic()
+	#BerryPhase [-1 to +1]
+	berryneg1to1 = mainCalculationObject.remappedberryphase()
+	#Total Phase [-1 to +1]
+	totalphaseneg1to1 = mainCalculationObject.totalphaseneg1to1()
+
+
+	#Ionic Polarization
+	ionpolarneg1to1 = mainCalculationObject.ionPolarization()
+	#Electronic Polarization [ +1 to -1]
+	electronpolarneg1to1 = mainCalculationObject.electronPolarization()
+	#Total Polarization [-1 to +1 ]
+	totalpolarneg1to1=mainCalculationObject.netPolarizationEnergy()
+
+
+
+	fileHandle.write('                                   ---LATTICE CONSTANTS IN Bohr---\n\t\t\t')
+	#for constant in calcValues['Lattice Constants in bohr']:
+	for i in calcValues['Lattice Constants in bohr']:
+
+		a=str(i)+"\t"
+	fileHandle.write(a)
+
+	fileHandle.write('\n\n                                          ----ATOM INFO---\n')
+	for iName, iCoord, iValence in valanceinfo:
+		fileHandle.write('                 ELEMENT: ' + iName +"\t")
+		fileHandle.write('NO OF VALANCE ELECTRONS:\t'+str(iValence)+"\n")
+		fileHandle.write('      REDUCED COORDINATE: ')
+	for i in iCoord:
+		a=str(i)
+		fileHandle.write(a +"\t")
+		fileHandle.write('\n\n\n')	
+	fileHandle.write('                                  ---BERRYPI COMPUTATION---\n')
+	print DEFAULT_PREFIX +"                                         ---BERRYPI COMPUTATION---\n"
+	fileHandle.write('\n\n                                 ---PHASES/2*PI IN [0 to 2]RANGE---\n')
+	print "\n\n                                 ---PHASES/2*PI IN [0 to 2]RANGE---\n"
+	fileHandle.write('     IONIC PHASE/(2*PI):\t')
+	print "     IONIC PHASE/(2*PI):         " +str(ionphase2pi)
+	for i in ionphase2pi:
+		a=str(i)+"\t"
+		fileHandle.write(a)
+	fileHandle.write('\nELECTRONIC PHASE/(2*PI):\t')
+	print "\nELECTRONIC PHASE/(2*PI):         "+str(berry2pi)
+	for i in berry2pi:
+		a=str(i)+"\t"
+		fileHandle.write(a)
+	fileHandle.write('\n     TOTAL PHASE/(2*PI):\t')
+	print "\n     TOTAL PHASE/(2*PI):         " + str(totalphase2pi)
+	for i in totalphase2pi:
+		a=str(i)+"\t"
+		fileHandle.write(a)
+	fileHandle.write('\n\n                         ---POLARIZATION IN C/m^2 FOR [0 to 2] PHASE/2PI RANGE---\n')
+	print "\n\n                         ---POLARIZATION IN C/m^2 FOR [0 to 2] PHASE/2PI RANGE---\n"
+	fileHandle.write('     IONIC POLARIZATION:\t')
+	print "     IONIC POLARIZATION:\t"+str(ionpolar2pi)
+	for i in ionpolar2pi:
+		a=str(i)+"\t"
+		fileHandle.write(a)
+	fileHandle.write('\nELECTRONIC POLARIZATION:\t')
+	print "\nELECTRONIC POLARIZATION:\t" +str(electronpolar2pi)
+	for i in electronpolar2pi:
+		a=str(i)+"\t"
+		fileHandle.write(a)
+	fileHandle.write('\n     TOTAL POLARIZATION:\t')
+	print "\n     TOTAL POLARIZATION:\t"+str(totalpolar2pi)
+	for i in totalpolar2pi:
+		a=str(i)+"\t"
+		fileHandle.write(a)
+
+	fileHandle.write('\n\n                                 ---PHASES/2*PI IN [-1 to +1]RANGE---\n')
+	print "\n\n                                 ---PHASES/2*PI IN [-1 to +1]RANGE---\n"
+	fileHandle.write('     IONIC PHASE/(2*PI):\t')
+	print "     IONIC PHASE/(2*PI):\t" +str(ionphaseneg1to1)
+	for i in ionphaseneg1to1:
+		a=str(i)+"\t"
+		fileHandle.write(a)
+
+	fileHandle.write('\nELECTRONIC PHASE/(2*PI):\t')
+	print "\nELECTRONIC PHASE/(2*PI):\t" +str(berryneg1to1)
+	for i in berryneg1to1:
+		a=str(i)+"\t"
+		fileHandle.write(a)
+	fileHandle.write('\n     TOTAL PHASE/(2*PI):\t')
+	print "\n     TOTAL PHASE/(2*PI):\t" +str(totalphaseneg1to1)
+	for i in totalphaseneg1to1:
+		a=str(i)+"\t"
+		fileHandle.write(a)
+	fileHandle.write('\n\n                         ---POLARIZATION IN C/m^2 FOR [-1 to +1] PHASE/2PI RANGE---\n')
+	print "\n\n                         ---POLARIZATION IN C/m^2 FOR [-1 to +1] PHASE/2PI RANGE---\n"
+	fileHandle.write('     IONIC POLARIZATION:\t')
+	print "     IONIC POLARIZATION:\t" +str(ionpolarneg1to1)
+	for i in ionpolarneg1to1:
+		a=str(i)+"\t"
+		fileHandle.write(a)
+	fileHandle.write('\nELECTRONIC POLARIZATION:\t')
+	print "\nELECTRONIC POLARIZATION:\t" +str(electronpolarneg1to1)
+	for i in electronpolarneg1to1:
+		a=str(i)+"\t"
+		fileHandle.write(a)
+	fileHandle.write('\n     TOTAL POLARIZATION:\t')
+	print "\n     TOTAL POLARIZATION:\t" +str(totalpolarneg1to1)
+	for i in totalpolarneg1to1:
+		a=str(i)+"\t"
+		fileHandle.write(a)
+
+	print "\n"
+	#Extended output
+	print DEFAULT_PREFIX +"                                         ---BERRYPI EXTENDED COMPUTATION OUTPUT---\n"
+
+	print "                 \t pass   |\tx        |\t  y         |\t  z"
+	print "          PHASE VALUES:"
+
+	valuex = phaseValues[0]['values']
+	valuey = phaseValues[1]['values']
+	valuez = phaseValues[2]['values']
+	
+	for j in range(len(valuex)):
+		if j+1 < 10:
+			print "                  \t    "+str(j+1)+"   | "+str([valuex[j],valuey[j],valuez[j]])
+		elif j+1< 100:
+			print "                  \t    "+str(j+1)+"  | "+str([valuex[j],valuey[j],valuez[j]])
+		elif j+1 < 1000:
+			print "                  \t    "+str(j+1)+" | "+str([valuex[j],valuey[j],valuez[j]])
+		else:
+			print "                  \t    "+str(j+1)+"| "+str([valuex[j],valuey[j],valuez[j]]) 
+	print "\n"
+
+	print "  PHASE CORRECT DOMAIN:"
+
+	ExtendedPrint(phaseConsistentDomainValues)
+
+	print "PHASE CORRECTED VALUES:"
+
+	ExtendedPrint(phaseCorrectedValues)
+
+	#json version of our code
+	someString = json.dumps(calcValues, indent=4)
+	filename_json = os.path.join(configFile['Structure Path'], configFile['Structure Name'] + BERRY_FILE_EXTENSION + ".json")
+	fileHandle_json = open(filename_json, 'w')
+	fileHandle_json.write(someString)
+	#someString = json.dumps(calcValues, indent=4)
+	#fileHandle.write(someString)
+
 
 if __name__ == "__main__":
-    def helpInfo():
-        print '''
+	def helpInfo():
+		print '''
 
-        DEPENDENCIES:
-        - WIEN2k (tested against 11.1 Release 05/04/2011)
-        - WIEN2WANNIER (tested against 0.92)
-        - Python (tested against 2.7.3)
-        - NumPy (tested against 1.6.2)
+		DEPENDENCIES:
+		- WIEN2k (tested against 11.1 Release 05/04/2011)
+		- WIEN2WANNIER (tested against 0.92)
+		- Python (tested against 2.7.3)
+		- NumPy (tested against 1.6.2)
 
-        Once you have all the dependencies installed.
-        To run "BerryPI" after standard WIEN2k scf cycle run the following command
+		Once you have all the dependencies installed.
+		To run "BerryPI" after standard WIEN2k scf cycle run the following command
 
-        berrypi -p[PATH] -kNUM:NUM:NUM
-        OR
-        berrypi --structure-path=[PATH] --kdiv=NUM:NUM:NUM
+		berrypi -p[PATH] -kNUM:NUM:NUM
+		OR
+		berrypi --structure-path=[PATH] --kdiv=NUM:NUM:NUM
 
-        NOTE: Failure to also provide a path will result in an error
+		NOTE: Failure to also provide a path will result in an error
 
-        --structure-path=[PATH], -p[PATH]
+		--structure-path=[PATH], -p[PATH]
 
-        Provides a facility to include the structures path.
+		Provides a facility to include the structures path.
 
 
-        --kdiv=NUM:NUM:NUM, -kNUM:NUM:NUM
+		--kdiv=NUM:NUM:NUM, -kNUM:NUM:NUM
 
-        Provides a new set of K Divisions for the configuration
+		Provides a new set of K Divisions for the configuration
 
-        Additional Switches
+		Additional Switches
 
 	--bloch-band=NUM:NUM, -bNUM:NUM
 
-        Used to manually set the bloch band for band by band decomposition.
-        By default, it is parsing out the bloch band based on the number of total bands.
+		Used to manually set the bloch band for band by band decomposition.
+		By default, it is parsing out the bloch band based on the number of total bands.
 
-        --no-auto, -n
+		--no-auto, -n
 
-        It assumes that the electronic phase calculation has been performed 
-        before and all the required files are for computaion of polarization 
-        is present and it just calculate the polarization based on those data
+		It assumes that the electronic phase calculation has been performed 
+		before and all the required files are for computaion of polarization 
+		is present and it just calculate the polarization based on those data
 
-        --parallel, -P
+		--parallel, -P
 
-        Enable parallel caulculation where it run "x lapw1" in parallel
+		Enable parallel caulculation where it run "x lapw1" in parallel
 
-        Examples:
+		Examples:
 
 
-        I have a structure and structure path is "~/tutorial/tutorial2/lambda1 " I would like to provide
-        manually to the berrypi file with 10*10*10 size k mesh
+		I have a structure and structure path is "~/tutorial/tutorial2/lambda1 " I would like to provide
+		manually to the berrypi file with 10*10*10 size k mesh
 
-        $ python ~/BerryPI/berrypi  --structure-path=~/tutorial/tutorial2/lambda1  --kdiv=10:10:10
+		$ python ~/BerryPI/berrypi  --structure-path=~/tutorial/tutorial2/lambda1  --kdiv=10:10:10
 
-        OR
+		OR
 
-        $ python ~/BerryPI/berrypi -p~/tutorial/tutorial2/lambda1  -k10:10:10
+		$ python ~/BerryPI/berrypi -p~/tutorial/tutorial2/lambda1  -k10:10:10
 
- 	I would like to repeat the same calculation for the first two band (1 to 2)
+	I would like to repeat the same calculation for the first two band (1 to 2)
 
-  	$ python ~/BerryPI/berrypi  --structure-path=~/tutorial/tutorial2/lambda1  --kdiv=10:10:10 --bloch-band=1:2
-          
+	$ python ~/BerryPI/berrypi  --structure-path=~/tutorial/tutorial2/lambda1  --kdiv=10:10:10 --bloch-band=1:2
+		  
 	OR
 
-        $ python ~/BerryPI/berrypi -p~/tutorial/tutorial2/lambda1  -k10:10:10 -b1:2
+		$ python ~/BerryPI/berrypi -p~/tutorial/tutorial2/lambda1  -k10:10:10 -b1:2
 
-        I would like to only calculate the polarization on a given
-        file without automation
+		I would like to only calculate the polarization on a given
+		file without automation
 
-        $ python ~/BerryPI/berrypi  --structure-path=~/tutorial/tutorial2/lambda1  --no-auto
-         OR
-        $ python ~/BerryPI/berrypi  -p~/tutorial/tutorial2/lambda1  -n
-
-
-      
-        '''
-        pass
+		$ python ~/BerryPI/berrypi  --structure-path=~/tutorial/tutorial2/lambda1  --no-auto
+		 OR
+		$ python ~/BerryPI/berrypi  -p~/tutorial/tutorial2/lambda1  -n
 
 
-        
-    try:
-        opts, args = getopt.getopt(sys.argv[1:], 
-                                   "S:hvp:Pnk:lb:", 
-                                   ["help", "structure-path=", "structure-name=", "bloch-band=", 
-                                    "no-auto", "kdiv=", "no-lapw1", "parallel", "verbose"])
-    except getopt.GetoptError, err:
-        # print help information and exit:
-        print helpInfo()
-        print "ERROR"
-        print str(err) # will print something like "option -a not recognized"
-        sys.exit(2)
+	  
+		'''
+		pass
 
-    #boolean for whether to check config for
-    #configuration dicts
-    checkConfig = True
 
-    #boolean for whether to automate the entire process
-    checkAuto = True
+		
+	try:
+		opts, args = getopt.getopt(sys.argv[1:], 
+								   "S:hvp:Pnk:lb:", 
+								   ["help", "structure-path=", "structure-name=", "bloch-band=", 
+									"no-auto", "kdiv=", "no-lapw1", "parallel", "verbose"])
+	except getopt.GetoptError, err:
+		# print help information and exit:
+		print helpInfo()
+		print "ERROR"
+		print str(err) # will print something like "option -a not recognized"
+		sys.exit(2)
 
-    #defaults
-    structure_name = ''
-    structure_path = ''
-    structure_kmesh = config.DEFAULT_KMESH_DIVISIONS
-    structure_bloch = None
-    structure_initlapw1 = config.DEFAULT_INCLUDE_LAPW1
-    structure_lapw1_parallel = config.DEFAULT_INCLUDE_LAPW1_PARALLEL
-    VERBOSE = False
-    #begin checking command line arguments
-    for argName, argValue in opts:
+	#boolean for whether to check config for
+	#configuration dicts
+	checkConfig = True
 
-        #help option
-        if argName in ("-h", "--help"):
-            print helpInfo()
-            sys.exit(0)
+	#boolean for whether to automate the entire process
+	checkAuto = True
 
-        #structure name option
-        elif argName in ('-S', '--structure-name'):
-            structure_name = argValue
+	#defaults
+	structure_name = ''
+	structure_path = ''
+	structure_kmesh = config.DEFAULT_KMESH_DIVISIONS
+	structure_bloch = None
+	structure_initlapw1 = config.DEFAULT_INCLUDE_LAPW1
+	structure_lapw1_parallel = config.DEFAULT_INCLUDE_LAPW1_PARALLEL
+	VERBOSE = False
+	#begin checking command line arguments
+	for argName, argValue in opts:
 
-        #structure path option
-        elif argName in ('-p', '--structure-path'):
-            structure_path = argValue
-	    structure_name = os.path.split(argValue)[-1]
+		#help option
+		if argName in ("-h", "--help"):
+			print helpInfo()
+			sys.exit(0)
 
-        #automation disabling option
-        elif argName in ('-n', '--no-auto'):
-            checkAuto = False
-        
-        #For number of divisons 
-        elif argName in ('-k', '--kdiv'):
-            structure_kmesh = [ int(i) for i in argValue.split(':') ]
+		#structure name option
+		elif argName in ('-S', '--structure-name'):
+			structure_name = argValue
 
-        #Determines whether you should include lapw1 in the automation
-        elif argName in ('-l', '--no-lapw'):
-            structure_initlapw1 = False
+		#structure path option
+		elif argName in ('-p', '--structure-path'):
+			structure_path = argValue
+			structure_name = os.path.split(argValue)[-1]
 
-        #Determines whether to run lapw1 in parallel on the clustrer
-        elif argName in ('-P', '--parallel'):
-            structure_lapw1_parallel = True
+		#automation disabling option
+		elif argName in ('-n', '--no-auto'):
+			checkAuto = False
+		
+		#For number of divisons 
+		elif argName in ('-k', '--kdiv'):
+			structure_kmesh = [ int(i) for i in argValue.split(':') ]
 
-        elif argName in ('-b', '--bloch-band'):
-	    structure_bloch = [ int(i) for i in argValue.split(':') ]
+		#Determines whether you should include lapw1 in the automation
+		elif argName in ('-l', '--no-lapw'):
+			structure_initlapw1 = False
 
-        elif argName in ('-v', '--verbose'):
-            VERBOSE = True
-        else:
-            print("Invalid argument {} - {}").format(argName, argValue)
-            sys.exit(2)
+		#Determines whether to run lapw1 in parallel on the clustrer
+		elif argName in ('-P', '--parallel'):
+			structure_lapw1_parallel = True
 
-    #if configuration values are provided, create config file to pass
-    #to the automation and calculations
-    if structure_name or structure_path:
-        if structure_name and structure_path:
-            #follows same format as config.py configurations
-            configFile = {
-                'Structure Name' : structure_name,
-                'Structure Path' : structure_path,
-                'Number of K-Points' : config.DEFAULT_NUMBER_OF_KPOINTS,
-                'K-Mesh Divisions' : structure_kmesh,
-                'K-Mesh Shift' : config.DEFAULT_KMESH_SHIFT, 
-                'Bloch Band' : structure_bloch,
-                'Number of Wannier Functions' : config.DEFAULT_WANNIER_FUNCTIONS,
-                'Center Atom and Character' : config.DEFAULT_CENTER_ATOM_AND_CHARACTER,
-                'Perform LAPW1' : structure_initlapw1,
-                'LAPW1 in Parallel' : structure_lapw1_parallel, 
-                }
-            checkConfig = False
-        else:
-            print "structure name and structure path must be provided"
-            raise getopt.GetoptError
+		elif argName in ('-b', '--bloch-band'):
+			structure_bloch = [ int(i) for i in argValue.split(':') ]
 
-    #check config (based on if structure name or
-    #structure path has been passed to berryPyRunAutomation.py)
-    bAutomationErrorChk = True
-    if checkConfig:
-        ConfigurationFiles = config.berryPyConfigAutomationList
-        for berryConfig in ConfigurationFiles:
-            #check whether to automate
-            if checkAuto:
-                bAutomationErrorChk = runAutomation(berryConfig)
-            if bAutomationErrorChk:
-                try:
-                    theCalc = performCalculation(berryConfig)
-                except b_PyError.ParseError, err:
-                    print DEFAULT_PREFIX + "ERROR: in automation of " + berryConfig['Structure Name']
-                    print DEFAULT_PREFIX + str(err)
-                    print DEFAULT_PREFIX + "ERROR: missing tags: " + str(err.errorTags)
-                    continue
-                #write to file
-                writeResult(berryConfig, theCalc)
-    else:
-        #assuming the configFile was passed correctly
-        if checkAuto:
-            bAutomationErrorChk = runAutomation(configFile)
-        if bAutomationErrorChk:
-            try:
-                theCalc = performCalculation(configFile)
-            except b_PyError.ParseError, err:
-                print DEFAULT_PREFIX + "ERROR: in automation of " + configFile['Structure Name']
-                print DEFAULT_PREFIX + str(err)
-                print DEFAULT_PREFIX + "ERROR: missing tags: " + str(err.errorTags)
-                
-            writeResult(configFile, theCalc)
-    #take the resulting information and store it in a file defined by
-    #the given extension
-    
-    
+		elif argName in ('-v', '--verbose'):
+			VERBOSE = True
+		else:
+			print("Invalid argument {} - {}").format(argName, argValue)
+			sys.exit(2)
 
-    #print " --- BerryPI Computation Completed ---"
-    print "\nCompleted using BerryPI version 1.0"
-    print "\nBerryPI is a joint project between Thunder Bay Regional Research Institute and Lakehead University"
-    print "\nSuggested reference:\n  S.J.Ahmed, J.Kivinen, B.Zaporzan, L.Curiel, S.Pichardo, O.Rubel,Comp. Phys. Commun. 184, 647 (2013)"	
-    print ("\nQuestions and comments are to be directed to\n  1.Dr. Oleg Rubel \n    Lakehead University\n          and\n    Thunder Bay Regional Research institute\n    290 Munro Street, Thunder Bay, ON Canada P7A 7T1\n    Tel:+1 (807) 766-3350 \n    E-mail:rubelo@tbh.net\n    URL:http://www.tbrri.com/~orubel")
-    print ("\n  2.Dr. Samuel Pichardo \n    Lakehead University\n          and\n    Sunnybrook Health Science Centre\n    2075 Bayview Avenue, Toronto, ON Canada M4N 3M5 \n    Tel:+1 (416) 480-6100 Ext:6156\n    E-mail:spichard@lakeheadu.ca\n    URL:http://www.proteus-mrighifu.net")
+	#if configuration values are provided, create config file to pass
+	#to the automation and calculations
+	if structure_name or structure_path:
+		if structure_name and structure_path:
+			#follows same format as config.py configurations
+			configFile = {
+				'Structure Name' : structure_name,
+				'Structure Path' : structure_path,
+				'Number of K-Points' : config.DEFAULT_NUMBER_OF_KPOINTS,
+				'K-Mesh Divisions' : structure_kmesh,
+				'K-Mesh Shift' : config.DEFAULT_KMESH_SHIFT, 
+				'Bloch Band' : structure_bloch,
+				'Number of Wannier Functions' : config.DEFAULT_WANNIER_FUNCTIONS,
+				'Center Atom and Character' : config.DEFAULT_CENTER_ATOM_AND_CHARACTER,
+				'Perform LAPW1' : structure_initlapw1,
+				'LAPW1 in Parallel' : structure_lapw1_parallel, 
+				}
+			checkConfig = False
+		else:
+			print "structure name and structure path must be provided"
+			raise getopt.GetoptError
+
+	#check config (based on if structure name or
+	#structure path has been passed to berryPyRunAutomation.py)
+	bAutomationErrorChk = True
+	if checkConfig:
+		ConfigurationFiles = config.berryPyConfigAutomationList
+		for berryConfig in ConfigurationFiles:
+			#check whether to automate
+			if checkAuto:
+				bAutomationErrorChk = runAutomation(berryConfig)
+			if bAutomationErrorChk:
+				try:
+					theCalc = performCalculation(berryConfig)
+				except b_PyError.ParseError, err:
+					print DEFAULT_PREFIX + "ERROR: in automation of " + berryConfig['Structure Name']
+					print DEFAULT_PREFIX + str(err)
+					print DEFAULT_PREFIX + "ERROR: missing tags: " + str(err.errorTags)
+					continue
+				#write to file
+				writeResult(berryConfig, theCalc)
+	else:
+		#assuming the configFile was passed correctly
+		if checkAuto:
+			bAutomationErrorChk = runAutomation(configFile)
+		if bAutomationErrorChk:
+			try:
+				theCalc = performCalculation(configFile)
+			except b_PyError.ParseError, err:
+				print DEFAULT_PREFIX + "ERROR: in automation of " + configFile['Structure Name']
+				print DEFAULT_PREFIX + str(err)
+				print DEFAULT_PREFIX + "ERROR: missing tags: " + str(err.errorTags)
+				
+			writeResult(configFile, theCalc)
+	#take the resulting information and store it in a file defined by
+	#the given extension
+
+
+
+	#print " --- BerryPI Computation Completed ---"
+	print "\nCompleted using BerryPI version 1.0"
+	print "\nBerryPI is a joint project between Thunder Bay Regional Research Institute and Lakehead University"
+	print "\nSuggested reference:\n  S.J.Ahmed, J.Kivinen, B.Zaporzan, L.Curiel, S.Pichardo, O.Rubel,Comp. Phys. Commun. 184, 647 (2013)"	
+	print ("\nQuestions and comments are to be directed to\n  1.Dr. Oleg Rubel \n    Lakehead University\n          and\n    Thunder Bay Regional Research institute\n    290 Munro Street, Thunder Bay, ON Canada P7A 7T1\n    Tel:+1 (807) 766-3350 \n    E-mail:rubelo@tbh.net\n    URL:http://www.tbrri.com/~orubel")
+	print ("\n  2.Dr. Samuel Pichardo \n    Lakehead University\n          and\n    Sunnybrook Health Science Centre\n    2075 Bayview Avenue, Toronto, ON Canada M4N 3M5 \n    Tel:+1 (416) 480-6100 Ext:6156\n    E-mail:spichard@lakeheadu.ca\n    URL:http://www.proteus-mrighifu.net")
