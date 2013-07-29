@@ -60,15 +60,13 @@ class PathphaseCalculation:
         '''
         topDomain = self.topDomain
 
-        self.correctedValues = self.values[:]
-
-        #use modulo 2PI to maintain a consistent domain
-        self.correctedValues = [ (i + (2 *numpy.pi)) % topDomain for i in self.correctedValues ]
+        self.consistentDomainValues = self.values[:]
 	
+        #use modulo 2PI to maintain a consistent domain
+        self.consistentDomainValues = [ (i + (2 *numpy.pi)) % topDomain for i in self.consistentDomainValues]
         
 
-        self.correctedValues=numpy.unwrap(self.correctedValues)
-
+        self.correctedValues=numpy.unwrap(self.consistentDomainValues)
 
 	#self.correctedValues = [ numpy.unwrap(i) for i in self.correctedValues ]
         #function to add topDomain when value is less than zero
@@ -103,6 +101,9 @@ class PathphaseCalculation:
 
     def getMeanValue(self):
         return self.meanValue
+
+    def getConsistentDomainValues(self):
+	return self.consistentDomainValues
 
 class CalculateNumberOfBands:
     '''
@@ -238,12 +239,16 @@ class MainCalculationContainer:
         for i in phaseValues: 
             i.parse()
         #send to pathphasecalculation for correction
-        phaseObjects = [ PathphaseCalculation(values=i['values']) for i in phaseValues ]
-        #receive mean values
-        value_phaseCorrectedValues = [ i.getCorrectedValues() for i in phaseObjects ]
 
+	self.phaseValues = phaseValues
+
+        phaseObjects = [ PathphaseCalculation(values=i['values']) for i in phaseValues ]
+        
+	self.value_phaseConsistentDomainValues = [i.getConsistentDomainValues() for i in phaseObjects]
+
+        self.value_phaseCorrectedValues = [ i.getCorrectedValues() for i in phaseObjects ]
+	#receive mean values
         self.value_phaseMeanValues = value_phaseMeanValues = [ i.getMeanValue() for i in phaseObjects ]
-	#print self.value_phaseMeanValues
 
         #constants
         #electron charge / unit volume
@@ -255,6 +260,15 @@ class MainCalculationContainer:
 
 
 #Berry/Electrcnic phase value in [0 to 2] range
+    def getPhasevalues(self):
+	return self.phaseValues
+
+    def getPhaseConsistentDomainValues(self):
+	return self.value_phaseConsistentDomainValues
+
+    def getPhaseCorrectedValues(self):
+	return self.value_phaseCorrectedValues
+
     def valuephaseMeanValues(self):
 	return self.value_phaseMeanValues
 

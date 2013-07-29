@@ -389,7 +389,7 @@ def writeResult(configFile, mainCalculationObject):
     fileHandle = open(filename, 'w')
     
     #intro to file
-    fileHandle.write("BerryPI version 0.1\n\n")
+    fileHandle.write("BerryPI version 1.0\n\n")
     fileHandle.write("BerryPI is a joint project between Thunder Bay Regional Research Institute and Lakehead University\n")
     fileHandle.write("\nSuggested reference:\n  S.J.Ahmed, J.Kivinen, B.Zaporzan, L.Curiel, S.Pichardo, O.Rubel,Comp. Phys. Commun. 184, 647 (2013)")
     fileHandle.write("\nQuestions and comments are to be directed to\n  1.Dr. Oleg Rubel \n    Lakehead University\n          and\n    Thunder Bay Regional Research institute\n    290 Munro Street, Thunder Bay, ON Canada P7A 7T1\n    Tel:+1 (807) 766-3350 \n    E-mail:rubelo@tbh.net\n    URL:http://www.tbrri.com/~orubel")	
@@ -402,50 +402,50 @@ def writeResult(configFile, mainCalculationObject):
     #grab calculation values and write them to file
     calcValues = mainCalculationObject.calculationValues()
    
+    #Valance ion info
+    valanceinfo = mainCalculationObject.valance()
+
+   #Extended information output
+
+    phaseValues = mainCalculationObject.getPhasevalues()
+    phaseConsistentDomainValues = mainCalculationObject.getPhaseConsistentDomainValues()
+    phaseCorrectedValues = mainCalculationObject.getPhaseCorrectedValues()
+    phaseMeanValues = mainCalculationObject.valuephaseMeanValues()#Same as berry2pi/Electronic Phase [0 to 2]
+
+   #Final BerryPI Calculations
+   #Ionic Phase [0 to 2]
+    ionphase2pi = mainCalculationObject.ionicphase()	
    #Berry Phase [0 to 2]
     berry2pi = mainCalculationObject.valuephaseMeanValues()
- 
+   #Total Phase [0 to 2]
+    totalphase2pi = mainCalculationObject.totalphase2pi()
+
+   
    #Eletron Pollarization [0 to 2]
-
     electronpolar2pi =  mainCalculationObject.electronpolar2pi()
-
-   #BerryPhase [-1 to +1]
-    berryneg1to1 = mainCalculationObject.remappedberryphase()
-
-
-   #Electronic Polarization [ +1 to -1]
-    electronpolarneg1to1 = mainCalculationObject.electronPolarization()
-
-
-   #Ionic Phase [0 to 2]
-    ionphase2pi = mainCalculationObject.ionicphase()
-
    #Ionic Polarization [0 to 2]
     ionpolar2pi = mainCalculationObject.ionicpolar2pi()
+   #Total Polarization [0 to 2]
+    totalpolar2pi = mainCalculationObject.netpolarization2pi()
+
 
    #Ionic Phase [-1 to +1]
     ionphaseneg1to1 = mainCalculationObject.mappedionic()
+   #BerryPhase [-1 to +1]
+    berryneg1to1 = mainCalculationObject.remappedberryphase()
+   #Total Phase [-1 to +1]
+    totalphaseneg1to1 = mainCalculationObject.totalphaseneg1to1()
 
 
    #Ionic Polarization
     ionpolarneg1to1 = mainCalculationObject.ionPolarization()
-
-   #Total Phase [0 to 2]
-    totalphase2pi = mainCalculationObject.totalphase2pi()
-
-   #Total Phase [-1 to +1]
-    totalphaseneg1to1 = mainCalculationObject.totalphaseneg1to1()
-
-   #Total Polarization [0 to 2]
-    totalpolar2pi = mainCalculationObject.netpolarization2pi()
-
+   #Electronic Polarization [ +1 to -1]
+    electronpolarneg1to1 = mainCalculationObject.electronPolarization()
    #Total Polarization [-1 to +1 ]
     totalpolarneg1to1=mainCalculationObject.netPolarizationEnergy()
    
-   #Valance ion info
-    valanceinfo = mainCalculationObject.valance()
-    
-
+  
+   
     fileHandle.write('                                   ---LATTICE CONSTANTS IN Bohr---\n\t\t\t')
     #for constant in calcValues['Lattice Constants in bohr']:
     for i in calcValues['Lattice Constants in bohr']:
@@ -535,7 +535,67 @@ def writeResult(configFile, mainCalculationObject):
         a=str(i)+"\t"
         fileHandle.write(a)
 
- 
+    print "\n"
+    #Extended output
+    print DEFAULT_PREFIX +"                                         ---BERRYPI EXTENDED COMPUTATION OUTPUT---\n"
+    print "\n\n                                 ---PHASES/2*PI IN [0 to 2]RANGE---\n"
+    print "                 \t pass   |\tx        |\t  y         |\t  z"
+    print "          PHASE VALUES:"
+    
+    valuex = phaseValues[0]['values']
+    valuey = phaseValues[1]['values']
+    valuez = phaseValues[2]['values']
+
+    for j in range(len(valuex)):
+	if j+1 < 10:
+		print "                  \t    "+str(j+1)+"   | "+str([valuex[j],valuey[j],valuez[j]])
+	elif j+1< 100:
+		print "                  \t    "+str(j+1)+"  | "+str([valuex[j],valuey[j],valuez[j]])
+	elif j+1 < 1000:
+		print "                  \t    "+str(j+1)+" | "+str([valuex[j],valuey[j],valuez[j]])
+	else:
+		print "                  \t    "+str(j+1)+"| "+str([valuex[j],valuey[j],valuez[j]]) 
+		
+
+    print "\n"
+
+    print "  PHASE CORRECT DOMAIN:"
+    
+    valuex = phaseConsistentDomainValues[0]
+    valuey = phaseConsistentDomainValues[1]
+    valuez = phaseConsistentDomainValues[2]
+
+    for j in range(len(valuex)):
+	if j+1 < 10:
+		print "                  \t    "+str(j+1)+"   | "+str([valuex[j],valuey[j],valuez[j]])
+	elif j+1< 100:
+		print "                  \t    "+str(j+1)+"  | "+str([valuex[j],valuey[j],valuez[j]])
+	elif j+1 < 1000:
+		print "                  \t    "+str(j+1)+" | "+str([valuex[j],valuey[j],valuez[j]])
+	else:
+		print "                  \t    "+str(j+1)+"|  "+str([valuex[j],valuey[j],valuez[j]]) 
+    print "\n"
+   
+    print "PHASE CORRECTED VALUES:"
+    
+    valuex = phaseCorrectedValues[0]
+    valuey = phaseCorrectedValues[1]
+    valuez = phaseCorrectedValues[2]
+
+    for j in range(len(valuex)):
+	if j+1 < 10:
+		print "                  \t    "+str(j+1)+"   | "+str([valuex[j],valuey[j],valuez[j]])
+	elif j+1< 100:
+		print "                  \t    "+str(j+1)+"  | "+str([valuex[j],valuey[j],valuez[j]])
+	elif j+1 < 1000:
+		print "                  \t    "+str(j+1)+" | "+str([valuex[j],valuey[j],valuez[j]])
+	else:
+		print "                  \t    "+str(j+1)+"| "+str([valuex[j],valuey[j],valuez[j]]) 
+    print "\n"
+   
+
+
+   
     #json version of our code
     someString = json.dumps(calcValues, indent=4)
     filename_json = os.path.join(configFile['Structure Path'], configFile['Structure Name'] + BERRY_FILE_EXTENSION + ".json")
@@ -752,7 +812,7 @@ if __name__ == "__main__":
     
 
     #print " --- BerryPI Computation Completed ---"
-    print "\nCompleted using BerryPI version 0.1"
+    print "\nCompleted using BerryPI version 1.0"
     print "\nBerryPI is a joint project between Thunder Bay Regional Research Institute and Lakehead University"
     print "\nSuggested reference:\n  S.J.Ahmed, J.Kivinen, B.Zaporzan, L.Curiel, S.Pichardo, O.Rubel,Comp. Phys. Commun. 184, 647 (2013)"	
     print ("\nQuestions and comments are to be directed to\n  1.Dr. Oleg Rubel \n    Lakehead University\n          and\n    Thunder Bay Regional Research institute\n    290 Munro Street, Thunder Bay, ON Canada P7A 7T1\n    Tel:+1 (807) 766-3350 \n    E-mail:rubelo@tbh.net\n    URL:http://www.tbrri.com/~orubel")
