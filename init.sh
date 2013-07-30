@@ -1,5 +1,6 @@
 #!/bin/bash
 
+#TODO figure out how to install missing packages across multiple platforms (e.g apt-get, yum, ...)
 
 #Intialization
 
@@ -44,7 +45,6 @@ $W2WROOT >/dev/null 2>&1
 W2WVAR=$?
 
 
-
 if [ $WIENVAR == 126 ]; then
 	echo "WIEN2k detected"
 else
@@ -74,7 +74,7 @@ fi
 echo "######################################################################"
 #
 
-#Procedures
+#Functions
 get_berrypi_path()
 {
 	loopvar=1
@@ -162,69 +162,41 @@ get_python_path()
 
 check_numpy_exists()
 {
+	numpyver=$($PYTHONDIR -c 'import numpy; print numpy.__version__')
 
-	if [ -d "/usr/lib/python2.7/dist-packages/numpy/" ];then
+	if [ $numpyver == '1.6.2' ];then
 		echo "A NumPy directory exists"
 		echo "Continuing..."
 	else
 		echo "No NumPy directory found"
 		echo "BerryPI will fail to run without NumPy"
-		
-		skipinstall=0
-		loopvar=1
-		while [ $loopvar == 1 ]; do 
-			echo -e "Enter the directory where NumPy resides:\n('S' to skip) \n "
-			read  USERPATH
+		echo "Would you like to attempt to install NumPy?"
+	
+		read -p "(Y/n)?" choice
+  		case "$choice" in
+  		y|Y) 
 			
-			NUMPYDIR="$USERPATH/version.pyc"
-			if [ $USERPATH == "S" ];then
-				loopvar=0
+			#sudo apt-get install python-numpy #May not work on all linux distros but hopefully all debian distros
+			yum install python-numpy
 
-			
-			elif [ -f $NUMPYDIR ]; then 
-				echo "Numpy directory provided is correct"
+			if [-d "usr/lib/python2.7/dist-packages/numpy" ]; then
+				echo "A NumPy directory exists"
 				echo "Continuing..."
-				loopvar=0
-				skipinstall=1 
 			else
-				echo "Numpy directory specified is incorrect"
-				echo "Format(/subdir/Numpydir/) ex: /usr/lib/python2.7/dist-packages/numpy/"
+				echo "NumPy was unable to be intalled"
+				exit 1
 			fi
-		done	
-		
+		;;
+		n|N)
+			echo "BerryPI initialization can not continue"
+			echo "Aborted"
+			exit 1	
+		;;
+		esac
 
-		if [ $skipinstall == 0 ];then
-		
-			echo "Would you like to attempt to install NumPy?"
-		
-			read -p "(Y/n)?" choice
-	  		case "$choice" in
-	  		y|Y) 
-			
-				#sudo apt-get install python-numpy #May not work on all linux distros but hopefully all debian distros
-				yum install python-numpy
-				if [-d "usr/lib/python2.7/dist-packages/numpy" ]; then
-					echo "A NumPy directory exists"
-					echo "Continuing..."
-				else
-					echo "NumPy was unable to be intalled"
-					exit 1
-				fi
-			;;
-			n|N)
-				echo "BerryPI initialization can not continue"
-				echo "Aborted"
-				exit 1	
-			;;
-			esac
-		fi
 	fi
 }
-
-
-	
-
-#
+#END FUNCTIONS
 
 #Main
 get_berrypi_path
