@@ -54,7 +54,7 @@ else
 	else
 		echo "WIEN2K not detected. BerryPI will not run without WIEN2K."
 		echo "Initialization aborted"
-		exit 1
+		#exit 1
 	fi
 	
 fi
@@ -68,7 +68,7 @@ else
 	else
 		echo "w2w not detected. BerryPI will not run without W2WANNIER."
 		echo "Initialization aborted"
-		exit 1
+		#exit 1
 	fi
 fi
 echo "######################################################################"
@@ -107,19 +107,23 @@ get_berrypi_path()
 get_python_path()
 {
 	pyexist=true
-	#linux command type
 	# >/dev/null 2>&1 to mask the string that type echos 
 	type python2.7 >/dev/null 2>&1 || { local pyexist=false; echo >&2 "I require python 2.7 but it's not installed.";}
 	
 	if [ $pyexist == true ]; then
 		loopvar=1
-		if [ -f "/usr/bin/python2.7" ]; then
+		if [ -f "$HOME/.local/bin/python2.7" ]; then
+			PYTHONDIR="$HOME/.local/bin/python2.7"
+			echo "Python 2.7 directory found"
+			echo "Continuing..."
+		elif [ -f "/usr/bin/python2.7" ];then
 			PYTHONDIR="/usr/bin/python2.7"
 			echo "Python 2.7 directory found"
 			echo "Continuing..."
 		else
 			while [ $loopvar == 1 ]; do 
 				echo "Enter the directory where python2.7 resides: "
+				which python
 				read USERPATH
 	
 				PYTHONDIR="$USERPATH/python2.7"
@@ -140,15 +144,29 @@ get_python_path()
 		read -p "(Y/n)?" choice
   		case "$choice" in
   		y|Y) 
-			#sudo apt-get install python2.7 #May not work on all linux distros but hopefully all debian distros
-			yum install python2.7
-			if [ -f "/usr/bin/python2.7" ]; then
-				PYTHONDIR="/usr/bin/python2.7"
+			mkdir ''$HOME'/.local/' >/dev/null 2>&1
+			wget --directory-prefix=''$HOME'/.local/' 'http://www.python.org/ftp/python/2.7.4/Python-2.7.4.tar.bz2'
+			cd ''$HOME'/.local/'
+			tar -xjf 'Python-2.7.4.tar.bz2'
+			cd 'Python-2.7.4'
+			make clean
+			./configure --prefix=''$HOME'/.local'
+			make
+			make install
+			cd ..
+			rm 'Python-2.7.4.tar.bz2'
+			rm -R 'Python-2.7.4'
+			
+
+			if [ -f "$HOME/.local/bin/python2.7" ];then
+				PYTHONDIR="$HOME/.local/bin/python2.7"
 				echo "Python 2.7 directory found"
 				echo "Continuing..."
 			else
 				echo "Python 2.7 directory not found"
-				#TODO allow user to look and provide path if their system installed python else where
+				echo "BerryPI initialization can not continue"
+				echo "Aborted"
+				exit 1	
 			fi
 		;;
 		n|N)
@@ -162,10 +180,9 @@ get_python_path()
 
 check_numpy_exists()
 {
-	numpyver=$($PYTHONDIR -c 'import numpy; print numpy.__version__')
-
-	if [ $numpyver == '1.6.2' ];then
-		echo "A NumPy directory exists"
+	numpyver=$($PYTHONDIR -c 'import numpy; print numpy.__version__' 2>/dev/null )
+	if [ "$numpyver" == "1.6.2" ];then
+		echo "A NumPy 1.6.2 directory exists"
 		echo "Continuing..."
 	else
 		echo "No NumPy directory found"
@@ -176,11 +193,18 @@ check_numpy_exists()
   		case "$choice" in
   		y|Y) 
 			
-			#sudo apt-get install python-numpy #May not work on all linux distros but hopefully all debian distros
-			yum install python-numpy
-
-			if [-d "usr/lib/python2.7/dist-packages/numpy" ]; then
-				echo "A NumPy directory exists"
+			cd ''$HOME'/.local/'
+			wget 'sourceforge.net/projects/numpy/files/NumPy/1.6.2/numpy-1.6.2.tar.gz/download'
+			tar -xzvf 'download'
+			cd 'numpy-1.6.2'
+			$PYTHONDIR 'setup.py' install --prefix=''$HOME'/.local/'
+			cd ..
+			rm 'download'
+			rm -R 'numpy-1.6.2'
+			
+			numpyver=$($PYTHONDIR -c 'import numpy; print numpy.__version__' >/dev/null 2>&1 )
+			if [ $numpyver == '1.6.2' ];then
+				echo "A NumPy 1.6.2 directory exists"
 				echo "Continuing..."
 			else
 				echo "NumPy was unable to be intalled"
