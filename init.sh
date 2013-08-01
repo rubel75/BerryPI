@@ -86,8 +86,8 @@ else
 	echo "If missing Python2.7 or NumPy 1.6.2."
 	echo "This script will be unable to download and install them" 
 fi
-
-#ping -q -w 1 -c 1 `ip r | grep default | cut -d ' ' -f 3` >/dev/null && echo ok || echo error
+echo "Internet Status: " 
+ping -q -w 1 -c 1 `ip r | grep default | cut -d ' ' -f 3` >/dev/null && echo ok || echo error
 echo "######################################################################"
 #
 
@@ -208,7 +208,7 @@ get_python_path()
 
 check_numpy_exists()
 {
-	numpyver=$($PYTHONDIR -c 'import numpy; print numpy.__version__' 2>/dev/null )
+	numpyver=$($PYTHONDIR -c 'import numpy; print numpy.__version__' )
 	if [ "$numpyver" == "1.6.2" ];then
 		echo "A NumPy 1.6.2 directory exists"
 		echo "Continuing..."
@@ -242,13 +242,16 @@ check_numpy_exists()
 				rm -R 'numpy-1.6.2'
 			fi
 			
-			numpyver=$($PYTHONDIR -c 'import numpy; print numpy.__version__' >/dev/null 2>&1 )
-			if [ $numpyver == '1.6.2' ];then
+			numpyver=$($PYTHONDIR -c 'import numpy; print numpy.__version__' )
+			if [ '$numpyver' == '1.6.2' ];then
 				echo "A NumPy 1.6.2 directory exists"
 				echo "Continuing..."
 			else
 				echo "NumPy was unable to be intalled"
+				cd "$DIR"
+				bash 'init.sh'
 				exit 1
+				
 			fi
 		;;
 		n|N)
