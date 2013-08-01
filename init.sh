@@ -9,6 +9,8 @@ BERRYPIDIR=""
 PYTHONDIR= "/local/bin/python2.7"
 SOURCE=""
 DIR=""
+iswget=true
+iscurl=true			
 #
 clear
 echo "######################################################################"
@@ -54,7 +56,7 @@ else
 	else
 		echo "WIEN2K not detected. BerryPI will not run without WIEN2K."
 		echo "Initialization aborted"
-		#exit 1
+		exit 1
 	fi
 	
 fi
@@ -68,9 +70,24 @@ else
 	else
 		echo "w2w not detected. BerryPI will not run without W2WANNIER."
 		echo "Initialization aborted"
-		#exit 1
+		exit 1
 	fi
 fi
+
+type wget >/dev/null 2>&1 ||{ iswget=false; }
+type curl >/dev/null 2>&1 ||{ iscurl=false; }
+
+if [ $iswget ]; then
+	echo "Installation via wget available"
+elif [ $iscurl  ]; then
+	echo "Installation via curl available"
+else
+	echo "wget and curl not available."
+	echo "If missing Python2.7 or NumPy 1.6.2."
+	echo "This script will be unable to download and install them" 
+fi
+
+#ping -q -w 1 -c 1 `ip r | grep default | cut -d ' ' -f 3` >/dev/null && echo ok || echo error
 echo "######################################################################"
 #
 
@@ -98,7 +115,6 @@ get_berrypi_path()
 			else
 				echo "BerryPI directory specified is incorrect"
 				echo "Format(/subdir/berrydir) ex: /home/user/Desktop"
-		
 			fi
 		done	
 	fi
@@ -144,18 +160,30 @@ get_python_path()
 		read -p "(Y/n)?" choice
   		case "$choice" in
   		y|Y) 
+			
+			isinstall=true
 			mkdir ''$HOME'/.local/' >/dev/null 2>&1
-			wget --directory-prefix=''$HOME'/.local/' 'http://www.python.org/ftp/python/2.7.4/Python-2.7.4.tar.bz2'
 			cd ''$HOME'/.local/'
-			tar -xjf 'Python-2.7.4.tar.bz2'
-			cd 'Python-2.7.4'
-			make clean
-			./configure --prefix=''$HOME'/.local'
-			make
-			make install
-			cd ..
-			rm 'Python-2.7.4.tar.bz2'
-			rm -R 'Python-2.7.4'
+			
+			if [ $iswget ]; then
+				wget 'http://www.python.org/ftp/python/2.7.4/Python-2.7.4.tar.bz2'
+			elif [ $iscurl ]; then
+				curl -O 'http://www.python.org/ftp/python/2.7.4/Python-2.7.4.tar.bz2'
+			else
+				isinstall=false
+			fi
+			
+			if [ $isinstall ]; then
+				tar -xjf 'Python-2.7.4.tar.bz2'
+				cd 'Python-2.7.4'
+				make clean
+				./configure --prefix=''$HOME'/.local'
+				make
+				make install
+				cd ..
+				rm 'Python-2.7.4.tar.bz2'
+				rm -R 'Python-2.7.4'
+			fi
 			
 
 			if [ -f "$HOME/.local/bin/python2.7" ];then
@@ -193,14 +221,26 @@ check_numpy_exists()
   		case "$choice" in
   		y|Y) 
 			
+			isinstall=true
+			mkdir ''$HOME'/.local/' >/dev/null 2>&1
 			cd ''$HOME'/.local/'
-			wget 'sourceforge.net/projects/numpy/files/NumPy/1.6.2/numpy-1.6.2.tar.gz/download'
-			tar -xzvf 'download'
-			cd 'numpy-1.6.2'
-			$PYTHONDIR 'setup.py' install --prefix=''$HOME'/.local/'
-			cd ..
-			rm 'download'
-			rm -R 'numpy-1.6.2'
+
+			if [ $iswget ]; then
+				wget 'sourceforge.net/projects/numpy/files/NumPy/1.6.2/numpy-1.6.2.tar.gz/download'
+			elif [ $iscurl ]; then
+				curl -O 'sourceforge.net/projects/numpy/files/NumPy/1.6.2/numpy-1.6.2.tar.gz/download'
+			else
+				isinstall=false
+			fi
+			
+			if [ $isinstall ]; then
+				tar -xzvf 'download'
+				cd 'numpy-1.6.2'
+				$PYTHONDIR 'setup.py' install --prefix=''$HOME'/.local/'
+				cd ..
+				rm 'download'
+				rm -R 'numpy-1.6.2'
+			fi
 			
 			numpyver=$($PYTHONDIR -c 'import numpy; print numpy.__version__' >/dev/null 2>&1 )
 			if [ $numpyver == '1.6.2' ];then
@@ -275,24 +315,12 @@ if [ -f "$file" ]; then
 	done <"$file"
 fi
 
+
 if [ $ispaths == 0 ]; then
 	echo '# --- BERRYPI START ---' >> $file
 	echo 'export BERRYPI_PATH='$BERRYPIDIR'' >> $file
 	echo 'export BERRYPI_PYTHON='$PYTHONDIR'' >> $file
 	echo 'alias berrypi="${BERRYPI_PYTHON} ${BERRYPI_PATH}/berrypi"' >> $file
 	echo '# --- BERRYPI END ---' >> $file
-fi
-
-
-
-
-
-
-
-
-
-
-
-
-
+fi 
 
