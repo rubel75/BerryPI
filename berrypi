@@ -7,6 +7,7 @@ import sys, shutil, getopt
 import time
 import json
 import subprocess
+from decimal import Decimal
 
 import errorCheck as b_PyError
 import parsing as b_PyParse
@@ -387,17 +388,45 @@ def writeResult(configFile, mainCalculationObject):
 		valuex = values[0]
 		valuey = values[1]
 		valuez = values[2]
-		
-		for j in range(len(valuex)):
-			if j+1 < 10:
-				print "                  \t    "+str(j+1)+"   | "+str([valuex[j],valuey[j],valuez[j]])
-			elif j+1< 100:
-				print "                  \t    "+str(j+1)+"  | "+str([valuex[j],valuey[j],valuez[j]])
-			elif j+1 < 1000:
-				print "                  \t    "+str(j+1)+" | "+str([valuex[j],valuey[j],valuez[j]])
+
+		lengths = [len(valuex), len(valuey), len(valuez)]
+
+		max_length = max(lengths)
+
+		print "\tPass:\t\t\tX\t\t\tY\t\t\tZ"
+		for i in range(max_length):
+			string ="\t   "+str(i)+":\t\t\t"
+			if i < lengths[0]:
+				if abs(Decimal(str(valuex[i])).as_tuple().exponent) >= 15:
+					string = string+str(valuex[i])+"\t"
+				elif abs(Decimal(str(valuex[i])).as_tuple().exponent) >= 10:
+					string = string+str(valuex[i])+"\t\t"
+				else:
+					string = string+str(valuex[i])+"\t\t\t"
 			else:
-				print "                  \t    "+str(j+1)+"| "+str([valuex[j],valuey[j],valuez[j]]) 
-		print "\n"
+				string = string+"\t\t\t"
+			if i< lengths[1]:
+
+				if abs(Decimal(str(valuey[i])).as_tuple().exponent) >= 15:
+					string = string+str(valuey[i])+"\t"
+				elif abs(Decimal(str(valuey[i])).as_tuple().exponent) >= 10:
+					string = string+str(valuey[i])+"\t\t"
+				else:
+					string = string+str(valuey[i])+"\t\t\t"	
+			else:
+				string = string+"\t\t\t"
+
+			if i< lengths[2]:
+				
+				if abs(Decimal(str(valuez[i])).as_tuple().exponent) >= 15:
+					string = string+str(valuez[i])+"\t"
+				elif abs(Decimal(str(valuez[i])).as_tuple().exponent) >= 10:
+					string = string+str(valuez[i])+"\t\t"
+				else:
+					string = string+str(valuez[i])+"\t\t\t"	
+			else:
+				string = string+"\t\t\t"
+			print string
 
 	#construct filename from structure name and path
 	filename = os.path.join(configFile['Structure Path'], configFile['Structure Name'] + BERRY_FILE_EXTENSION)
@@ -427,7 +456,9 @@ def writeResult(configFile, mainCalculationObject):
 	phaseConsistentDomainValues = mainCalculationObject.getPhaseConsistentDomainValues()
 	phaseCorrectedValues = mainCalculationObject.getPhaseCorrectedValues()
 	phaseMeanValues = mainCalculationObject.valuephaseMeanValues()#Same as berry2pi/Electronic Phase [0 to 2]
-
+	phaseConsistentDomainValues2 = mainCalculationObject.getPhaseConsistentDomainValues2()
+	phaseCorrectedValues2 = mainCalculationObject.getPhaseCorrectedValues2()
+	
 	#electronpolar2pi = mainCalculationObject.electronpolar2pi()
 	remappedberry = mainCalculationObject.remappedberryphase()
 	electronPolarization = mainCalculationObject.electronPolarization()
@@ -559,31 +590,43 @@ def writeResult(configFile, mainCalculationObject):
 	#Extended output
 	print DEFAULT_PREFIX +"                                         ---BERRYPI EXTENDED COMPUTATION OUTPUT---\n"
 
-	print "                 \t pass   |\tx        |\t  y         |\t  z"
-	print "          PHASE VALUES:"
+	print "\tPHASE VALUES:"
 
 	valuex = phaseValues[0]['values']
 	valuey = phaseValues[1]['values']
 	valuez = phaseValues[2]['values']
 	
-	for j in range(len(valuex)):
-		if j+1 < 10:
-			print "                  \t    "+str(j+1)+"   | "+str([valuex[j],valuey[j],valuez[j]])
-		elif j+1< 100:
-			print "                  \t    "+str(j+1)+"  | "+str([valuex[j],valuey[j],valuez[j]])
-		elif j+1 < 1000:
-			print "                  \t    "+str(j+1)+" | "+str([valuex[j],valuey[j],valuez[j]])
+	lengths = [len(valuex), len(valuey), len(valuez)]
+
+	max_length = max(lengths)
+
+	
+	print "\tPass:\t\t\tX\t\t\tY\t\t\tZ"
+	for i in range(max_length):
+		string ="\t   "+str(i)+":\t\t\t"
+		if i < lengths[0]:
+			string = string+str(valuex[i])+"\t\t\t"
 		else:
-			print "                  \t    "+str(j+1)+"| "+str([valuex[j],valuey[j],valuez[j]]) 
+			string = string+"\t\t\t"
+		if i< lengths[1]:
+			string = string+str(valuey[i])+"\t\t\t"
+		else:
+			string = string+"\t\t\t"
+		if i< lengths[2]:
+			string = string+str(valuez[i])+"\t\t\t"
+		else:
+			string = string+"\t\t\t"
+		print string
 	print "\n"
 
-	print "  PHASE CORRECT DOMAIN:"
-
+	print "  PHASE Wrapped [0, 2]"
 	ExtendedPrint(phaseConsistentDomainValues)
-
-	print "PHASE CORRECTED VALUES:"
-
+	print "PHASE Unwrapped [0,2]"
 	ExtendedPrint(phaseCorrectedValues)
+	print "  PHASE Wrapped [-1, 1]"
+	ExtendedPrint(phaseConsistentDomainValues2)
+	print "PHASE Unwrapped [-1,1]"
+	ExtendedPrint(phaseCorrectedValues2)
 
 	#json version of our code
 	someString = json.dumps(calcValues, indent=4)
@@ -723,12 +766,7 @@ if __name__ == "__main__":
 		
 		#For number of divisons 
 		elif argName in ('-k', '--kdiv'):
-			try:
-				structure_kmesh = [ int(i) for i in argValue.split(':') ]
-			except valueError:
-				print structure_kmesh
-				print "Error: Please enter integers into the kmesh in the format of '-kx:x:x'"
-				exit(1)
+			structure_kmesh = [ int(i) for i in argValue.split(':') ]
 
 		#Determines whether you should include lapw1 in the automation
 		elif argName in ('-l', '--no-lapw'):
@@ -746,22 +784,6 @@ if __name__ == "__main__":
 		else:
 			print("Invalid argument {} - {}").format(argName, argValue)
 			sys.exit(2)
-
-	#Makes sure that the length of the tuple is 3 
-	if len(structure_kmesh)!=3:
-		print structure_kmesh
-		print "Error: Please make sure that you have 3 integers in the kmesh"
-		exit(1)
-
-	if 0 in structure_kmesh:
-		print structure_kmesh
-		print "Error: Cannot have a dimension of 0 in the kmesh"
-		exit(1)
-
-	if max(structure_kmesh)>11
-		print structure_kmesh
-		print "Error: Please make sure that your kmesh values are within the range of 1 - 10"
-		exit(1)
 
 	#if configuration values are provided, create config file to pass
 	#to the automation and calculations
@@ -826,5 +848,5 @@ if __name__ == "__main__":
 	print "\nCompleted using BerryPI version 1.0"
 	print "\nBerryPI is a joint project between Thunder Bay Regional Research Institute and Lakehead University"
 	print "\nSuggested reference:\n  S.J.Ahmed, J.Kivinen, B.Zaporzan, L.Curiel, S.Pichardo, O.Rubel,Comp. Phys. Commun. 184, 647 (2013)"	
-	print ("\nQuestions and comments are to be directed to\n  1.Dr. Oleg Rubel \n    Lakehead University\n          and\n    Thunder Bay Regional Research Institute\n    290 Munro Street, Thunder Bay, ON Canada P7A 7T1\n    Tel:+1 (807) 766-3350 \n    E-mail:rubelo@tbh.net\n    URL:http://www.tbrri.com/~orubel")
-	print ("\n  2.Dr. Samuel Pichardo \n    Lakehead University\n          and\n    Sunnybrook Health Sciences Centre\n    2075 Bayview Avenue, Toronto, ON Canada M4N 3M5 \n    Tel:+1 (416) 480-6100 Ext:6156\n    E-mail:spichard@lakeheadu.ca\n    URL:http://www.proteus-mrighifu.net")
+	print ("\nQuestions and comments are to be directed to\n  1.Dr. Oleg Rubel \n    Lakehead University\n          and\n    Thunder Bay Regional Research institute\n    290 Munro Street, Thunder Bay, ON Canada P7A 7T1\n    Tel:+1 (807) 766-3350 \n    E-mail:rubelo@tbh.net\n    URL:http://www.tbrri.com/~orubel")
+	print ("\n  2.Dr. Samuel Pichardo \n    Lakehead University\n          and\n    Sunnybrook Health Science Centre\n    2075 Bayview Avenue, Toronto, ON Canada M4N 3M5 \n    Tel:+1 (416) 480-6100 Ext:6156\n    E-mail:spichard@lakeheadu.ca\n    URL:http://www.proteus-mrighifu.net")

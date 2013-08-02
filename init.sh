@@ -86,8 +86,6 @@ else
 	echo "If missing Python2.7 or NumPy 1.6.2."
 	echo "This script will be unable to download and install them" 
 fi
-echo "Internet Status: " 
-ping -q -w 1 -c 1 `ip r | grep default | cut -d ' ' -f 3` >/dev/null && echo ok || echo error
 echo "######################################################################"
 #
 
@@ -123,11 +121,22 @@ get_berrypi_path()
 get_python_path()
 {
 	pyexist=true
+	islocal=true
+	isbin=true
 	# >/dev/null 2>&1 to mask the string that type echos 
-	type python2.7 >/dev/null 2>&1 || { local pyexist=false; echo >&2 "I require python 2.7 but it's not installed.";}
+	type python2.7 >/dev/null 2>&1 || { pyexist=false;}
 	
-	if [ $pyexist == true ]; then
+	if ! [  -f "$HOME/.local/bin/python2.7" ]; then
+		islocal=false	
+	fi
+
+	if ! [ -f "/usr/bin/python2.7" ]; then
+		isbin=false
+	fi
+	
+	if $pyexist || $islocal || $isbin ;then
 		loopvar=1
+		
 		if [ -f "$HOME/.local/bin/python2.7" ]; then
 			PYTHONDIR="$HOME/.local/bin/python2.7"
 			echo "Python 2.7 directory found"
@@ -208,7 +217,7 @@ get_python_path()
 
 check_numpy_exists()
 {
-	numpyver=$($PYTHONDIR -c 'import numpy; print numpy.__version__' )
+	numpyver=$($PYTHONDIR -c 'import numpy; print numpy.__version__')  
 	if [ "$numpyver" == "1.6.2" ];then
 		echo "A NumPy 1.6.2 directory exists"
 		echo "Continuing..."
@@ -234,20 +243,21 @@ check_numpy_exists()
 			fi
 			
 			if [ $isinstall ]; then
-				tar -xzvf 'download'
+				tar -xzvf 'numpy-1.6.2.tar.gz'
 				cd 'numpy-1.6.2'
 				$PYTHONDIR 'setup.py' install --prefix=''$HOME'/.local/'
 				cd ..
-				rm 'download'
+				rm 'numpy-1.6.2.tar.gz'
 				rm -R 'numpy-1.6.2'
 			fi
 			
-			numpyver=$($PYTHONDIR -c 'import numpy; print numpy.__version__' )
+			numpyver=$($PYTHONDIR -c 'import numpy; print numpy.__version__' ) 
 			if [ '$numpyver' == '1.6.2' ];then
 				echo "A NumPy 1.6.2 directory exists"
 				echo "Continuing..."
 			else
 				echo "NumPy was unable to be intalled"
+				#Restart script as numPy sometimes doesn't want to be detected until the script restarts
 				cd "$DIR"
 				bash 'init.sh'
 				exit 1
