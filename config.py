@@ -13,10 +13,10 @@ username = 'benzap'
 #######################################################
 
 #fix for location of python file locations when executing from the python commandline
-DEFAULT_BIN_PATH='C:\Users\David Hassan\Desktop\BerryPI-master\BerryPI-master\BerryPI'
+DEFAULT_BIN_PATH=''
 
 #Fix for python path to make sure it grabs the latest version
-DEFAULT_PYTHON_PATH='C:\Python27\python'
+DEFAULT_PYTHON_PATH=''
 
 
 ########################################################
