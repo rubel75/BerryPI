@@ -384,7 +384,7 @@ def writeResult(configFile, mainCalculationObject):
 	file
 	'''
 	
-	def ExtendedPrint(values):
+	def ExtendedPrint(values,fileHandle):
 		valuex = values[0]
 		valuey = values[1]
 		valuez = values[2]
@@ -392,8 +392,9 @@ def writeResult(configFile, mainCalculationObject):
 		lengths = [len(valuex), len(valuey), len(valuez)]
 
 		max_length = max(lengths)
-
-		print "\tPass:\t\t\tX\t\t\tY\t\t\tZ"
+		#print "\tPass:\t\t\tX\t\t\tY\t\t\tZ"
+		fileHandle.write("\tPass:\t\t\tX\t\t\tY\t\t\tZ")
+		fileHandle.write("\n")
 		for i in range(max_length):
 			string ="\t   "+str(i)+":\t\t\t"
 			if i < lengths[0]:
@@ -426,7 +427,9 @@ def writeResult(configFile, mainCalculationObject):
 					string = string+str(valuez[i])+"\t\t\t"	
 			else:
 				string = string+"\t\t\t"
-			print string
+			#print string
+			fileHandle.write(string)
+			fileHandle.write("\n")
 
 	#construct filename from structure name and path
 	filename = os.path.join(configFile['Structure Path'], configFile['Structure Name'] + BERRY_FILE_EXTENSION)
@@ -585,12 +588,18 @@ def writeResult(configFile, mainCalculationObject):
 	for i in totalpolarneg1to1:
 		a=str(i)+"\t"
 		fileHandle.write(a)
+	
+	fileHandle.write("\n")
+	fileHandle.write("\n")
+	fileHandle.write("\n")
+	fileHandle.write(DEFAULT_PREFIX +"               ---BERRYPI EXTENDED COMPUTATION OUTPUT---\n")
+	fileHandle.write("\n")
+	fileHandle.write("\tPHASE VALUES:")
+	fileHandle.write("\n")
+	fileHandle.write("\tPass:\t\t\tX\t\t\tY\t\t\tZ")
+	fileHandle.write("\n")
+	
 
-	print "\n"
-	#Extended output
-	print DEFAULT_PREFIX +"                                         ---BERRYPI EXTENDED COMPUTATION OUTPUT---\n"
-
-	print "\tPHASE VALUES:"
 
 	valuex = phaseValues[0]['values']
 	valuey = phaseValues[1]['values']
@@ -601,7 +610,7 @@ def writeResult(configFile, mainCalculationObject):
 	max_length = max(lengths)
 
 	
-	print "\tPass:\t\t\tX\t\t\tY\t\t\tZ"
+	#print "\tPass:\t\t\tX\t\t\tY\t\t\tZ"
 	for i in range(max_length):
 		string ="\t   "+str(i)+":\t\t\t"
 		if i < lengths[0]:
@@ -616,17 +625,29 @@ def writeResult(configFile, mainCalculationObject):
 			string = string+str(valuez[i])+"\t\t\t"
 		else:
 			string = string+"\t\t\t"
-		print string
-	print "\n"
-
-	print "  PHASE Wrapped [0, 2]"
-	ExtendedPrint(phaseConsistentDomainValues)
-	print "PHASE Unwrapped [0,2]"
-	ExtendedPrint(phaseCorrectedValues)
-	print "  PHASE Wrapped [-1, 1]"
-	ExtendedPrint(phaseConsistentDomainValues2)
-	print "PHASE Unwrapped [-1,1]"
-	ExtendedPrint(phaseCorrectedValues2)
+		#print string
+		fileHandle.write(string)
+		fileHandle.write("\n")
+	
+	#print "\n"
+	fileHandle.write("\n")
+	fileHandle.write("  PHASE Wrapped [0, 2]")
+	fileHandle.write("\n")
+	
+	#print "  PHASE Wrapped [0, 2]"
+	ExtendedPrint(phaseConsistentDomainValues,fileHandle)
+	#print "PHASE Unwrapped [0,2]"
+	fileHandle.write("  PHASE Unwrapped [0, 2]")
+	fileHandle.write("\n")
+	ExtendedPrint(phaseCorrectedValues,fileHandle)
+	#print "  PHASE Wrapped [-1, 1]"
+	fileHandle.write("  PHASE Unwrapped [-1, 1]")
+	fileHandle.write("\n")
+	ExtendedPrint(phaseConsistentDomainValues2,fileHandle)
+	#print "PHASE Unwrapped [-1,1]"
+	fileHandle.write("  PHASE Unwrapped [-1, 1]")
+	fileHandle.write("\n")
+	ExtendedPrint(phaseCorrectedValues2,fileHandle)
 
 	#json version of our code
 	someString = json.dumps(calcValues, indent=4)
