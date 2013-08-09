@@ -47,6 +47,7 @@ def performCalculation(configFile):
         print(DEFAULT_PREFIX + "Checking existance of {}").format(tempFilename)
         if not b_PyError.fileExists(tempFilename):
             print( DEFAULT_PREFIX + "{} does not exist, cannot finish calculation").format(tempFilename)
+            exit(2)
         else: print DEFAULT_PREFIX + '-- OK'
 
     #perform the main calculation
@@ -844,7 +845,7 @@ if __name__ == "__main__":
             print("Invalid argument {} - {}").format(argName, argValue)
             sys.exit(2)
 
-    if ~helpOpt or ~checkAuto:
+    if not helpOpt and  checkAuto:
 	#automates the inputting of kmesh values
 	#list1=['-k','3:3:3']
 	k_mesh_values=raw_input('What kmesh values would you like? (e.g. 2:2:2)\n')
