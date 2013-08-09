@@ -57,5 +57,5 @@ class VirtualShellInstance:
         return commandString
 
 if __name__ == '__main__':
-    x = VirtualShellInstance('ping', '-c', '2','google.com', input=2)
+    x = VirtualShellInstance('init_lapw', '-b', '-rkmax 6', '-numk 1')#VirtualShellInstance('ping', '-c', '2','google.com', input=2)
     x()

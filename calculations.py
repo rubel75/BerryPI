@@ -39,71 +39,76 @@ COORDINATE_CORRECTION_UPPER_BOUND = 1.0
 COORDINATE_CORRECTION_LOWER_BOUND = 0.8
 
 class PathphaseCalculation:
-    '''
-    -- arguments --
+	'''
+	-- arguments --
 
-    values(list) : list of berry phase values which you wish to pass
-    to the calculation
+	values(list) : list of berry phase values which you wish to pass
+	to the calculation
 
-    
-    '''
-    def __init__(self, **arguments):
-        self.topDomain = math.pi * 2
-        self.values = arguments['values']
-        self.correctDomain() #produces correct domain in self.correctedValues
-        self.meanValue = (sum(self.correctedValues) / len(self.correctedValues)) / (self.topDomain/2)
-#	print self.meanValue
-    def correctDomain(self):
-        '''
-        Correct the domain of the pathphase values so that they lie
-        within the [0, 2PI] domain -- [0. 6.28]
-        '''
-        topDomain = self.topDomain
 
-        self.consistentDomainValues = self.values[:]
+	'''
+	def __init__(self, **arguments):
+		self.topDomain = math.pi * 2
+		self.values = arguments['values']
+		self.correctDomain() #produces correct domain in self.correctedValues
+		self.meanValue = (sum(self.correctedValues) / len(self.correctedValues)) / (self.topDomain/2)
+		#	print self.meanValue
 	
-        #use modulo 2PI to maintain a consistent domain
-        self.consistentDomainValues = [ (i + (2 *numpy.pi)) % topDomain for i in self.consistentDomainValues]
+
+	def correctDomain(self):
+		'''
+		Correct the domain of the pathphase values so that they lie
+		within the [0, 2PI] domain -- [0. 6.28]
+		'''
+		def correctPhaseDomain(phaseValue):
+			'''
+			Corrects the values phase so that it resides 
+			between topDomain and bottomDomain
+			'''
+			topDomain = 1.
+			bottomDomain = -1.
+
+			domainRange = topDomain - bottomDomain
+
+			phaseValue %= domainRange
+			if phaseValue >= topDomain or phaseValue <= bottomDomain:
+				if phaseValue > 0:
+						phaseValue -= domainRange
+				elif phaseValue <= 0:
+				    phaseValue += domainRange
+			return phaseValue
+
+		topDomain = self.topDomain
+
+		self.consistentDomainValues = self.values[:]
+		self.consistentDomainValues2 = self.values[:]
+		#use modulo 2PI to maintain a consistent domain
+		self.consistentDomainValues = [ (i + (2 *numpy.pi)) % topDomain for i in self.consistentDomainValues]
+
+
+		self.consistentDomainValues2 = [ correctPhaseDomain(i) for i in self.consistentDomainValues2]
+
+		self.correctedValues=numpy.unwrap(self.consistentDomainValues)
+		self.correctedValues2=numpy.unwrap(self.consistentDomainValues2)
         
+	def getValues(self):
+		return self.values
 
-        self.correctedValues=numpy.unwrap(self.consistentDomainValues)
+	def getCorrectedValues(self):
+		return self.correctedValues
+	def getCorrectedValues2(self):
+		return self.correctedValues2
 
-	#self.correctedValues = [ numpy.unwrap(i) for i in self.correctedValues ]
-        #function to add topDomain when value is less than zero
-       # def correctNegation(x):
-       #     if x < 0: return x + topDomain
-        #    else: return x
-        #self.correctedValues = map(
-         #                          correctNegation,
-          #                         self.correctedValues
-           #                        )
+	
+	def getMeanValue(self):
+		return self.meanValue
 
-        #correct for 2*pi values which should be
-        #zero
-        #def correctToZero(x):
-         #   if x > (self.topDomain - GAMMA_ZEROING_VALUE):
-          #     z = 2* math.pi - x
-           #    return z
-            #else:
-             #  return x
-        #self.correctedValues = map(
-         #                          correctToZero,
-          #                         self.correctedValues
-           #                       )
-        #print self.correctedValues
-        #return self.correctedValues
-        
-    def getValues(self):
-        return self.values
+	def getConsistentDomainValues(self):
+		return self.consistentDomainValues
+	def getConsistentDomainValues2(self):
+		return self.consistentDomainValues2
 
-    def getCorrectedValues(self):
-        return self.correctedValues
-
-    def getMeanValue(self):
-        return self.meanValue
-
-    def getConsistentDomainValues(self):
-	return self.consistentDomainValues
+		
 
 class CalculateNumberOfBands:
     '''
@@ -245,8 +250,9 @@ class MainCalculationContainer:
         phaseObjects = [ PathphaseCalculation(values=i['values']) for i in phaseValues ]
         
 	self.value_phaseConsistentDomainValues = [i.getConsistentDomainValues() for i in phaseObjects]
-
+	self.value_phaseConsistentDomainValues2 = [i.getConsistentDomainValues2() for i in phaseObjects]
         self.value_phaseCorrectedValues = [ i.getCorrectedValues() for i in phaseObjects ]
+	self.value_phaseCorrectedValues2 = [ i.getCorrectedValues2() for i in phaseObjects ]
 	#receive mean values
         self.value_phaseMeanValues = value_phaseMeanValues = [ i.getMeanValue() for i in phaseObjects ]
 
@@ -259,18 +265,24 @@ class MainCalculationContainer:
         self.calculateNetPolarizationEnergy()
 
 
-#Berry/Electrcnic phase value in [0 to 2] range
+	#Berry/Electrcnic phase value in [0 to 2] range
     def getPhasevalues(self):
-	return self.phaseValues
+		return self.phaseValues
 
     def getPhaseConsistentDomainValues(self):
-	return self.value_phaseConsistentDomainValues
+		return self.value_phaseConsistentDomainValues
+    def getPhaseConsistentDomainValues2(self):
+		return self.value_phaseConsistentDomainValues2
+
 
     def getPhaseCorrectedValues(self):
-	return self.value_phaseCorrectedValues
+		return self.value_phaseCorrectedValues
+    def getPhaseCorrectedValues2(self):
+		return self.value_phaseCorrectedValues2
+
 
     def valuephaseMeanValues(self):
-	return self.value_phaseMeanValues
+		return self.value_phaseMeanValues
 
     def __call__(self):
         return self.netPolarizationEnergy()
@@ -312,8 +324,8 @@ class MainCalculationContainer:
         lattice_z = absVector(latticeMatrix_z)
 	### e/V*latticeconstant
 	self._ebyVandlatticeconstant.append(ELEC_BY_VOL_CONST * bohrToMeters(latticeConstants[0]))
- 	self._ebyVandlatticeconstant.append(ELEC_BY_VOL_CONST * bohrToMeters(latticeConstants[1]))
- 	self._ebyVandlatticeconstant.append(ELEC_BY_VOL_CONST * bohrToMeters(latticeConstants[2]))
+	self._ebyVandlatticeconstant.append(ELEC_BY_VOL_CONST * bohrToMeters(latticeConstants[1]))
+	self._ebyVandlatticeconstant.append(ELEC_BY_VOL_CONST * bohrToMeters(latticeConstants[2]))
        
 
 	#print  DEFAULT_PREFIX + "e/V*lattice constant\n           "+str(self._ebyVandlatticeconstant)+"\n"
@@ -322,11 +334,11 @@ class MainCalculationContainer:
 	###Electronic Polarization in [-1 to +1] range
 	electronpolar2pix =  berryphase[0] * ELEC_BY_VOL_CONST * bohrToMeters(latticeConstants[0])
 	electronpolar2piy =  berryphase[1] * ELEC_BY_VOL_CONST * bohrToMeters(latticeConstants[1])
-        electronpolar2piz =  berryphase[2] * ELEC_BY_VOL_CONST * bohrToMeters(latticeConstants[2])
+	electronpolar2piz =  berryphase[2] * ELEC_BY_VOL_CONST * bohrToMeters(latticeConstants[2])
 
 	self._electronpolar2pi = [ electronpolar2pix, electronpolar2piy, electronpolar2piz ]
 
-  
+
 	###Electronic/Berry Phase Remapping in between -pi to +pi to calculate electronic Polrization	
 	remappedberryx=self.correctPhaseDomain( berryphase[0])
 	remappedberryy=self.correctPhaseDomain( berryphase[1])
@@ -348,15 +360,15 @@ class MainCalculationContainer:
 #Electron polrization in [0 to 2] range
 
     def electronpolar2pi(self):
-	return self._electronpolar2pi
+		return self._electronpolar2pi
 
 
 #Berry/electronic phase in [-1 to +1] range  
     def remappedberryphase(self):	
-	return self._berryremapped	
+		return self._berryremapped	
 
     def ebyVlatticeconstant(self):		
-	return self._ebyVandlatticeconstant	
+		return self._ebyVandlatticeconstant	
 
 
 #Electron polrization in [-1 to +1 range]
@@ -403,19 +415,6 @@ class MainCalculationContainer:
 
                     #produce tuple from coordinates
                     coordinates = (xCoordinate, yCoordinate, zCoordinate)
-        #            self._calcIonValues=[0,0,0]		    
-        #            self._calcIonValues.append(theElementName,theValence,coordinates)
-                     
-
-                    #correct coordinates which are close to 1.0 between 
-                    #(COORDINATE_CORRECTION_LOWER_BOUND,COORDINATE_CORRECTION_UPPER_BOUND)
-                   # def correctCoordinates(x):
-                    #    if x > COORDINATE_CORRECTION_LOWER_BOUND:
-                     #      print DEFAULT_PREFIX + "WARNING:Coordinate {} has been corrected to {} to account for periodic boundary condition".format(x, x-1)
-                      #     return x - 1.
-                       # else: return x
-                  #  coordinates = map(correctCoordinates, coordinates)
-                  #  append to calcIonValues list
                     calcIonValues.append((theElementName,coordinates, theValence))
                 else:
                     print DEFAULT_PREFIX + 'ERROR: Missing element in element list'
@@ -439,14 +438,14 @@ class MainCalculationContainer:
 #	print xPolarIon,yPolarIon,zPolarIon
 	xPolarionCorrected=xPolarIon%topPi
 	yPolarionCorrected=yPolarIon%topPi
-        zPolarionCorrected=zPolarIon%topPi
+	zPolarionCorrected=zPolarIon%topPi
 	self._ionicphase=[ xPolarionCorrected, yPolarionCorrected, zPolarionCorrected ]
 
        #IONIC Polarization in 2 PI range
         ionpolx = xPolarionCorrected * ELEC_BY_VOL_CONST * bohrToMeters(latticeConstants[0]) 
 	ionpoly = yPolarionCorrected * ELEC_BY_VOL_CONST * bohrToMeters(latticeConstants[1])
 	ionpolz = zPolarionCorrected * ELEC_BY_VOL_CONST * bohrToMeters(latticeConstants[2])    
-        self._ionicpolar2pi = [ ionpolx, ionpoly, ionpolz] 
+	self._ionicpolar2pi = [ ionpolx, ionpoly, ionpolz] 
 
 	
 	# Remapping of Ionic Phase in -pi to +pi for Ionic Polarization 
@@ -456,14 +455,14 @@ class MainCalculationContainer:
 	self._mappedionic=[ xPolrionmapped, yPolrionmapped, zPolrionmapped ]
          
 
-#	print DEFAULT_PREFIX + " New Polarion " + str((xPolarionCorrected,yPolarionCorrected,zPolarionCorrected))
-        #lattice constants were converted from bohr
-        xPolrionmapped *= ELEC_BY_VOL_CONST * bohrToMeters(latticeConstants[0])
-#        print DEFAULT_PREFIX + "(eV//V, Lattice Constant X, Lat_x in Meters) - " + str((ELEC_BY_VOL_CONST, latticeConstants[0], bohrToMeters(latticeConstants[0])))
-        yPolrionmapped *= ELEC_BY_VOL_CONST * bohrToMeters(latticeConstants[1])
-#        print DEFAULT_PREFIX + "(eV//V, Lattice Constant Y, Lat_y in Meters)  - " + str((ELEC_BY_VOL_CONST, latticeConstants[1], bohrToMeters(latticeConstants[1])))
-        zPolrionmapped *= ELEC_BY_VOL_CONST * bohrToMeters(latticeConstants[2])
- #       print DEFAULT_PREFIX + "(eV//V, Lattice Constant Z, Lat_z in Meters)  - " + str((ELEC_BY_VOL_CONST, latticeConstants[2], bohrToMeters(latticeConstants[2])))
+	#	print DEFAULT_PREFIX + " New Polarion " + str((xPolarionCorrected,yPolarionCorrected,zPolarionCorrected))
+			#lattice constants were converted from bohr
+	xPolrionmapped *= ELEC_BY_VOL_CONST * bohrToMeters(latticeConstants[0])
+	#        print DEFAULT_PREFIX + "(eV//V, Lattice Constant X, Lat_x in Meters) - " + str((ELEC_BY_VOL_CONST, latticeConstants[0], bohrToMeters(latticeConstants[0])))
+	yPolrionmapped *= ELEC_BY_VOL_CONST * bohrToMeters(latticeConstants[1])
+	#        print DEFAULT_PREFIX + "(eV//V, Lattice Constant Y, Lat_y in Meters)  - " + str((ELEC_BY_VOL_CONST, latticeConstants[1], bohrToMeters(latticeConstants[1])))
+	zPolrionmapped *= ELEC_BY_VOL_CONST * bohrToMeters(latticeConstants[2])
+	 #       print DEFAULT_PREFIX + "(eV//V, Lattice Constant Z, Lat_z in Meters)  - " + str((ELEC_BY_VOL_CONST, latticeConstants[2], bohrToMeters(latticeConstants[2])))
 	self._ionPolarization = [ xPolrionmapped, yPolrionmapped, zPolrionmapped ]
         ######## END ########
         return self._ionPolarization
@@ -506,15 +505,15 @@ class MainCalculationContainer:
 	phaseValue %= domainRange
         if phaseValue >= topDomain or phaseValue <= bottomDomain:
 	        if phaseValue > 0:
-		    phaseValue -= domainRange
+				phaseValue -= domainRange
 	        elif phaseValue <= 0:
 	            phaseValue += domainRange
         return phaseValue	
 
     def calculateNetPolarizationEnergy(self):
         '''
-	Need to correct the Berryphase so that it resides in the
-	-pi to +pi domain (-1 to 1)
+		Need to correct the Berryphase so that it resides in the
+		-pi to +pi domain (-1 to 1)
         '''
         elecPolar = self.electronPolarization()
         ionPolar = self.ionPolarization()
@@ -527,7 +526,7 @@ class MainCalculationContainer:
 	#Zipping  values together and summing them
 	ionicphase = [ i * 2 * math.pi for i in ionicphase ]
 	electronicphase = [ i * 2 * math.pi for i in electronicphase ]
-        self._netPolarizationEnergy = zip(ionicphase, electronicphase)
+	self._netPolarizationEnergy = zip(ionicphase, electronicphase)
 	self._netPolarizationEnergy = [sum(i) for i in self._netPolarizationEnergy ]
 	self._netPolarizationEnergy= [i / ( 2 * math.pi) for i in self._netPolarizationEnergy ]	
 	self._netPolarizationEnergy= [i % 2 for i in self._netPolarizationEnergy ]
@@ -556,7 +555,7 @@ class MainCalculationContainer:
 	latticeConstants = calcValues['Lattice Constants in bohr']
 	
 	ELEC_BY_VOL_CONST = self.ELEC_BY_VOL_CONST
- 	self._netPolarizationEnergy = [ELEC_BY_VOL_CONST * bohrToMeters(i[0]) * i[1] for i in zip(latticeConstants, self._netPolarizationEnergy) ]
+	self._netPolarizationEnergy = [ELEC_BY_VOL_CONST * bohrToMeters(i[0]) * i[1] for i in zip(latticeConstants, self._netPolarizationEnergy) ]
 
         return self._netPolarizationEnergy
 

@@ -9,6 +9,8 @@ BERRYPIDIR=""
 PYTHONDIR= "/local/bin/python2.7"
 SOURCE=""
 DIR=""
+iswget=true
+iscurl=true			
 #
 clear
 echo "######################################################################"
@@ -71,6 +73,19 @@ else
 		exit 1
 	fi
 fi
+
+type wget >/dev/null 2>&1 ||{ iswget=false; }
+type curl >/dev/null 2>&1 ||{ iscurl=false; }
+
+if [ $iswget ]; then
+	echo "Installation via wget available"
+elif [ $iscurl  ]; then
+	echo "Installation via curl available"
+else
+	echo "wget and curl not available."
+	echo "If missing Python2.7 or NumPy 1.6.2."
+	echo "This script will be unable to download and install them" 
+fi
 echo "######################################################################"
 #
 
@@ -98,7 +113,6 @@ get_berrypi_path()
 			else
 				echo "BerryPI directory specified is incorrect"
 				echo "Format(/subdir/berrydir) ex: /home/user/Desktop"
-		
 			fi
 		done	
 	fi
@@ -107,19 +121,34 @@ get_berrypi_path()
 get_python_path()
 {
 	pyexist=true
-	#linux command type
+	islocal=true
+	isbin=true
 	# >/dev/null 2>&1 to mask the string that type echos 
-	type python2.7 >/dev/null 2>&1 || { local pyexist=false; echo >&2 "I require python 2.7 but it's not installed.";}
+	type python2.7 >/dev/null 2>&1 || { pyexist=false;}
 	
-	if [ $pyexist == true ]; then
+	if ! [  -f "$HOME/.local/bin/python2.7" ]; then
+		islocal=false	
+	fi
+
+	if ! [ -f "/usr/bin/python2.7" ]; then
+		isbin=false
+	fi
+	
+	if $pyexist || $islocal || $isbin ;then
 		loopvar=1
-		if [ -f "/usr/bin/python2.7" ]; then
+		
+		if [ -f "$HOME/.local/bin/python2.7" ]; then
+			PYTHONDIR="$HOME/.local/bin/python2.7"
+			echo "Python 2.7 directory found"
+			echo "Continuing..."
+		elif [ -f "/usr/bin/python2.7" ];then
 			PYTHONDIR="/usr/bin/python2.7"
 			echo "Python 2.7 directory found"
 			echo "Continuing..."
 		else
 			while [ $loopvar == 1 ]; do 
 				echo "Enter the directory where python2.7 resides: "
+				which python
 				read USERPATH
 	
 				PYTHONDIR="$USERPATH/python2.7"
@@ -140,15 +169,41 @@ get_python_path()
 		read -p "(Y/n)?" choice
   		case "$choice" in
   		y|Y) 
-			#sudo apt-get install python2.7 #May not work on all linux distros but hopefully all debian distros
-			yum install python2.7
-			if [ -f "/usr/bin/python2.7" ]; then
-				PYTHONDIR="/usr/bin/python2.7"
+			
+			isinstall=true
+			mkdir ''$HOME'/.local/' >/dev/null 2>&1
+			cd ''$HOME'/.local/'
+			
+			if [ $iswget ]; then
+				wget 'http://www.python.org/ftp/python/2.7.4/Python-2.7.4.tar.bz2'
+			elif [ $iscurl ]; then
+				curl -O 'http://www.python.org/ftp/python/2.7.4/Python-2.7.4.tar.bz2'
+			else
+				isinstall=false
+			fi
+			
+			if [ $isinstall ]; then
+				tar -xjf 'Python-2.7.4.tar.bz2'
+				cd 'Python-2.7.4'
+				make clean
+				./configure --prefix=''$HOME'/.local'
+				make
+				make install
+				cd ..
+				rm 'Python-2.7.4.tar.bz2'
+				rm -R 'Python-2.7.4'
+			fi
+			
+
+			if [ -f "$HOME/.local/bin/python2.7" ];then
+				PYTHONDIR="$HOME/.local/bin/python2.7"
 				echo "Python 2.7 directory found"
 				echo "Continuing..."
 			else
 				echo "Python 2.7 directory not found"
-				#TODO allow user to look and provide path if their system installed python else where
+				echo "BerryPI initialization can not continue"
+				echo "Aborted"
+				exit 1	
 			fi
 		;;
 		n|N)
@@ -162,10 +217,9 @@ get_python_path()
 
 check_numpy_exists()
 {
-	numpyver=$($PYTHONDIR -c 'import numpy; print numpy.__version__')
-
-	if [ $numpyver == '1.6.2' ];then
-		echo "A NumPy directory exists"
+	numpyver=$($PYTHONDIR -c 'import numpy; print numpy.__version__')  
+	if [ "$numpyver" == "1.6.2" ];then
+		echo "A NumPy 1.6.2 directory exists"
 		echo "Continuing..."
 	else
 		echo "No NumPy directory found"
@@ -176,15 +230,38 @@ check_numpy_exists()
   		case "$choice" in
   		y|Y) 
 			
-			#sudo apt-get install python-numpy #May not work on all linux distros but hopefully all debian distros
-			yum install python-numpy
+			isinstall=true
+			mkdir ''$HOME'/.local/' >/dev/null 2>&1
+			cd ''$HOME'/.local/'
 
-			if [-d "usr/lib/python2.7/dist-packages/numpy" ]; then
-				echo "A NumPy directory exists"
+			if [ $iswget ]; then
+				wget 'sourceforge.net/projects/numpy/files/NumPy/1.6.2/numpy-1.6.2.tar.gz/download'
+			elif [ $iscurl ]; then
+				curl -O 'sourceforge.net/projects/numpy/files/NumPy/1.6.2/numpy-1.6.2.tar.gz/download'
+			else
+				isinstall=false
+			fi
+			
+			if [ $isinstall ]; then
+				tar -xzvf 'numpy-1.6.2.tar.gz'
+				cd 'numpy-1.6.2'
+				$PYTHONDIR 'setup.py' install --prefix=''$HOME'/.local/'
+				cd ..
+				rm 'numpy-1.6.2.tar.gz'
+				rm -R 'numpy-1.6.2'
+			fi
+			
+			numpyver=$($PYTHONDIR -c 'import numpy; print numpy.__version__' ) 
+			if [ '$numpyver' == '1.6.2' ];then
+				echo "A NumPy 1.6.2 directory exists"
 				echo "Continuing..."
 			else
 				echo "NumPy was unable to be intalled"
+				#Restart script as numPy sometimes doesn't want to be detected until the script restarts
+				cd "$DIR"
+				bash 'init.sh'
 				exit 1
+				
 			fi
 		;;
 		n|N)
@@ -251,24 +328,12 @@ if [ -f "$file" ]; then
 	done <"$file"
 fi
 
+
 if [ $ispaths == 0 ]; then
 	echo '# --- BERRYPI START ---' >> $file
 	echo 'export BERRYPI_PATH='$BERRYPIDIR'' >> $file
 	echo 'export BERRYPI_PYTHON='$PYTHONDIR'' >> $file
 	echo 'alias berrypi="${BERRYPI_PYTHON} ${BERRYPI_PATH}/berrypi"' >> $file
 	echo '# --- BERRYPI END ---' >> $file
-fi
-
-
-
-
-
-
-
-
-
-
-
-
-
+fi 
 
