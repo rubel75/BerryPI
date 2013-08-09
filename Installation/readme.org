@@ -1,48 +1,49 @@
 * Current Version
 BerryPI 1.0
 
-* Installation
-  - Include paths to this folder within your ~/.bashrc file
-  - Include required paths for DEFAULT_BIN_PATH and DEFAULT_PYTHON_PATH
+* Automated Installation
+    1. Download BerryPI
+    	a. Download BerryPI off the Github repository via 'Download ZIP'
+    	b. wget https://github.com/spichardo/BerryPI/archive/master.zip
+    	c. curl -O https://github.com/spichardo/BerryPI/archive/master.zip
+    2. Extract BerryPI out of ZIP compression (Ex: unzip master.zip, tar -xzvf master.zip)
+    3. Rename the folder whatever you want and place the folder in any directory you want
+    4. Execute the bash script init.sh in the BerryPI folder following all prompts until completion
+
+* Optional:
+    5. Verify that in config.py both DEFAULT_BIN_PATH and DEFAULT_PYTHON_PATH are not equal to ''
+    6. Verify that .bashrc has BerryPI related enviroment variables( Ex: alias berrypi="${BERRYPI_PYTHON} ${BERRYPI_PATH}/berrypi")
+    
+* Manual Installation:
+    1. Download BerryPI
+    	a. Download BerryPI off the Github repository via 'Download ZIP'
+    	b. wget https://github.com/spichardo/BerryPI/archive/master.zip
+    	c. curl -O https://github.com/spichardo/BerryPI/archive/master.zip
+    2. Extract BerryPI out of ZIP compression (Ex: unzip master.zip, tar -xzvf master.zip)
+    3. Rename the folder whatever you want and place the folder in any directory you want
+    4. Open config.py in a text editor
+    5. Change DEFAULT_BIN_PATH to your BerryPI root directory (Ex: DEFAULT_BIN_PATH='~/share/BerryPI/') 
+    6. Change DEFAULT_PYTHON_PATH to your Python 2.7 root directory (Ex: DEFAULT_PYTHON_PATH='/usr/bin/python2.7')
+    7. open .bashrc in a text editor
+    8. Add the line 'export BERRYPI_PATH= *Insert the same path you used in config.py for DEFAULT_BIN_PATH*'
+    9. Add the line 'export BERRYPI_PYTHON= *Insert the same path you used in config.py for DEFAULT_PYTHON_PATH*'
+    10.Add the line 'alias berrypi="${BERRYPI_PYTHON} ${BERRYPI_PATH}/berrypi"'
+
 
 * Configuration
-  configuration is done through the config.py file.
+  - Configuration is done through the config.py file.
+  - Currently, the paths for berrypi and for python are hardcoded within
+    this file due to the nature of the current users environment. 
+  - If accomodating multiple users we recommended having BerryPI in a shared enviroment(Ex: '~/share/BerryPI/')
 
-  currently, the paths for berrypi and for python are hardcoded within
-  this file due to the nature of the current users environment. This
-  should be changed in later developments to accomodate all users if
-  it is a requirement.
-
-  Before running, DEFAULT_BIN_PATH and DEFAULT_PYTHON_PATH values
-  within config.py should be set to legitimate values
-
-  DEFAULT_BIN_PATH - should be exactly the same as your BerryPi
-  directory root where all of the code is being stored.
-
-  example:
-
-  DEFAULT_BIN_PATH='~/share/BerryPI/'
-
-  DEFAULT_PYTHON_PATH - should be the path to the current python
-  distribution.  NOTE: please also include the python command which is
-  also being used, with a space.
-
-  example:
-
-  DEFAULT_PYTHON_PATH='/usr/bin/python2.7 '
-  
-  NOTE: the space at the end of python2.7 (this is required).
-
-  for further configuration options when running berrypi, run 
-
-  python ~/BerryPI/berrypi -h
-
+  For further configuration options when running berrypi, run 
+  berrypi -h
   to get a list of prefix options.
 
 * Dependencies
   - WIEN2k (tested against 12.1 Release 22/07/2012)
   - WIEN2WANNIER (tested against 0.96)
-  - Python (tested against 2.7.3)
+  - Python (tested against 2.7.4)
   - NumPy (tested against 1.6.2)
   
 * File Descriptions
@@ -72,5 +73,8 @@ BerryPI 1.0
 ** calculations.py
    Includes the necessary classes to carry out the remaining
    calculations at the end of the automation run
+** init.sh 
+   Used to automate the install process.
+   Can install Python 2.7.4 and Numpy 1.6.2.
 
 
