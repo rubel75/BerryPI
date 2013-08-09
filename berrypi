@@ -387,15 +387,25 @@ def writeResult(configFile, mainCalculationObject):
 	is returned from the "performCalculation" function in this
 	file
 	'''
+<<<<<<< HEAD
 
+=======
+	
+>>>>>>> 4f19e32b9fc06b1ece3ae6096d637fcb85413669
 	def ExtendedPrint(values,fileHandle):
 		valuex = values[0]
 		valuey = values[1]
 		valuez = values[2]
 
 		lengths = [len(valuex), len(valuey), len(valuez)]
+<<<<<<< HEAD
 		max_length = max(lengths)
 
+=======
+
+		max_length = max(lengths)
+		#print "\tPass:\t\t\tX\t\t\tY\t\t\tZ"
+>>>>>>> 4f19e32b9fc06b1ece3ae6096d637fcb85413669
 		fileHandle.write("\tPass:\t\t\tX\t\t\tY\t\t\tZ")
 		fileHandle.write("\n")
 		for i in range(max_length):
@@ -421,6 +431,10 @@ def writeResult(configFile, mainCalculationObject):
 				string = string+"\t\t\t"
 
 			if i< lengths[2]:
+<<<<<<< HEAD
+=======
+				
+>>>>>>> 4f19e32b9fc06b1ece3ae6096d637fcb85413669
 				if abs(Decimal(str(valuez[i])).as_tuple().exponent) >= 15:
 					string = string+str(valuez[i])+"\t"
 				elif abs(Decimal(str(valuez[i])).as_tuple().exponent) >= 10:
@@ -429,10 +443,16 @@ def writeResult(configFile, mainCalculationObject):
 					string = string+str(valuez[i])+"\t\t\t"	
 			else:
 				string = string+"\t\t\t"
+<<<<<<< HEAD
 
 			fileHandle.write(string)
 			fileHandle.write("\n")
 
+=======
+			#print string
+			fileHandle.write(string)
+			fileHandle.write("\n")
+>>>>>>> 4f19e32b9fc06b1ece3ae6096d637fcb85413669
 
 	#construct filename from structure name and path
 	filename = os.path.join(configFile['Structure Path'], configFile['Structure Name'] + BERRY_FILE_EXTENSION)
@@ -458,10 +478,17 @@ def writeResult(configFile, mainCalculationObject):
 	phaseMeanValues = mainCalculationObject.valuephaseMeanValues()#Same as berry2pi/Electronic Phase [0 to 2]
 	phaseConsistentDomainValues2 = mainCalculationObject.getPhaseConsistentDomainValues2()
 	phaseCorrectedValues2 = mainCalculationObject.getPhaseCorrectedValues2()
+<<<<<<< HEAD
 
 	
 	#grab calculation values and write them to file
 	calcValues = mainCalculationObject.calculationValues()
+=======
+	
+	#electronpolar2pi = mainCalculationObject.electronpolar2pi()
+	remappedberry = mainCalculationObject.remappedberryphase()
+	electronPolarization = mainCalculationObject.electronPolarization()
+>>>>>>> 4f19e32b9fc06b1ece3ae6096d637fcb85413669
 
 	#Berry Phase [0 to 2]
 	berry2pi = mainCalculationObject.valuephaseMeanValues()
@@ -594,7 +621,7 @@ def writeResult(configFile, mainCalculationObject):
 	for i in totalpolarneg1to1:
 		a=str(i)+"\t"
 		fileHandle.write(a)
-
+	
 	fileHandle.write("\n")
 	fileHandle.write("\n")
 	fileHandle.write("\n")
@@ -606,6 +633,20 @@ def writeResult(configFile, mainCalculationObject):
 	fileHandle.write("\n")
 	
 
+<<<<<<< HEAD
+	fileHandle.write("\n")
+	fileHandle.write("\n")
+	fileHandle.write("\n")
+	fileHandle.write(DEFAULT_PREFIX +"               ---BERRYPI EXTENDED COMPUTATION OUTPUT---\n")
+	fileHandle.write("\n")
+	fileHandle.write("\tPHASE VALUES:")
+	fileHandle.write("\n")
+	fileHandle.write("\tPass:\t\t\tX\t\t\tY\t\t\tZ")
+	fileHandle.write("\n")
+	
+
+=======
+>>>>>>> 4f19e32b9fc06b1ece3ae6096d637fcb85413669
 
 	valuex = phaseValues[0]['values']
 	valuey = phaseValues[1]['values']
@@ -741,6 +782,7 @@ if __name__ == "__main__":
         pass
 
 
+<<<<<<< HEAD
         
     try:
         opts, args = getopt.getopt(sys.argv[1:], 
@@ -762,6 +804,134 @@ if __name__ == "__main__":
     #boolean for whether to automate the entire process
     checkAuto = True
 
+=======
+		
+	try:
+		opts, args = getopt.getopt(sys.argv[1:], 
+								   "S:hvp:Pnk:lb:", 
+								   ["help", "structure-path=", "structure-name=", "bloch-band=", 
+									"no-auto", "kdiv=", "no-lapw1", "parallel", "verbose"])
+	except getopt.GetoptError, err:
+		# print help information and exit:
+		print helpInfo()
+		print "ERROR"
+		print str(err) # will print something like "option -a not recognized"
+		sys.exit(2)
+
+	#boolean for whether to check config for
+	#configuration dicts
+	checkConfig = True
+
+	#boolean for whether to automate the entire process
+	checkAuto = True
+
+	#defaults
+	structure_name = ''
+	structure_path = ''
+	structure_kmesh = config.DEFAULT_KMESH_DIVISIONS
+	structure_bloch = None
+	structure_initlapw1 = config.DEFAULT_INCLUDE_LAPW1
+	structure_lapw1_parallel = config.DEFAULT_INCLUDE_LAPW1_PARALLEL
+	VERBOSE = False
+	#begin checking command line arguments
+	for argName, argValue in opts:
+
+		#help option
+		if argName in ("-h", "--help"):
+			print helpInfo()
+			sys.exit(0)
+
+		#structure name option
+		elif argName in ('-S', '--structure-name'):
+			structure_name = argValue
+
+		#structure path option
+		elif argName in ('-p', '--structure-path'):
+			structure_path = argValue
+			structure_name = os.path.split(argValue)[-1]
+
+		#automation disabling option
+		elif argName in ('-n', '--no-auto'):
+			checkAuto = False
+		
+		#For number of divisons 
+		elif argName in ('-k', '--kdiv'):
+			structure_kmesh = [ int(i) for i in argValue.split(':') ]
+
+		#Determines whether you should include lapw1 in the automation
+		elif argName in ('-l', '--no-lapw'):
+			structure_initlapw1 = False
+
+		#Determines whether to run lapw1 in parallel on the clustrer
+		elif argName in ('-P', '--parallel'):
+			structure_lapw1_parallel = True
+
+		elif argName in ('-b', '--bloch-band'):
+			structure_bloch = [ int(i) for i in argValue.split(':') ]
+
+		elif argName in ('-v', '--verbose'):
+			VERBOSE = True
+		else:
+			print("Invalid argument {} - {}").format(argName, argValue)
+			sys.exit(2)
+
+	#if configuration values are provided, create config file to pass
+	#to the automation and calculations
+	if structure_name or structure_path:
+		if structure_name and structure_path:
+			#follows same format as config.py configurations
+			configFile = {
+				'Structure Name' : structure_name,
+				'Structure Path' : structure_path,
+				'Number of K-Points' : config.DEFAULT_NUMBER_OF_KPOINTS,
+				'K-Mesh Divisions' : structure_kmesh,
+				'K-Mesh Shift' : config.DEFAULT_KMESH_SHIFT, 
+				'Bloch Band' : structure_bloch,
+				'Number of Wannier Functions' : config.DEFAULT_WANNIER_FUNCTIONS,
+				'Center Atom and Character' : config.DEFAULT_CENTER_ATOM_AND_CHARACTER,
+				'Perform LAPW1' : structure_initlapw1,
+				'LAPW1 in Parallel' : structure_lapw1_parallel, 
+				}
+			checkConfig = False
+		else:
+			print "structure name and structure path must be provided"
+			raise getopt.GetoptError
+
+	#check config (based on if structure name or
+	#structure path has been passed to berryPyRunAutomation.py)
+	bAutomationErrorChk = True
+	if checkConfig:
+		ConfigurationFiles = config.berryPyConfigAutomationList
+		for berryConfig in ConfigurationFiles:
+			#check whether to automate
+			if checkAuto:
+				bAutomationErrorChk = runAutomation(berryConfig)
+			if bAutomationErrorChk:
+				try:
+					theCalc = performCalculation(berryConfig)
+				except b_PyError.ParseError, err:
+					print DEFAULT_PREFIX + "ERROR: in automation of " + berryConfig['Structure Name']
+					print DEFAULT_PREFIX + str(err)
+					print DEFAULT_PREFIX + "ERROR: missing tags: " + str(err.errorTags)
+					continue
+				#write to file
+				writeResult(berryConfig, theCalc)
+	else:
+		#assuming the configFile was passed correctly
+		if checkAuto:
+			bAutomationErrorChk = runAutomation(configFile)
+		if bAutomationErrorChk:
+			try:
+				theCalc = performCalculation(configFile)
+			except b_PyError.ParseError, err:
+				print DEFAULT_PREFIX + "ERROR: in automation of " + configFile['Structure Name']
+				print DEFAULT_PREFIX + str(err)
+				print DEFAULT_PREFIX + "ERROR: missing tags: " + str(err.errorTags)
+				
+			writeResult(configFile, theCalc)
+	#take the resulting information and store it in a file defined by
+	#the given extension
+>>>>>>> 4f19e32b9fc06b1ece3ae6096d637fcb85413669
 
 
     #defaults
@@ -936,5 +1106,5 @@ if __name__ == "__main__":
 	print "\nCompleted using BerryPI version 1.0"
 	print "\nBerryPI is a joint project between Thunder Bay Regional Research Institute and Lakehead University"
 	print "\nSuggested reference:\n  S.J.Ahmed, J.Kivinen, B.Zaporzan, L.Curiel, S.Pichardo, O.Rubel,Comp. Phys. Commun. 184, 647 (2013)"	
-	print ("\nQuestions and comments are to be directed to\n  1.Dr. Oleg Rubel \n    Lakehead University\n          and\n    Thunder Bay Regional Research Institute\n    290 Munro Street, Thunder Bay, ON Canada P7A 7T1\n    Tel:+1 (807) 766-3350 \n    E-mail:rubelo@tbh.net\n    URL:http://www.tbrri.com/~orubel")
-	print ("\n  2.Dr. Samuel Pichardo \n    Lakehead University\n          and\n    Sunnybrook Health Sciences Centre\n    2075 Bayview Avenue, Toronto, ON Canada M4N 3M5 \n    Tel:+1 (416) 480-6100 Ext:6156\n    E-mail:spichard@lakeheadu.ca\n    URL:http://www.proteus-mrighifu.net")
+	print ("\nQuestions and comments are to be directed to\n  1.Dr. Oleg Rubel \n    Lakehead University\n          and\n    Thunder Bay Regional Research institute\n    290 Munro Street, Thunder Bay, ON Canada P7A 7T1\n    Tel:+1 (807) 766-3350 \n    E-mail:rubelo@tbh.net\n    URL:http://www.tbrri.com/~orubel")
+	print ("\n  2.Dr. Samuel Pichardo \n    Lakehead University\n          and\n    Sunnybrook Health Science Centre\n    2075 Bayview Avenue, Toronto, ON Canada M4N 3M5 \n    Tel:+1 (416) 480-6100 Ext:6156\n    E-mail:spichard@lakeheadu.ca\n    URL:http://www.proteus-mrighifu.net")
