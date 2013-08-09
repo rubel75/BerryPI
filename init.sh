@@ -337,3 +337,5 @@ if [ $ispaths == 0 ]; then
 	echo '# --- BERRYPI END ---' >> $file
 fi 
 
+source "$HOME/.bashrc"
+
