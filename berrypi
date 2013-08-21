@@ -7,6 +7,7 @@ import sys, shutil, getopt
 import time
 import json
 import subprocess
+from decimal import Decimal
 
 import errorCheck as b_PyError
 import parsing as b_PyParse
@@ -46,6 +47,7 @@ def performCalculation(configFile):
         print(DEFAULT_PREFIX + "Checking existance of {}").format(tempFilename)
         if not b_PyError.fileExists(tempFilename):
             print( DEFAULT_PREFIX + "{} does not exist, cannot finish calculation").format(tempFilename)
+            exit(2)
         else: print DEFAULT_PREFIX + '-- OK'
 
     #perform the main calculation
@@ -69,7 +71,7 @@ def runAutomation(configFile):
     otherwise it returns True. This allows for several automation
     processes to be batched.
     '''
-    print(DEFAULT_PREFIX + "Starting BerryPi Automation for {}").format(configFile['Structure Name'])
+    print(DEFAULT_PREFIX + "Starting BerryPI Automation for {}").format(configFile['Structure Name'])
     
     #get the starting directory and switch to it
     oldCurrentWorkingDirectory = os.getcwd()
@@ -77,7 +79,7 @@ def runAutomation(configFile):
     changeToWorkingDirectory(newWorkingDirectory)
     #ensure background env is also in the right directory
     os.system('cd ' + newWorkingDirectory)
-    print DEFAULT_PREFIX + 'new working directory: ' + newWorkingDirectory
+    print DEFAULT_PREFIX + 'New working directory: ' + newWorkingDirectory
     
     #check to make sure certain files exist
     structureName = configFile['Structure Name']
@@ -87,6 +89,8 @@ def runAutomation(configFile):
         string = DEFAULT_PREFIX + str(tempFileName)
         string += ' does not exist'
         print string
+        print(DEFAULT_PREFIX + 'The correct .struct file has not been found. BerryPI will now close ...')
+        sys.exit(2)		
         return False
 
     #remove the broyd file
@@ -221,7 +225,7 @@ def runAutomation(configFile):
 
     #win2nnkp.py $filename
     shell_win2nnkp = b_PySubProcess.VirtualShellInstance(
-        DEFAULT_PYTHON_PATH + DEFAULT_BIN_PATH + 'win2nnkp.py', str(structureName),
+        DEFAULT_PYTHON_PATH +" "+ DEFAULT_BIN_PATH + 'win2nnkp.py', str(structureName),
         )
     try:
         shell_win2nnkp()
@@ -283,8 +287,10 @@ def runAutomation(configFile):
 
     #python ./mmn2pathphase.py $filename x
     #TODO incorporate in file itself
+    
+   
     shell_pathphase_x_command = b_PySubProcess.VirtualShellInstance(
-        DEFAULT_PYTHON_PATH + DEFAULT_BIN_PATH + 'mmn2pathphase.py', str(structureName), 'x',
+        DEFAULT_PYTHON_PATH +" "+ DEFAULT_BIN_PATH + 'mmn2pathphase.py', str(structureName), 'x',
         )
     try:
         shell_pathphase_x_command()
@@ -311,7 +317,7 @@ def runAutomation(configFile):
     #python ./mmn2pathphase.py $filename y
     #TODO incorporate in file itself
     shell_pathphase_y_command = b_PySubProcess.VirtualShellInstance(
-        DEFAULT_PYTHON_PATH + DEFAULT_BIN_PATH + 'mmn2pathphase.py', str(structureName), 'y',
+        DEFAULT_PYTHON_PATH +" "+ DEFAULT_BIN_PATH + 'mmn2pathphase.py', str(structureName), 'y',
         )
     try:
         shell_pathphase_y_command()
@@ -340,7 +346,7 @@ def runAutomation(configFile):
     #python ./mmn2pathphase.py $filename z
     #TODO incorporate in file itself
     shell_pathphase_z_command = b_PySubProcess.VirtualShellInstance(
-        DEFAULT_PYTHON_PATH + DEFAULT_BIN_PATH + 'mmn2pathphase.py', str(structureName), 'z',
+        DEFAULT_PYTHON_PATH +" "+ DEFAULT_BIN_PATH + 'mmn2pathphase.py', str(structureName), 'z',
         )
     
     try:
@@ -372,177 +378,312 @@ def runAutomation(configFile):
     return True
 
 def writeResult(configFile, mainCalculationObject):
-    '''
-    Writes the calculated polarization value along with the
-    information used to calculate it to a file defined by the
-    structures name and the extension defined by
-    BERRY_FILE_EXTENSION
-    
-    Requires the main calculation object to be passed to it which
-    is returned from the "performCalculation" function in this
-    file
-    '''
+	'''
+	Writes the calculated polarization value along with the
+	information used to calculate it to a file defined by the
+	structures name and the extension defined by
+	BERRY_FILE_EXTENSION
 
-    #construct filename from structure name and path
-    filename = os.path.join(configFile['Structure Path'], configFile['Structure Name'] + BERRY_FILE_EXTENSION)
-    print DEFAULT_PREFIX + "Writing to file: " + filename
-    fileHandle = open(filename, 'w')
-    
-    #intro to file
-    fileHandle.write("BerryPI version 0.1\n\n")
-    fileHandle.write("BerryPI is a joint project between Thunder Bay Regional Research Institute and Lakehead University\n")
-    fileHandle.write("\nSuggested reference:\n  S.J.Ahmed, J.Kivinen, B.Zaporzan, L.Curiel, S.Pichardo, O.Rubel,Comp. Phys. Commun. 184, 647 (2013)")
-    fileHandle.write("\nQuestions and comments are to be directed to\n  1.Dr. Oleg Rubel \n    Lakehead University\n          and\n    Thunder Bay Regional Research institute\n    290 Munro Street, Thunder Bay, ON Canada P7A 7T1\n    Tel:+1 (807) 766-3350 \n    E-mail:rubelo@tbh.net\n    URL:http://www.tbrri.com/~orubel")	
-    fileHandle.write("\n  2.Dr. Samuel Pichardo \n    Lakehead University\n          and\n    Sunnybrook Health Science Centre\n    2075 Bayview Avenue, Toronto, ON Canada M4N 3M5 \n    Tel:+1 (416) 480-6100 Ext:6156\n    E-mail:spichard@lakeheadu.ca\n    URL:http://www.proteus-mrighifu.net")
-    string = "\nDate: {}\n".format(time.ctime())
-    fileHandle.write(string)
-    string = "\nCase Name: {}\n".format(configFile['Structure Name'])
-    fileHandle.write(string)
+	Requires the main calculation object to be passed to it which
+	is returned from the "performCalculation" function in this
+	file
+	'''
 
-    #grab calculation values and write them to file
-    calcValues = mainCalculationObject.calculationValues()
-   
-   #Berry Phase [0 to 2]
-    berry2pi = mainCalculationObject.valuephaseMeanValues()
- 
-   #Eletron Pollarization [0 to 2]
+	def ExtendedPrint(values,fileHandle):
+		valuex = values[0]
+		valuey = values[1]
+		valuez = values[2]
 
-    electronpolar2pi =  mainCalculationObject.electronpolar2pi()
+		lengths = [len(valuex), len(valuey), len(valuez)]
 
-   #BerryPhase [-1 to +1]
-    berryneg1to1 = mainCalculationObject.remappedberryphase()
+		max_length = max(lengths)
+
+		fileHandle.write("\tPass:\t\t\tX\t\t\tY\t\t\tZ")
+		fileHandle.write("\n")
+		for i in range(max_length):
+			string ="\t   "+str(i)+":\t\t\t"
+			if i < lengths[0]:
+				if abs(Decimal(str(valuex[i])).as_tuple().exponent) >= 15:
+					string = string+str(valuex[i])+"\t"
+				elif abs(Decimal(str(valuex[i])).as_tuple().exponent) >= 10:
+					string = string+str(valuex[i])+"\t\t"
+				else:
+					string = string+str(valuex[i])+"\t\t\t"
+			else:
+				string = string+"\t\t\t"
+			if i< lengths[1]:
+
+				if abs(Decimal(str(valuey[i])).as_tuple().exponent) >= 15:
+					string = string+str(valuey[i])+"\t"
+				elif abs(Decimal(str(valuey[i])).as_tuple().exponent) >= 10:
+					string = string+str(valuey[i])+"\t\t"
+				else:
+					string = string+str(valuey[i])+"\t\t\t"	
+			else:
+				string = string+"\t\t\t"
+
+			if i< lengths[2]:
+
+				if abs(Decimal(str(valuez[i])).as_tuple().exponent) >= 15:
+					string = string+str(valuez[i])+"\t"
+				elif abs(Decimal(str(valuez[i])).as_tuple().exponent) >= 10:
+					string = string+str(valuez[i])+"\t\t"
+				else:
+					string = string+str(valuez[i])+"\t\t\t"	
+			else:
+				string = string+"\t\t\t"
 
 
-   #Electronic Polarization [ +1 to -1]
-    electronpolarneg1to1 = mainCalculationObject.electronPolarization()
+			fileHandle.write(string)
+			fileHandle.write("\n")
 
 
-   #Ionic Phase [0 to 2]
-    ionphase2pi = mainCalculationObject.ionicphase()
+	#construct filename from structure name and path
+	filename = os.path.join(configFile['Structure Path'], configFile['Structure Name'] + BERRY_FILE_EXTENSION)
+	print DEFAULT_PREFIX + "Writing to file: " + filename
+	fileHandle = open(filename, 'w')
 
-   #Ionic Polarization [0 to 2]
-    ionpolar2pi = mainCalculationObject.ionicpolar2pi()
+	#intro to file
+	fileHandle.write("BerryPI version 1.0\n\n")
+	fileHandle.write("BerryPI is a joint project between Thunder Bay Regional Research Institute and Lakehead University\n")
+	fileHandle.write("\nSuggested reference:\n  S.J.Ahmed, J.Kivinen, B.Zaporzan, L.Curiel, S.Pichardo, O.Rubel,Comp. Phys. Commun. 184, 647 (2013)")
+	fileHandle.write("\nQuestions and comments are to be directed to\n  1.Dr. Oleg Rubel \n    Lakehead University\n          and\n    Thunder Bay Regional Research institute\n    290 Munro Street, Thunder Bay, ON Canada P7A 7T1\n    Tel:+1 (807) 766-3350 \n    E-mail:rubelo@tbh.net\n    URL:http://www.tbrri.com/~orubel")	
+	fileHandle.write("\n  2.Dr. Samuel Pichardo \n    Lakehead University\n          and\n    Sunnybrook Health Science Centre\n    2075 Bayview Avenue, Toronto, ON Canada M4N 3M5 \n    Tel:+1 (416) 480-6100 Ext:6156\n    E-mail:spichard@lakeheadu.ca\n    URL:http://www.proteus-mrighifu.net")
+	string = "\nDate: {}\n".format(time.ctime())
+	fileHandle.write(string)
+	string = "\nCase Name: {}\n".format(configFile['Structure Name'])
+	fileHandle.write(string)
 
-   #Ionic Phase [-1 to +1]
-    ionphaseneg1to1 = mainCalculationObject.mappedionic()
+
+	#Extended information output
+	phaseValues = mainCalculationObject.getPhasevalues()
+	phaseConsistentDomainValues = mainCalculationObject.getPhaseConsistentDomainValues()
+	phaseCorrectedValues = mainCalculationObject.getPhaseCorrectedValues()
+	phaseMeanValues = mainCalculationObject.valuephaseMeanValues()#Same as berry2pi/Electronic Phase [0 to 2]
+	phaseConsistentDomainValues2 = mainCalculationObject.getPhaseConsistentDomainValues2()
+	phaseCorrectedValues2 = mainCalculationObject.getPhaseCorrectedValues2()
 
 
-   #Ionic Polarization
-    ionpolarneg1to1 = mainCalculationObject.ionPolarization()
-
-   #Total Phase [0 to 2]
-    totalphase2pi = mainCalculationObject.totalphase2pi()
-
-   #Total Phase [-1 to +1]
-    totalphaseneg1to1 = mainCalculationObject.totalphaseneg1to1()
-
-   #Total Polarization [0 to 2]
-    totalpolar2pi = mainCalculationObject.netpolarization2pi()
-
-   #Total Polarization [-1 to +1 ]
-    totalpolarneg1to1=mainCalculationObject.netPolarizationEnergy()
-   
-   #Valance ion info
-    valanceinfo = mainCalculationObject.valance()
-    
-
-    fileHandle.write('                                   ---LATTICE CONSTANTS IN Bohr---\n\t\t\t')
-    #for constant in calcValues['Lattice Constants in bohr']:
-    for i in calcValues['Lattice Constants in bohr']:
-    
-        a=str(i)+"\t"
-	fileHandle.write(a)
 	
-    fileHandle.write('\n\n                                          ----ATOM INFO---\n')
-    for iName, iCoord, iValence in valanceinfo:
-	fileHandle.write('                 ELEMENT: ' + iName +"\t")
-	fileHandle.write('NO OF VALANCE ELECTRONS:\t'+str(iValence)+"\n")
-	fileHandle.write('      REDUCED COORDINATE: ')
+	#grab calculation values and write them to file
+	calcValues = mainCalculationObject.calculationValues()
+
+	
+	#electronpolar2pi = mainCalculationObject.electronpolar2pi()
+	remappedberry = mainCalculationObject.remappedberryphase()
+	electronPolarization = mainCalculationObject.electronPolarization()
+
+
+	#Berry Phase [0 to 2]
+	berry2pi = mainCalculationObject.valuephaseMeanValues()
+
+	#Eletron Pollarization [0 to 2]
+
+	electronpolar2pi =  mainCalculationObject.electronpolar2pi()
+
+	#BerryPhase [-1 to +1]
+	berryneg1to1 = mainCalculationObject.remappedberryphase()
+
+
+	#Electronic Polarization [ +1 to -1]
+	electronpolarneg1to1 = mainCalculationObject.electronPolarization()
+
+
+	#Ionic Phase [0 to 2]
+	ionphase2pi = mainCalculationObject.ionicphase()
+
+	#Ionic Polarization [0 to 2]
+	ionpolar2pi = mainCalculationObject.ionicpolar2pi()
+
+	#Ionic Phase [-1 to +1]
+	ionphaseneg1to1 = mainCalculationObject.mappedionic()
+
+
+	#Ionic Polarization
+	ionpolarneg1to1 = mainCalculationObject.ionPolarization()
+
+	#Total Phase [0 to 2]
+	totalphase2pi = mainCalculationObject.totalphase2pi()
+
+	#Total Phase [-1 to +1]
+	totalphaseneg1to1 = mainCalculationObject.totalphaseneg1to1()
+
+	#Total Polarization [0 to 2]
+	totalpolar2pi = mainCalculationObject.netpolarization2pi()
+
+	#Total Polarization [-1 to +1 ]
+	totalpolarneg1to1=mainCalculationObject.netPolarizationEnergy()
+
+	#Valance ion info
+	valanceinfo = mainCalculationObject.valance()
+
+
+	fileHandle.write('                                   ---LATTICE CONSTANTS IN Bohr---\n\t\t\t')
+	#for constant in calcValues['Lattice Constants in bohr']:
+	for i in calcValues['Lattice Constants in bohr']:
+		a=str(i)+"\t"
+		fileHandle.write(a)
+	
+	fileHandle.write('\n\n                                          ----ATOM INFO---\n')
+	for iName, iCoord, iValence in valanceinfo:
+		fileHandle.write('                 ELEMENT: ' + iName +"\t")
+		fileHandle.write('NO OF VALANCE ELECTRONS:\t'+str(iValence)+"\n")
+		fileHandle.write('      REDUCED COORDINATE: ')
 	for i in iCoord:
-	    a=str(i)
-            fileHandle.write(a +"\t")
-        fileHandle.write('\n\n\n')	
-    fileHandle.write('                                  ---BERRYPI COMPUTATION---\n')
-    print DEFAULT_PREFIX +"                                         ---BERRYPI COMPUTATION---\n"
-    fileHandle.write('\n\n                                 ---PHASES/2*PI IN [0 to 2]RANGE---\n')
-    print "\n\n                                 ---PHASES/2*PI IN [0 to 2]RANGE---\n"
-    fileHandle.write('     IONIC PHASE/(2*PI):\t')
-    print "     IONIC PHASE/(2*PI):         " +str(ionphase2pi)
-    for i in ionphase2pi:
-        a=str(i)+"\t"
-        fileHandle.write(a)
-    fileHandle.write('\nELECTRONIC PHASE/(2*PI):\t')
-    print "\nELECTRONIC PHASE/(2*PI):         "+str(berry2pi)
-    for i in berry2pi:
-        a=str(i)+"\t"
-        fileHandle.write(a)
-    fileHandle.write('\n     TOTAL PHASE/(2*PI):\t')
-    print "\n     TOTAL PHASE/(2*PI):         " + str(totalphase2pi)
-    for i in totalphase2pi:
-        a=str(i)+"\t"
-        fileHandle.write(a)
-    fileHandle.write('\n\n                         ---POLARIZATION IN C/m^2 FOR [0 to 2] PHASE/2PI RANGE---\n')
-    print "\n\n                         ---POLARIZATION IN C/m^2 FOR [0 to 2] PHASE/2PI RANGE---\n"
-    fileHandle.write('     IONIC POLARIZATION:\t')
-    print "     IONIC POLARIZATION:\t"+str(ionpolar2pi)
-    for i in ionpolar2pi:
-        a=str(i)+"\t"
-        fileHandle.write(a)
-    fileHandle.write('\nELECTRONIC POLARIZATION:\t')
-    print "\nELECTRONIC POLARIZATION:\t" +str(electronpolar2pi)
-    for i in electronpolar2pi:
-        a=str(i)+"\t"
-        fileHandle.write(a)
-    fileHandle.write('\n     TOTAL POLARIZATION:\t')
-    print "\n     TOTAL POLARIZATION:\t"+str(totalpolar2pi)
-    for i in totalpolar2pi:
-        a=str(i)+"\t"
-        fileHandle.write(a)
+		a=str(i)
+        fileHandle.write(a +"\t")
+	fileHandle.write('\n\n\n')	
+	fileHandle.write('                                  ---BERRYPI COMPUTATION---\n')
+	print DEFAULT_PREFIX +"                                         ---BERRYPI COMPUTATION---\n"
+	fileHandle.write('\n\n                                 ---PHASES/2*PI IN [0 to 2]RANGE---\n')
+	print "\n\n                                 ---PHASES/2*PI IN [0 to 2]RANGE---\n"
+	fileHandle.write('     IONIC PHASE/(2*PI):\t')
+	print "     IONIC PHASE/(2*PI):         " +str(ionphase2pi)
+	for i in ionphase2pi:
+        	a=str(i)+"\t"
+        	fileHandle.write(a)
+	fileHandle.write('\nELECTRONIC PHASE/(2*PI):\t')
+	print "\nELECTRONIC PHASE/(2*PI):         "+str(berry2pi)
+	for i in berry2pi:
+		a=str(i)+"\t"
+		fileHandle.write(a)
+	fileHandle.write('\n     TOTAL PHASE/(2*PI):\t')
+	print "\n     TOTAL PHASE/(2*PI):         " + str(totalphase2pi)
+	for i in totalphase2pi:
+		a=str(i)+"\t"
+		fileHandle.write(a)
+	fileHandle.write('\n\n                         ---POLARIZATION IN C/m^2 FOR [0 to 2] PHASE/2PI RANGE---\n')
+	print "\n\n                         ---POLARIZATION IN C/m^2 FOR [0 to 2] PHASE/2PI RANGE---\n"
+	fileHandle.write('     IONIC POLARIZATION:\t')
+	print "     IONIC POLARIZATION:\t"+str(ionpolar2pi)
+	for i in ionpolar2pi:
+		a=str(i)+"\t"
+		fileHandle.write(a)
+	fileHandle.write('\nELECTRONIC POLARIZATION:\t')
+	print "\nELECTRONIC POLARIZATION:\t" +str(electronpolar2pi)
+	for i in electronpolar2pi:
+		a=str(i)+"\t"
+		fileHandle.write(a)
+	fileHandle.write('\n     TOTAL POLARIZATION:\t')
+	print "\n     TOTAL POLARIZATION:\t"+str(totalpolar2pi)
+	for i in totalpolar2pi:
+		a=str(i)+"\t"
+		fileHandle.write(a)
 	
-    fileHandle.write('\n\n                                 ---PHASES/2*PI IN [-1 to +1]RANGE---\n')
-    print "\n\n                                 ---PHASES/2*PI IN [-1 to +1]RANGE---\n"
-    fileHandle.write('     IONIC PHASE/(2*PI):\t')
-    print "     IONIC PHASE/(2*PI):\t" +str(ionphaseneg1to1)
-    for i in ionphaseneg1to1:
-        a=str(i)+"\t"
-        fileHandle.write(a)
+	fileHandle.write('\n\n                                 ---PHASES/2*PI IN [-1 to +1]RANGE---\n')
+	print "\n\n                                 ---PHASES/2*PI IN [-1 to +1]RANGE---\n"
+	fileHandle.write('     IONIC PHASE/(2*PI):\t')
+	print "     IONIC PHASE/(2*PI):\t" +str(ionphaseneg1to1)
+	for i in ionphaseneg1to1:
+		a=str(i)+"\t"
+		fileHandle.write(a)
 
-    fileHandle.write('\nELECTRONIC PHASE/(2*PI):\t')
-    print "\nELECTRONIC PHASE/(2*PI):\t" +str(berryneg1to1)
-    for i in berryneg1to1:
-        a=str(i)+"\t"
-        fileHandle.write(a)
-    fileHandle.write('\n     TOTAL PHASE/(2*PI):\t')
-    print "\n     TOTAL PHASE/(2*PI):\t" +str(totalphaseneg1to1)
-    for i in totalphaseneg1to1:
-        a=str(i)+"\t"
-        fileHandle.write(a)
-    fileHandle.write('\n\n                         ---POLARIZATION IN C/m^2 FOR [-1 to +1] PHASE/2PI RANGE---\n')
-    print "\n\n                         ---POLARIZATION IN C/m^2 FOR [-1 to +1] PHASE/2PI RANGE---\n"
-    fileHandle.write('     IONIC POLARIZATION:\t')
-    print "     IONIC POLARIZATION:\t" +str(ionpolarneg1to1)
-    for i in ionpolarneg1to1:
-        a=str(i)+"\t"
-        fileHandle.write(a)
-    fileHandle.write('\nELECTRONIC POLARIZATION:\t')
-    print "\nELECTRONIC POLARIZATION:\t" +str(electronpolarneg1to1)
-    for i in electronpolarneg1to1:
-        a=str(i)+"\t"
-        fileHandle.write(a)
-    fileHandle.write('\n     TOTAL POLARIZATION:\t')
-    print "\n     TOTAL POLARIZATION:\t" +str(totalpolarneg1to1)
-    for i in totalpolarneg1to1:
-        a=str(i)+"\t"
-        fileHandle.write(a)
+	fileHandle.write('\nELECTRONIC PHASE/(2*PI):\t')
+	print "\nELECTRONIC PHASE/(2*PI):\t" +str(berryneg1to1)
+	for i in berryneg1to1:
+		a=str(i)+"\t"
+		fileHandle.write(a)
+	fileHandle.write('\n     TOTAL PHASE/(2*PI):\t')
+	print "\n     TOTAL PHASE/(2*PI):\t" +str(totalphaseneg1to1)
+	for i in totalphaseneg1to1:
+		a=str(i)+"\t"
+		fileHandle.write(a)
+	fileHandle.write('\n\n                         ---POLARIZATION IN C/m^2 FOR [-1 to +1] PHASE/2PI RANGE---\n')
+	print "\n\n                         ---POLARIZATION IN C/m^2 FOR [-1 to +1] PHASE/2PI RANGE---\n"
+	fileHandle.write('     IONIC POLARIZATION:\t')
+	print "     IONIC POLARIZATION:\t" +str(ionpolarneg1to1)
+	for i in ionpolarneg1to1:
+		a=str(i)+"\t"
+		fileHandle.write(a)
+	fileHandle.write('\nELECTRONIC POLARIZATION:\t')
+	print "\nELECTRONIC POLARIZATION:\t" +str(electronpolarneg1to1)
+	for i in electronpolarneg1to1:
+		a=str(i)+"\t"
+		fileHandle.write(a)
+	fileHandle.write('\n     TOTAL POLARIZATION:\t')
+	print "\n     TOTAL POLARIZATION:\t" +str(totalpolarneg1to1)
+	for i in totalpolarneg1to1:
+		a=str(i)+"\t"
+		fileHandle.write(a)
+	
+	fileHandle.write("\n")
+	fileHandle.write("\n")
+	fileHandle.write("\n")
+	fileHandle.write(DEFAULT_PREFIX +"               ---BERRYPI EXTENDED COMPUTATION OUTPUT---\n")
+	fileHandle.write("\n")
+	fileHandle.write("\tPHASE VALUES:")
+	fileHandle.write("\n")
+	fileHandle.write("\tPass:\t\t\tX\t\t\tY\t\t\tZ")
+	fileHandle.write("\n")
+	
 
- 
-    #json version of our code
-    someString = json.dumps(calcValues, indent=4)
-    filename_json = os.path.join(configFile['Structure Path'], configFile['Structure Name'] + BERRY_FILE_EXTENSION + ".json")
-    fileHandle_json = open(filename_json, 'w')
-    fileHandle_json.write(someString)
-    #someString = json.dumps(calcValues, indent=4)
-    #fileHandle.write(someString)
+
+	fileHandle.write("\n")
+	fileHandle.write("\n")
+	fileHandle.write("\n")
+	fileHandle.write(DEFAULT_PREFIX +"               ---BERRYPI EXTENDED COMPUTATION OUTPUT---\n")
+	fileHandle.write("\n")
+	fileHandle.write("\tPHASE VALUES:")
+	fileHandle.write("\n")
+	fileHandle.write("\tPass:\t\t\tX\t\t\tY\t\t\tZ")
+	fileHandle.write("\n")
+	
+
+	valuex = phaseValues[0]['values']
+	valuey = phaseValues[1]['values']
+	valuez = phaseValues[2]['values']
+	
+	lengths = [len(valuex), len(valuey), len(valuez)]
+
+	max_length = max(lengths)
+
+	
+	#print "\tPass:\t\t\tX\t\t\tY\t\t\tZ"
+	for i in range(max_length):
+		string ="\t   "+str(i)+":\t\t\t"
+		if i < lengths[0]:
+			string = string+str(valuex[i])+"\t\t\t"
+		else:
+			string = string+"\t\t\t"
+		if i< lengths[1]:
+			string = string+str(valuey[i])+"\t\t\t"
+		else:
+			string = string+"\t\t\t"
+		if i< lengths[2]:
+			string = string+str(valuez[i])+"\t\t\t"
+		else:
+			string = string+"\t\t\t"
+		#print string
+		fileHandle.write(string)
+		fileHandle.write("\n")
+	
+	#print "\n"
+	fileHandle.write("\n")
+	fileHandle.write("  PHASE Wrapped [0, 2]")
+	fileHandle.write("\n")
+	
+	#print "  PHASE Wrapped [0, 2]"
+	ExtendedPrint(phaseConsistentDomainValues,fileHandle)
+	#print "PHASE Unwrapped [0,2]"
+	fileHandle.write("  PHASE Unwrapped [0, 2]")
+	fileHandle.write("\n")
+	ExtendedPrint(phaseCorrectedValues,fileHandle)
+	#print "  PHASE Wrapped [-1, 1]"
+	fileHandle.write("  PHASE Unwrapped [-1, 1]")
+	fileHandle.write("\n")
+	ExtendedPrint(phaseConsistentDomainValues2,fileHandle)
+	#print "PHASE Unwrapped [-1,1]"
+	fileHandle.write("  PHASE Unwrapped [-1, 1]")
+	fileHandle.write("\n")
+	ExtendedPrint(phaseCorrectedValues2,fileHandle)
+
+	#json version of our code
+	someString = json.dumps(calcValues, indent=4)
+	filename_json = os.path.join(configFile['Structure Path'], configFile['Structure Name'] + BERRY_FILE_EXTENSION + ".json")
+	fileHandle_json = open(filename_json, 'w')
+	fileHandle_json.write(someString)
+	#someString = json.dumps(calcValues, indent=4)
+	#fileHandle.write(someString)
 
 if __name__ == "__main__":
     def helpInfo():
@@ -621,7 +762,6 @@ if __name__ == "__main__":
         '''
         pass
 
-
         
     try:
         opts, args = getopt.getopt(sys.argv[1:], 
@@ -635,12 +775,15 @@ if __name__ == "__main__":
         print str(err) # will print something like "option -a not recognized"
         sys.exit(2)
 
+
     #boolean for whether to check config for
     #configuration dicts
     checkConfig = True
 
     #boolean for whether to automate the entire process
     checkAuto = True
+
+
 
     #defaults
     structure_name = ''
@@ -650,12 +793,17 @@ if __name__ == "__main__":
     structure_initlapw1 = config.DEFAULT_INCLUDE_LAPW1
     structure_lapw1_parallel = config.DEFAULT_INCLUDE_LAPW1_PARALLEL
     VERBOSE = False
+
+    helpOpt = False
+    pathOpt = False
+
     #begin checking command line arguments
     for argName, argValue in opts:
-
+	
         #help option
         if argName in ("-h", "--help"):
             print helpInfo()
+	    helpOpt = True
             sys.exit(0)
 
         #structure name option
@@ -666,14 +814,19 @@ if __name__ == "__main__":
         elif argName in ('-p', '--structure-path'):
             structure_path = argValue
 	    structure_name = os.path.split(argValue)[-1]
+	    pathOpt = True
 
         #automation disabling option
         elif argName in ('-n', '--no-auto'):
             checkAuto = False
-        
+
         #For number of divisons 
         elif argName in ('-k', '--kdiv'):
-            structure_kmesh = [ int(i) for i in argValue.split(':') ]
+   	    try: structure_kmesh = [ int(i) for i in argValue.split(':') ] 
+	   
+	    except ValueError:
+		print('Value Error: Please enter the integers into kmesh in the format of "-kx:x:x"')
+		sys.exit(2)      
 
         #Determines whether you should include lapw1 in the automation
         elif argName in ('-l', '--no-lapw'):
@@ -692,6 +845,56 @@ if __name__ == "__main__":
             print("Invalid argument {} - {}").format(argName, argValue)
             sys.exit(2)
 
+    if not helpOpt and  checkAuto:
+	#automates the inputting of kmesh values
+	#list1=['-k','3:3:3']
+	k_mesh_values=raw_input('What kmesh values would you like? (e.g. 2:2:2)\n')
+	#list1[1]=k_mesh_values
+	#list1=tuple(list1)
+	try: structure_kmesh = [ int(i) for i in k_mesh_values.split(':') ] 
+	   
+	except ValueError:
+		print('Value Error: Please enter the integers into kmesh in the format of "x:x:x"')
+		sys.exit(2)      
+
+    if ~pathOpt:
+	structure_path = os.getcwd()
+        structure_name = os.path.split(os.getcwd())[-1]
+
+    #Makes sure that the length of the tuple is 3
+    if len(structure_kmesh)!=3:
+	print('You entered: ' +str(structure_kmesh))
+        print('Error: Please check that you have 3 constants in the kmesh')
+        sys.exit(2)
+
+    #Makes sure that there are no values of 0 in the kmesh
+    elif 0 in structure_kmesh:
+	print('You entered: ' + str(structure_kmesh))
+        print('Error: Cannot have a dimension of 0 in the kmesh')
+        sys.exit(2)
+		
+    #Sets the lower bound of the dimensions
+    elif min(structure_kmesh)<0:
+        print('You cannot have negative integers as kmesh values')
+        sys.exit(2)
+		
+     #Determines the upper size limit of the kmesh
+    elif max(structure_kmesh)>10:
+        print('Calculations with a dimension of more than 10 will take a long time to calculate. Are you sure you want to continue?')
+
+        check_10 = raw_input('Type in "Y" to continue or press any other button to exit\n')
+
+        if check_10=='Y':
+            pass
+        else:
+            sys.exit(2)
+			
+	#Determines whether or not W2WANNIER is installed
+    try:
+        with open('/act/W2WANNIER/util/w2w'): pass
+    except IOError:
+        print('Please make sure that W2W is installed before trying to run BerryPI')
+		
     #if configuration values are provided, create config file to pass
     #to the automation and calculations
     if structure_name or structure_path:
@@ -750,10 +953,9 @@ if __name__ == "__main__":
     #the given extension
     
     
-
-    #print " --- BerryPI Computation Completed ---"
-    print "\nCompleted using BerryPI version 0.1"
-    print "\nBerryPI is a joint project between Thunder Bay Regional Research Institute and Lakehead University"
-    print "\nSuggested reference:\n  S.J.Ahmed, J.Kivinen, B.Zaporzan, L.Curiel, S.Pichardo, O.Rubel,Comp. Phys. Commun. 184, 647 (2013)"	
-    print ("\nQuestions and comments are to be directed to\n  1.Dr. Oleg Rubel \n    Lakehead University\n          and\n    Thunder Bay Regional Research institute\n    290 Munro Street, Thunder Bay, ON Canada P7A 7T1\n    Tel:+1 (807) 766-3350 \n    E-mail:rubelo@tbh.net\n    URL:http://www.tbrri.com/~orubel")
-    print ("\n  2.Dr. Samuel Pichardo \n    Lakehead University\n          and\n    Sunnybrook Health Science Centre\n    2075 Bayview Avenue, Toronto, ON Canada M4N 3M5 \n    Tel:+1 (416) 480-6100 Ext:6156\n    E-mail:spichard@lakeheadu.ca\n    URL:http://www.proteus-mrighifu.net")
+	#print " --- BerryPI Computation Completed ---"
+	print "\nCompleted using BerryPI version 1.0"
+	print "\nBerryPI is a joint project between Thunder Bay Regional Research Institute and Lakehead University"
+	print "\nSuggested reference:\n  S.J.Ahmed, J.Kivinen, B.Zaporzan, L.Curiel, S.Pichardo, O.Rubel,Comp. Phys. Commun. 184, 647 (2013)"	
+	print ("\nQuestions and comments are to be directed to\n  1.Dr. Oleg Rubel \n    Lakehead University\n          and\n    Thunder Bay Regional Research institute\n    290 Munro Street, Thunder Bay, ON Canada P7A 7T1\n    Tel:+1 (807) 766-3350 \n    E-mail:rubelo@tbh.net\n    URL:http://www.tbrri.com/~orubel")
+	print ("\n  2.Dr. Samuel Pichardo \n    Lakehead University\n          and\n    Sunnybrook Health Science Centre\n    2075 Bayview Avenue, Toronto, ON Canada M4N 3M5 \n    Tel:+1 (416) 480-6100 Ext:6156\n    E-mail:spichard@lakeheadu.ca\n    URL:http://www.proteus-mrighifu.net")

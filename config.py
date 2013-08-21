@@ -6,18 +6,15 @@ process.
 be created automatically.
 '''
 
-username = 'benzap'
-
 #######################################################
 #### DEFAULT PATHS ####################################
 #######################################################
 
 #fix for location of python file locations when executing from the python commandline
-DEFAULT_BIN_PATH='/home/stud2/SheikhProjects/BerryPI/'
+DEFAULT_BIN_PATH=''
 
 #Fix for python path to make sure it grabs the latest version
-DEFAULT_PYTHON_PATH='/home/stud2/.local/bin/python2.7 '
-
+DEFAULT_PYTHON_PATH=''
 
 ########################################################
 ####Some default values for the automation of each case
