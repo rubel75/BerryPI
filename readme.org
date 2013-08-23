@@ -14,5 +14,5 @@ BerryPI 1.0
 The present version is restricted to cases when the lattice vectors correspond to cartesian directions. For example, the zinc-blend or NaCl structures should be regarded as an 8 atom cell instead of the conventional 2 atom basis.
 
 * To Do
-- Non-orthogonal lattice vectors: Extendting the capability of "BerryPI" to computing of polarization for structures with non-orthogonal lattice vectors
+- Non-orthogonal lattice vectors: Extending the capability of "BerryPI" to computing of polarization for structures with non-orthogonal lattice vectors
 - Band by band decomposition: Provide analysis of contribution from individual electronic bands (or their range) to the electronic polarization. The present version enables calculation of the Berry phase for a given band range (-b switch), but more testing need to be performed.
