@@ -2,9 +2,9 @@
 BerryPI 1.1
 * [[https://github.com/spichardo/BerryPI/blob/master/licencing.txt][Licensing Conditions]]
 * [[https://github.com/spichardo/BerryPI/blob/master/Installation][Installation Guide]]
-* [[https://github.com/spichardo/BerryPI/archive/master.tar.gz][Download the whole package here]]
+* [[https://github.com/spichardo/BerryPI/releases][Download the whole package here]]
 * Citation
-        S.J. Ahmed, J. Kivinen, B. Zaporzan, L. Curiel, S. Pichardo, O. Rubel, Comp. Phys. Commun. 184, 647(2013) ([[http://www.sciencedirect.com/science/article/pii/S0010465512003712?v=s5][Full Text]])
+        S.J. Ahmed, J. Kivinen, B. Zaporzan, L. Curiel, S. Pichardo, O. Rubel, Comp. Phys. Commun. 184, 647 (2013) ([[http://www.sciencedirect.com/science/article/pii/S0010465512003712?v=s5][Full Text]])
 
 * Tutorials
 - [[https://github.com/spichardo/BerryPI/tree/master/tutorials/tutorial1][Tutorial 1 - Spontaneous polarization calculation of BaTiO3]]
