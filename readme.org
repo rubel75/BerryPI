@@ -2,7 +2,9 @@
 BerryPI 1.0
 * [[https://github.com/spichardo/BerryPI/blob/master/licencing.txt][Licensing Conditions]]
 * [[https://github.com/spichardo/BerryPI/blob/master/Installation][Installation Guide]]
-* [[https://github.com/spichardo/BerryPI/archive/master.tar.gz][Download the whole package here]]
+* Downloads
+** [[https://github.com/spichardo/BerryPI/archive/v1.0.zip][Version 1.0 (Stable)]]
+** [[https://github.com/spichardo/BerryPI/archive/master.tar.gz][Latest Snapshot]]
 * Citation
         S.J. Ahmed, J. Kivinen, B. Zaporzan, L. Curiel, S. Pichardo, O. Rubel, Comp. Phys. Commun. 184, 647(2013) ([[http://www.sciencedirect.com/science/article/pii/S0010465512003712?v=s5][Full Text]])
 
