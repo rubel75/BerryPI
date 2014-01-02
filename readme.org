@@ -1,10 +1,8 @@
 * Current Version
-BerryPI 1.0
+BerryPI 1.1
 * [[https://github.com/spichardo/BerryPI/blob/master/licencing.txt][Licensing Conditions]]
 * [[https://github.com/spichardo/BerryPI/blob/master/Installation][Installation Guide]]
-* Downloads
-** [[https://github.com/spichardo/BerryPI/archive/v1.0.zip][Version 1.0 (Stable)]]
-** [[https://github.com/spichardo/BerryPI/archive/master.tar.gz][Latest Snapshot]]
+* [[https://github.com/spichardo/BerryPI/archive/master.tar.gz][Download the whole package here]]
 * Citation
         S.J. Ahmed, J. Kivinen, B. Zaporzan, L. Curiel, S. Pichardo, O. Rubel, Comp. Phys. Commun. 184, 647(2013) ([[http://www.sciencedirect.com/science/article/pii/S0010465512003712?v=s5][Full Text]])
 
@@ -17,4 +15,3 @@ The present version is restricted to cases when the lattice vectors correspond t
 
 * To Do
 - Non-orthogonal lattice vectors: Extending the capability of "BerryPI" to computing of polarization for structures with non-orthogonal lattice vectors
-- Band by band decomposition: Provide analysis of contribution from individual electronic bands (or their range) to the electronic polarization. The present version enables calculation of the Berry phase for a given band range (-b switch), but more testing need to be performed.

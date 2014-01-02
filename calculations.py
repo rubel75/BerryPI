@@ -16,9 +16,12 @@ import math, pprint
 import errorCheck as b_PyError
 import parsing as b_PyParse
 import numpy
+import copy # needed for deepcopy of arrays
+import collections
 
 from collections import OrderedDict as orderedDict
 from config import BERRY_DEFAULT_CONSOLE_PREFIX as DEFAULT_PREFIX
+from convunits import bohrToMeters # conversion [Bohr] => [m]
 
 DEBUG = True
 
@@ -29,7 +32,7 @@ DEBUG = True
 
 ELECTRON_CHARGE = 1.60217646e-19
 #bohr to meters
-BOHR_CONSTANT = 5.29e-11
+BOHR_CONSTANT = 5.2917725e-11
 
 #value which determines the bounds 
 #of zeroing our 2pi values
@@ -47,9 +50,9 @@ class PathphaseCalculation:
 
 
 	'''
-	def __init__(self, **arguments):
+	def __init__(self, **args):
 		self.topDomain = math.pi * 2
-		self.values = arguments['values']
+		self.values = args['values']
 		self.correctDomain() #produces correct domain in self.correctedValues
 		self.meanValue = (sum(self.correctedValues) / len(self.correctedValues)) / (self.topDomain/2)
 		#	print self.meanValue
@@ -139,11 +142,9 @@ class MainCalculationContainer:
     This class contains every calculation and spits out the final result
 
     -- arguments --
-    file_pathphase_x(file path) - to x-coordinate .pathphase file
+    phasesRaw[ direction(x/y/z), spin , k-path , initial k-point , phase(rad) ] - list with phases
     
-    file_pathphase_y(file path) - to y-coordinate .pathphase file
-
-    file_pathphase_y(file path) - to z-coordinate .pathphase file
+    spCalc - identifier for spin polarized calculation: True - sp, False - no sp
 
     file_struct(file path) - to structure .struct file
 
@@ -153,7 +154,11 @@ class MainCalculationContainer:
 
     file_outputst(file path) - to .outputst file
     '''
-    def __init__(self, **arguments):
+    def __init__(self, **args):
+
+        # spin polarization: yes/no
+        spCalc = args['sp']
+
         ############################
         ######### PARSING ##########
         ############################
@@ -161,25 +166,25 @@ class MainCalculationContainer:
         ###Rest of the Files###
         #parse all the things!
         #### *.struct file parser
-        parser_struct_handle = open(arguments['file_struct'], 'r').readlines()
+        parser_struct_handle = open(args['file_struct'], 'r').readlines()
         parser_struct_handle = b_PyParse.MainStructParser(parser_struct_handle)
         parser_struct_handle.parse()
 
 
         #### *.scf file parser
-        parser_scf_handle = open(arguments['file_scf'], 'r').readlines()
+        parser_scf_handle = open(args['file_scf'], 'r').readlines()
         parser_scf_handle = b_PyParse.MainSCFParser(parser_scf_handle)
         parser_scf_handle.parse()
 
 
         #### *.outputd parser
-        parser_outputd_handle = open(arguments['file_outputd'], 'r').readlines()
+        parser_outputd_handle = open(args['file_outputd'], 'r').readlines()
         parser_outputd_handle = b_PyParse.MainOutputDParser(parser_outputd_handle)
         parser_outputd_handle.parse()
 
         
         #### *.outputst parser
-        parser_outputst_handle = open(arguments['file_outputst'], 'r').readlines()
+        parser_outputst_handle = open(args['file_outputst'], 'r').readlines()
         parser_outputst_handle = b_PyParse.MainOutputstParser(parser_outputst_handle)
         parser_outputst_handle.parse()
 
@@ -197,75 +202,204 @@ class MainCalculationContainer:
         #### *.struct handle
         # - determine name of atoms
         # - determine MULT for each atom
-        self._calculationValues['Atom Listing'] = parser_struct_handle['Atom Listing']
+        self._calculationValues['Atom Listing'] = \
+            parser_struct_handle['Atom Listing'];
         
         #### *.scf handle
         # - Cell Volume
-        self._calculationValues['Cell Volume in bohr^3'] = parser_scf_handle['Cell Volume']
-        self._calculationValues['Cell Volume in m^3'] = bohrToMeters(self._calculationValues['Cell Volume in bohr^3'],3)
+        self._calculationValues['Cell Volume in bohr^3'] = \
+            parser_scf_handle['Cell Volume'];
+        self._calculationValues['Cell Volume in m^3'] = \
+            bohrToMeters(self._calculationValues['Cell Volume in bohr^3'],3);
+
         #### *.outputd handle
         # - BR2_DIR matrix (v_x, v_y, v_z)
         # - number of atoms in cell
         # - Lattice Constants (x,y,z)
-	laticematrix=parser_outputd_handle['BR2_DIR Matrix']
-	latticematrixa1=laticematrix[0]
-	self._calculationValues['Lattice Matrix a1 in bohr']=latticematrixa1
-	latticematrixa2=laticematrix[1]
-	self._calculationValues['Lattice Matrix a2 in bohr']=latticematrixa2
-	latticematrixa3=laticematrix[2]
-	self._calculationValues['Lattice Matrix a3 in bohr']=latticematrixa3
-        self._calculationValues['Lattice Matrix in bohr'] = parser_outputd_handle['BR2_DIR Matrix']
-        self._calculationValues['Lattice Matrix in m'] = [[ bohrToMeters(i) for i in j ] for j in self._calculationValues['Lattice Matrix in bohr']]
-        self._calculationValues['Number of Atoms in Unit Cell'] = parser_outputd_handle['Number of Atoms in Unit Cell']
-        self._calculationValues['Lattice Constants in bohr'] = parser_outputd_handle['Lattice Constants']
-        self._calculationValues['Lattice Constants in m'] = [ bohrToMeters(i) for i in self._calculationValues['Lattice Constants in bohr']]
+      	laticematrix=parser_outputd_handle['BR2_DIR Matrix']
+      	latticematrixa1=laticematrix[0]
+      	self._calculationValues['Lattice Matrix a1 in bohr'] = \
+            latticematrixa1;
+      	latticematrixa2=laticematrix[1]
+      	self._calculationValues['Lattice Matrix a2 in bohr'] = \
+            latticematrixa2;
+      	latticematrixa3=laticematrix[2]
+      	self._calculationValues['Lattice Matrix a3 in bohr'] = \
+            latticematrixa3;
+        self._calculationValues['Lattice Matrix in bohr'] = \
+            parser_outputd_handle['BR2_DIR Matrix'];
+        self._calculationValues['Lattice Matrix in m'] = \
+            [[ bohrToMeters(i) for i in j ] for j in \
+            self._calculationValues['Lattice Matrix in bohr']];
+        self._calculationValues['Number of Atoms in Unit Cell'] = \
+            parser_outputd_handle['Number of Atoms in Unit Cell'];
+        self._calculationValues['Lattice Constants in bohr'] = \
+            parser_outputd_handle['Lattice Constants'];
+        self._calculationValues['Lattice Constants in m'] = \
+            [ bohrToMeters(i) for i in \
+            self._calculationValues['Lattice Constants in bohr']];
 
         #### *.outputst handle
         # for each element:
         # - Core Value
         # - Spin Value 1
         # - Spin Value 2
-        self._calculationValues['Element Listing'] = parser_outputst_handle['Element List']
+        self._calculationValues['Element Listing'] = \
+            parser_outputst_handle['Element List'];
 
         ####
         
-        #### PATHPHASE ####
-        #*.pathphases parsers
-        #get text strings from each file
-        phaseFilesList = [
-            arguments['file_pathphase_x'],
-            arguments['file_pathphase_y'],
-            arguments['file_pathphase_z'],
-            ]
-        #read from files
-        phaseTextStringsList = [ open(i,'r').readlines() for i in phaseFilesList ]
-        #parse the values
-        phaseValues = [ b_PyParse.MainPathphaseParser(i) for i in phaseTextStringsList ]
-        for i in phaseValues: 
-            i.parse()
-        #send to pathphasecalculation for correction
+        ########################
+        # get electronic phase #
+        ########################
+        # get raw list [k-points, phase]
+        phaseDirSpinPathRaw = args['phases']
+        # wrap phases in the range [-pi ... +pi]
+        phaseDirSpinPathWrp11 = self.wrpPhase(phaseDirSpinPathRaw, \
+            self.wrp11);
+        # print nice
+        print "\n","Initial Berry phases and their", \
+            "wrapped values in the range [-pi ... +pi]";
+        print "="*87
+        print " "*30, "| init k-point", "| phase raw (rad)", \
+            "| phase wrap. (rad)"
+        icoord = -1
+        for coord in phaseDirSpinPathRaw:
+            icoord += 1
+            print "-"*87
+            print "direction(%u)" % int(icoord + 1)
+            ispin = -1
+            for spin in coord:
+                ispin += 1
+                print " "*12, "spin(%u)" % int(ispin + 1)
+                ipath = -1
+                for path in spin:
+                    ipath += 1
+                    # perform wraping using the method privided in input
+                    kpt = phaseDirSpinPathRaw[icoord][ispin][ipath][0]
+                    ph = phaseDirSpinPathRaw[icoord][ispin][ipath][1]
+                    phwrp = phaseDirSpinPathWrp11[icoord][ispin][ipath][1]
+                    print " "*20, "path(%4d)       %4d        % e        % e" \
+                        % (ipath+1, kpt, ph, phwrp)
+        print "="*87
+        print "\n","CALCULATION OF ELECTRONIC POLARIZATION"
+        print "="*87
+        print "Value", " "*25, "|  spin  ", "|   ", "dir(1)   ", \
+            "|   ", "dir(2)   ", "|   ", "dir(3)"
+        print "-"*87
+        # find path-average phase
+        phaseDirSpinWrp11 = self.pathAvrgPhase(phaseDirSpinPathWrp11)
+        nspins = numpy.shape(phaseDirSpinWrp11)[1]
+        for spinIndex in range(0,nspins):
+            print "Berry phase (rad) [-pi ... +pi]    sp(%1i)" \
+                % (spinIndex+1), \
+                " [% e, % e, % e]" % tuple(phaseDirSpinWrp11[:,spinIndex]);                
+        if not spCalc and not args['so']: # in case of non-SP or non-SO calculation...
+            phaseDirSpinWrp11 = 2*phaseDirSpinWrp11 # account for the spin degeneracy
+            nspins = numpy.shape(phaseDirSpinWrp11)[1]
+            if nspins != 1: # double check
+                print "Inconsistency detected in the number of spins"
+                print "Is it spin-polarized calculation? spCalc =", spCalc
+                print "Number of spins in the electronic phase array", \
+                    nspins;
+                print "Expected 1 spin"
+                print "Decision is taken to EXIT"
+                sys.exit(2)
+            print "Berry phase (rad)                  up+dn  "+ \
+                "[% e, % e, % e]" % tuple(phaseDirSpinWrp11);
+            # wrap phases again [-pi ... +pi]
+            phaseDirSpinWrp11 = self.wrp11(phaseDirSpinWrp11)
+            print "Berry phase (rad) [-pi ... +pi] " +\
+                "   up+dn  [% e, % e, % e]" \
+                % tuple(phaseDirSpinWrp11);
+        #electron charge / cell volume
+        self.ELEC_BY_VOL_CONST = ELECTRON_CHARGE / \
+            bohrToMeters(self._calculationValues['Cell Volume in bohr^3'], \
+            dimension = 3.);
+        # electronic polarization (C/m2)
+        elP = self.elPolarization(phaseDirSpinWrp11,self._calculationValues, \
+            self.ELEC_BY_VOL_CONST);
+        # ionic polarization (C/m2)
+        ionP = self.determineIonPolarization(self.wrp11,args)
+        # Total polarization (C/m2) will be returned
+        # when calling mainCalculation()
+        self._totalPolarizationVal = self.totalPolarization(elP, ionP)
+        # END main
 
-	self.phaseValues = phaseValues
 
-        phaseObjects = [ PathphaseCalculation(values=i['values']) for i in phaseValues ]
-        
-	self.value_phaseConsistentDomainValues = [i.getConsistentDomainValues() for i in phaseObjects]
-	self.value_phaseConsistentDomainValues2 = [i.getConsistentDomainValues2() for i in phaseObjects]
-        self.value_phaseCorrectedValues = [ i.getCorrectedValues() for i in phaseObjects ]
-	self.value_phaseCorrectedValues2 = [ i.getCorrectedValues2() for i in phaseObjects ]
-	#receive mean values
-        self.value_phaseMeanValues = value_phaseMeanValues = [ i.getMeanValue() for i in phaseObjects ]
+    def wrpPhase(self, List, fnWrpMethod):
+        # wrap phases from a List and bring them in the interval
+        # [-pi..+pi]
+        # List = [direction(x/y/z), spin, k-path, [start k-point, phase]]
+        #                                                           ^
+        #                                                        unwrapped
+        # fnWrpMethod - function that determines the method
+        #
+        # OUT = [direction(x/y/z), spin, k-path, [start k-point, phase]]
+        #                                                           ^
+        #                                                        wrapped
+        OUT = copy.deepcopy(List) # initialize output list
+                                  # deepcopy helps to avoid unintentional
+                                  # modification of the input arguments
+                                  # (stupid python)
+        icoord = -1
+        for coord in List:
+            icoord = icoord + 1
+            ispin = -1
+            for spin in coord:
+                ispin = ispin + 1
+                ipath = -1
+                for path in spin:
+                    ipath = ipath + 1
+                    # perform wraping using the method provided in input
+                    OUT[icoord][ispin][ipath][1] \
+                        = fnWrpMethod( List[icoord][ispin][ipath][1] )
+                pathPhaseWrp = OUT[icoord][ispin][:,1]
+                # unwrap phases among all pathes for a particular spin
+                # for example [-pi, +pi] => [-pi, -pi]
+                pathPhaseUnwrp = numpy.unwrap( pathPhaseWrp )
+                OUT[icoord][ispin][:,1] = pathPhaseUnwrp
+        return OUT
 
-        #constants
-        #electron charge / unit volume
-        self.ELEC_BY_VOL_CONST = ELECTRON_CHARGE / bohrToMeters(self._calculationValues['Cell Volume in bohr^3'], dimension = 3.)
-        #perform necessary calculations
-        self.determineElectronPolarization()
-        self.determineIonPolarization()
-        self.calculateNetPolarizationEnergy()
+    def wrp11(self, IN):
+        # wraps phase into the range [-pi .. +pi]
+        # IN can be any array of phases in (rad)
+        x = IN/numpy.pi # it will be easier to work with numbers [-1..+1]
+        # apply to all elements of the array
+        y = numpy.piecewise(x, [numpy.absolute(x)>1], \
+            [lambda x: x + numpy.sign((-1)*numpy.array(x))* \
+            numpy.round(numpy.absolute(x)/2)*2, lambda x: x]);
+            # last 'x' is needed as _else_ condition
+            # (i.e., no change in x)
+        OUT = y*numpy.pi # get back to radians
+        return OUT
 
 
-	#Berry/Electrcnic phase value in [0 to 2] range
+    def pathAvrgPhase(self, List):
+        # calculate path-average phase 
+        # List = [direction(x/y/z), spin, k-path, [start k-point, phase]]
+        #
+        # OUT = average phase[direction(x/y/z), spin]
+        listSize = numpy.shape(List) # determine the input size
+        # allocate output array based on number of directions and spins
+        OUT = numpy.zeros( listSize[:2] )
+        icoord = -1
+        for coord in List:
+            icoord = icoord + 1
+            ispin = -1
+            for spin in coord:
+                ispin = ispin + 1
+                ipath = -1
+                x = 0
+                for path in spin:
+                    ipath = ipath + 1
+                    x =  x + List[icoord][ispin][ipath][1]
+                avrg = x/(ipath+1)
+                OUT[icoord][ispin] = avrg
+        return OUT
+
+
+
     def getPhasevalues(self):
 		return self.phaseValues
 
@@ -285,7 +419,7 @@ class MainCalculationContainer:
 		return self.value_phaseMeanValues
 
     def __call__(self):
-        return self.netPolarizationEnergy()
+        return self.totalPolarizationVal()
 
     def calculationValues(self):
         return self._calculationValues
@@ -293,72 +427,44 @@ class MainCalculationContainer:
     def prettyPrintCalculationValues(self):
         pprint.pprint(self._calculationValues)
     
-    def determineElectronPolarization(self):
+    def elPolarization(self, berryPhase, calcValues, ELEC_BY_VOL_CONST):
         '''
-        Calculate the flux capacitance of the electron fermion fields
-        TODO write an actual good description later
+        Calculate electronic component of polarization
+
+        Input: berryPhase[direction 1, 2, 3][spin]
 
         Calculation:
 
-        Pel_x = electron charge / unit volume (m) * berry phase mean value *
-          lattice_matrices (diagonal x)
+        Pel_x = electron charge / unit volume (m) * \
+          berry phase mean value/2pi * lattice_matrices (diagonal x);
         '''
-        self._electronPolarization = []
-	self._ebyVandlatticeconstant = []
-        calcValues = self.calculationValues()
-	berryphase = self.valuephaseMeanValues()
-        ELEC_BY_VOL_CONST = self.ELEC_BY_VOL_CONST
-	latticeConstants = calcValues['Lattice Constants in bohr']
+        latticeConstants = calcValues['Lattice Constants in bohr']
         latticeMatrix_x = calcValues['Lattice Matrix in bohr'][0]
         latticeMatrix_y = calcValues['Lattice Matrix in bohr'][1]
         latticeMatrix_z = calcValues['Lattice Matrix in bohr'][2]
-        # split up lattice matrix into respective form
-        #latticeMatrix_x = [ i[0] for i in calcValues['Lattice Matrix'] ]
-        #latticeMatrix_y = [ i[1] for i in calcValues['Lattice Matrix'] ]
-        #latticeMatrix_z = [ i[2] for i in calcValues['Lattice Matrix'] ]
-        # take the absolute value of the vector sqrt(x^2 + y^2 + z^2)
+        # return the absolute value of the vector sqrt(x^2 + y^2 + z^2)
         absVector = lambda vec: math.sqrt(sum([i**2 for i in vec]))
-        #absolute matrices values (look oddly similar to lattice constants......)
+        # length of lattice vectors
         lattice_x = absVector(latticeMatrix_x)
         lattice_y = absVector(latticeMatrix_y)
         lattice_z = absVector(latticeMatrix_z)
-	### e/V*latticeconstant
-	self._ebyVandlatticeconstant.append(ELEC_BY_VOL_CONST * bohrToMeters(latticeConstants[0]))
-	self._ebyVandlatticeconstant.append(ELEC_BY_VOL_CONST * bohrToMeters(latticeConstants[1]))
-	self._ebyVandlatticeconstant.append(ELEC_BY_VOL_CONST * bohrToMeters(latticeConstants[2]))
-       
+	      # Electronic Polarization [OLEG]: check which lattice constants to use
+        nspins = numpy.shape(berryPhase)[1]
+        elP = numpy.zeros((nspins,3))
+        for spinIndex in range(0,nspins):
+            for coordIndex in range(0,3):
+                elP[spinIndex,coordIndex] = \
+                    (berryPhase[coordIndex,spinIndex]/(2*numpy.pi)) * \
+                    ELEC_BY_VOL_CONST * \
+                    bohrToMeters(latticeConstants[coordIndex]);
+            print "Electronic polarization (C/m2)     " +\
+                "sp(%1i) " % (spinIndex+1), \
+            "[% e, % e, % e]" % tuple(elP[spinIndex,:]);
+        print "="*87
+        return elP; # END elPolarization
 
-	#print  DEFAULT_PREFIX + "e/V*lattice constant\n           "+str(self._ebyVandlatticeconstant)+"\n"
-
-
-	###Electronic Polarization in [-1 to +1] range
-	electronpolar2pix =  berryphase[0] * ELEC_BY_VOL_CONST * bohrToMeters(latticeConstants[0])
-	electronpolar2piy =  berryphase[1] * ELEC_BY_VOL_CONST * bohrToMeters(latticeConstants[1])
-	electronpolar2piz =  berryphase[2] * ELEC_BY_VOL_CONST * bohrToMeters(latticeConstants[2])
-
-	self._electronpolar2pi = [ electronpolar2pix, electronpolar2piy, electronpolar2piz ]
-
-
-	###Electronic/Berry Phase Remapping in between -pi to +pi to calculate electronic Polrization	
-	remappedberryx=self.correctPhaseDomain( berryphase[0])
-	remappedberryy=self.correctPhaseDomain( berryphase[1])
-	remappedberryz=self.correctPhaseDomain( berryphase[2])
-	self._berryremapped=[ remappedberryx, remappedberryy, remappedberryz ]
-
-
-        #### CALCULATION ####
-        self._electronPolarization.append(
-            ELEC_BY_VOL_CONST * remappedberryx* bohrToMeters(latticeConstants[0])
-            )
-        self._electronPolarization.append(
-            ELEC_BY_VOL_CONST * remappedberryy* bohrToMeters(latticeConstants[1]))
-        self._electronPolarization.append(
-            ELEC_BY_VOL_CONST * remappedberryz * bohrToMeters(latticeConstants[2])
-            )
-        #### DONE ####
-        return self._electronPolarization
-#Electron polrization in [0 to 2] range
-
+    # [OLEG] check if any old functions left to be removed
+    #Electron polrization in [0 to 2] range
     def electronpolar2pi(self):
 		return self._electronpolar2pi
 
@@ -375,8 +481,17 @@ class MainCalculationContainer:
     def electronPolarization(self):
         return self._electronPolarization
 
-    def determineIonPolarization(self):
+    # Ionic polarization
+    def determineIonPolarization(self, fnWrpMethod, args):
         '''
+        INPUT: fnWrpMethod - function that determines the method for
+                             wrapping the phase
+               args - contains logical variables regarding the
+                      calculation setup
+                      args['so'] - spin-orbit coupling
+                      args['sp'] - spin-polarized calculation
+                      args['orb'] - additional orbital potential (LDA+U)
+
         Calculation:
 
         Pion_x = electron charge / unit volume (m) * lattice_x * (
@@ -388,13 +503,11 @@ class MainCalculationContainer:
 
           where atom valence charge = ( core value - spin val 1 - spin val 2 )
         '''
-        self._ionPolarization = []
+        print "\n", "CALCULATION OF IONIC POLARIZATION"
+        ionP = []
         calcValues = self.calculationValues()
-
         ELEC_BY_VOL_CONST = self.ELEC_BY_VOL_CONST
-
         latticeConstants = calcValues['Lattice Constants in bohr']
-
         atomListing = calcValues['Atom Listing']
         #produce a tuple pair which includes the valence electrons and
         #the coordinates for each element
@@ -402,13 +515,26 @@ class MainCalculationContainer:
         
         #TODO: include good exception handling for this stage
         #construct the calcIonValues for the calculation
+        if args['sp'] and not args['so']:
+            nspins = 2
+        else:
+            nspins = 1
         for atom in atomListing:
             for i in range(atom['MULT']):
                 theElementName = atom['Element Name']
-		
                 if calcValues['Element Listing'].has_key(theElementName):
                     theElement = calcValues['Element Listing'][theElementName]
-                    theValence = -theElement['Core Value'] + theElement['Spin Value 1'] + theElement['Spin Value 2']
+                    if nspins == 2:
+                        theValence = []
+                        for spin in [1, 2]:
+                            theValence.append( \
+                                -theElement['Core Value']/2 + \
+                                theElement['Spin Value '+repr(spin)]
+                            );
+                    else:
+                        theValence = -theElement['Core Value'] + \
+                            theElement['Spin Value 1'] + \
+                            theElement['Spin Value 2'];
                     xCoordinate = atom['X-Coord'][i]
                     yCoordinate = atom['Y-Coord'][i]
                     zCoordinate = atom['Z-Coord'][i] 
@@ -426,46 +552,70 @@ class MainCalculationContainer:
 
         #### CALCULATION ####
         xPolarIon, yPolarIon, zPolarIon = (0., 0., 0.)
+        print "="*87
+        print "Elem.|  Fractional coord.  |  spin |valence|", \
+            "   dir(1)   ", \
+            "|   ", "dir(2)   ", "|   ", "dir(3)"
+        print "-"*87
+        print " "*41, "+"+"-"*12, "Ionic phase (rad)", \
+            "-"*12+"+"
+        totIonPhase = numpy.zeros((nspins,3))
+        for element, iCoord, iValence in calcIonValues:
+            spinIndex = -1
+            if isinstance(iValence, collections.Iterable):
+                pass
+            else:
+                iValence = [iValence, ]
+            for spinValence in iValence:
+                spinIndex += 1
+                ionPhase = numpy.zeros((nspins,3))
+                coordIndex = -1
+                for fcoord in iCoord:
+                    coordIndex += 1
+                    # fractional coordinates used
+                    psi = fcoord * spinValence * 2*numpy.pi
+                    ionPhase[ spinIndex , coordIndex ] = psi
+                if spinIndex == 0:
+                    print "%2s " % element, \
+                        "(%6.4f, %6.4f, %6.4f) " % iCoord, \
+                        "sp(%1i)" % (spinIndex+1), \
+                        "%5.2f" % spinValence, \
+                        "[% e, % e, % e]" % tuple(ionPhase[spinIndex,:]);
+                else:
+                    print " "*29, \
+                        "sp(%1i)" % (spinIndex+1), \
+                        "%5.2f" % spinValence, \
+                        "[% e, % e, % e]" % tuple(ionPhase[spinIndex,:]);
+                totIonPhase[:,:] += ionPhase
+        print "-"*87
+        for spinIndex in range(0,nspins):
+           	print "Total ionic phase (rad)", " "*5, \
+                "sp(%1i)" % (spinIndex+1), " "*5, \
+                "[% e, % e, % e]" % tuple(totIonPhase[spinIndex,:]);
 
-        #coordinates were converted from bohr
-         
-        for element,iCoord, iValence in calcIonValues:
-            xPolarIon += iCoord[0] * iValence
-            yPolarIon += iCoord[1] * iValence
-            zPolarIon += iCoord[2] * iValence
-	#Correction of Polarion to 2pi domain As it should not be negetive so no negetive correction function was added
-	topPi=2
-#	print xPolarIon,yPolarIon,zPolarIon
-	xPolarionCorrected=xPolarIon%topPi
-	yPolarionCorrected=yPolarIon%topPi
-	zPolarionCorrected=zPolarIon%topPi
-	self._ionicphase=[ xPolarionCorrected, yPolarionCorrected, zPolarionCorrected ]
+        # warap phases
+        totIonPhase = fnWrpMethod( totIonPhase );
 
-       #IONIC Polarization in 2 PI range
-        ionpolx = xPolarionCorrected * ELEC_BY_VOL_CONST * bohrToMeters(latticeConstants[0]) 
-	ionpoly = yPolarionCorrected * ELEC_BY_VOL_CONST * bohrToMeters(latticeConstants[1])
-	ionpolz = zPolarionCorrected * ELEC_BY_VOL_CONST * bohrToMeters(latticeConstants[2])    
-	self._ionicpolar2pi = [ ionpolx, ionpoly, ionpolz] 
+        for spinIndex in range(0,nspins):
+           	print "Total ionic phase wrap. (rad)", \
+                "sp(%1i)" % (spinIndex+1), " "*5, \
+                "[% e, % e, % e]" % tuple(totIonPhase[spinIndex,:]);
 
-	
-	# Remapping of Ionic Phase in -pi to +pi for Ionic Polarization 
-	xPolrionmapped= self.correctPhaseDomain(xPolarionCorrected)
-	yPolrionmapped= self.correctPhaseDomain(yPolarionCorrected)
-	zPolrionmapped= self.correctPhaseDomain(zPolarionCorrected)
-	self._mappedionic=[ xPolrionmapped, yPolrionmapped, zPolrionmapped ]
-         
+        #IONIC Polarization
+        ionPol = numpy.zeros((nspins,3))
+        for spinIndex in range(0,nspins):
+            for coordIndex in range(0,3):
+                psi = totIonPhase[spinIndex,coordIndex]
+                a = latticeConstants[coordIndex]
+                ionPol[spinIndex,coordIndex] = \
+                    (psi/(2*numpy.pi)) * ELEC_BY_VOL_CONST * \
+                    bohrToMeters(a);
+            print "Ionic polarization (C/m2)    ", \
+                "sp(%1i)" % (spinIndex+1), " "*5, \
+                "[% e, % e, % e]" % tuple(ionPol[spinIndex,:]);
+        print "="*87
 
-	#	print DEFAULT_PREFIX + " New Polarion " + str((xPolarionCorrected,yPolarionCorrected,zPolarionCorrected))
-			#lattice constants were converted from bohr
-	xPolrionmapped *= ELEC_BY_VOL_CONST * bohrToMeters(latticeConstants[0])
-	#        print DEFAULT_PREFIX + "(eV//V, Lattice Constant X, Lat_x in Meters) - " + str((ELEC_BY_VOL_CONST, latticeConstants[0], bohrToMeters(latticeConstants[0])))
-	yPolrionmapped *= ELEC_BY_VOL_CONST * bohrToMeters(latticeConstants[1])
-	#        print DEFAULT_PREFIX + "(eV//V, Lattice Constant Y, Lat_y in Meters)  - " + str((ELEC_BY_VOL_CONST, latticeConstants[1], bohrToMeters(latticeConstants[1])))
-	zPolrionmapped *= ELEC_BY_VOL_CONST * bohrToMeters(latticeConstants[2])
-	 #       print DEFAULT_PREFIX + "(eV//V, Lattice Constant Z, Lat_z in Meters)  - " + str((ELEC_BY_VOL_CONST, latticeConstants[2], bohrToMeters(latticeConstants[2])))
-	self._ionPolarization = [ xPolrionmapped, yPolrionmapped, zPolrionmapped ]
-        ######## END ########
-        return self._ionPolarization
+        return ionPol # END determineIonPolarization
 
 #Valance Electron
     def valance(self):
@@ -510,54 +660,38 @@ class MainCalculationContainer:
 	            phaseValue += domainRange
         return phaseValue	
 
-    def calculateNetPolarizationEnergy(self):
+    # Total polarization
+    def totalPolarization(self, elP, ionP):
         '''
-		Need to correct the Berryphase so that it resides in the
-		-pi to +pi domain (-1 to 1)
+        Calculate total polarization
+        INPUT: elP    - electronic polarization (C/m2)
+               ionP   - ionic polarization (C/m2)
+        OUTPUT: totP  - total polarization (C/m)
+                totP = elP + ionP
         '''
-        elecPolar = self.electronPolarization()
-        ionPolar = self.ionPolarization()
-	ionicphase = self.ionicphase()
-	ionicremapped=self.mappedionic()
-	electronicphase=self.value_phaseMeanValues
-	electronicphaseremapped=self.remappedberryphase()
-
-
-	#Zipping  values together and summing them
-	ionicphase = [ i * 2 * math.pi for i in ionicphase ]
-	electronicphase = [ i * 2 * math.pi for i in electronicphase ]
-	self._netPolarizationEnergy = zip(ionicphase, electronicphase)
-	self._netPolarizationEnergy = [sum(i) for i in self._netPolarizationEnergy ]
-	self._netPolarizationEnergy= [i / ( 2 * math.pi) for i in self._netPolarizationEnergy ]	
-	self._netPolarizationEnergy= [i % 2 for i in self._netPolarizationEnergy ]
-
-        #Total Phase in [0 to 2]
-        self._totalphase2pi=self._netPolarizationEnergy
-
-
-	self._netPolarizationEnergy1=self._netPolarizationEnergy
-	calcValues = self.calculationValues()
-        latticeConstants = calcValues['Lattice Constants in bohr']
-
-        ELEC_BY_VOL_CONST = self.ELEC_BY_VOL_CONST
-        self._netPolarizationEnergy1 = [ELEC_BY_VOL_CONST * bohrToMeters(i[0]) * i[1] for i in zip(latticeConstants, self._netPolarizationEnergy1) ]
-
-	#Correcting the phase domain between -pi and pi
-
-	self._netPolarizationEnergy = [ self.correctPhaseDomain(i) for i in self._netPolarizationEnergy ]
-        
-       # Total Phase [-1 to +1]
-        self._totalphaseneg1to1 = self._netPolarizationEnergy
-
-        
-	#grab the calculation values
-	calcValues = self.calculationValues()
-	latticeConstants = calcValues['Lattice Constants in bohr']
-	
-	ELEC_BY_VOL_CONST = self.ELEC_BY_VOL_CONST
-	self._netPolarizationEnergy = [ELEC_BY_VOL_CONST * bohrToMeters(i[0]) * i[1] for i in zip(latticeConstants, self._netPolarizationEnergy) ]
-
-        return self._netPolarizationEnergy
+        totSpinP = numpy.add(elP, ionP)
+        nspins = numpy.shape(totSpinP)[0]
+        print "\nSUMMARY OF POLARIZATION CALCULATION"
+        print "="*87
+        print "Value", " "*25, "|  spin  ", "|   ", "dir(1)   ", \
+            "|   ", "dir(2)   ", "|   ", "dir(3)"
+        for spinIndex in range(0,nspins):
+            print "-"*87
+            print "Electronic polarization (C/m2)     " + \
+                "sp(%1i) " % (spinIndex+1), \
+                "[% e, % e, % e]" % tuple(elP[spinIndex,:])
+            print "Ionic polarization (C/m2)          " + \
+                "sp(%1i) " % (spinIndex+1), \
+                "[% e, % e, % e]" % tuple(ionP[spinIndex,:])
+            print "Tot. spin polariz.=Pion+Pel (C/m2) " + \
+                "sp(%1i) " % (spinIndex+1), \
+                "[% e, % e, % e]" % tuple(totSpinP[spinIndex,:])
+        print "-"*87
+        totP = numpy.sum(totSpinP, axis=0) # summ over spins
+        print "TOTAL POLARIZATION (C/m2)          " + \
+            "both   [% e, % e, % e]" % tuple(totP)
+        print "="*87
+        return totP # END totalPolarization
 
 #Total Phase [0 to 2] range
     def totalphase2pi(self):
@@ -570,19 +704,14 @@ class MainCalculationContainer:
 
 
 #Total Polarization [-1 to +1] range
-    def netPolarizationEnergy(self):
-        return self._netPolarizationEnergy
+    def totalPolarizationVal(self):
+        return self._totalPolarizationVal
 
 
 #Total Polarization [0 to 2] range
     def netpolarization2pi(self):
 	return self._netPolarizationEnergy1
 
-
-
-# local functions
-def bohrToMeters(value, dimension = 1):
-    return value * ((BOHR_CONSTANT )) ** dimension
 
         
 if __name__ == "__main__":

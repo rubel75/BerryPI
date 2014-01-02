@@ -2,13 +2,9 @@
 import sys
 import numpy
 
-#VERBOSE = True
-VERBOSE = False # Whether or not to print extra info
-
-### case.win parsing
-parse_line_list = lambda line, delimiter, T : [T(y) for y in [x.strip() for x in line.strip().split(delimiter)] if y] 
 
 def parse_win_mp_grid(f):
+    parse_line_list = lambda line, delimiter, T : [T(y) for y in [x.strip() for x in line.strip().split(delimiter)] if y]
     for line in f.xreadlines():
         if 'mp_grid' in line:
             # mp_grid :         A     B     C
@@ -143,33 +139,51 @@ def determine_neighbours(D, d, P = [0,1,2]):
     return nnkpts, neighbour_graph
 
 def print_usage():
-    print >> sys.stderr, "Usage: {0} case [direction]".format(sys.argv[0])
+    print >> sys.stderr, "Usage: mmn2pathphase case [direction]"
     print >> sys.stderr, " direction    x, y, or z; for <x, y, z> (default x)"
 
-###############################################################################
 
 ###############################################################################
+# Begin MAIN
+###############################################################################
 
-if __name__ == "__main__":
+def main(args):
 
-    if len(sys.argv) < 2:
+    #VERBOSE = True
+    VERBOSE = False # Whether or not to print extra info
+
+    ### case.win parsing
+    parse_line_list = lambda line, delimiter, T : [T(y) for y in [x.strip() for x in line.strip().split(delimiter)] if y]
+
+    if len(args) < 2:
         print >> sys.stderr, "Error: no case provided"
         exit(1)
 
+    spOption = '' # no spin polarization by default
+    soOption = '' # no spin-orbit by default
+    for arg in args: # check for spin polarization in arguments
+        if arg == '-up':
+            spOption = 'up'
+        elif arg == '-dn':
+            spOption = 'dn'
+        elif arg == '-so':
+            spOption = 'up' # keep up spin for spin-orbit ('dn' should not make a difference)
+            soOption = 'so'
+
     # Get case name from arguments
-    case_name = sys.argv[1]
+    case_name = args[0]
 
     # Get direction from arguments
     direction_args = {'x': [1, 0, 0],
                       'y': [0, 1, 0],
                       'z': [0, 0, 1]}
 
-    if len(sys.argv) > 2:
-        if not direction_args.has_key(sys.argv[2]):
-            print >> sys.stderr, "Error: unknown direction '{0}'".format(sys.argv[2])
+    if len(args) > 2:
+        if not direction_args.has_key(args[1]):
+            print >> sys.stderr, "Error: unknown direction '{0}'".format(args[1])
             exit(1)
 
-        direction = direction_args[sys.argv[2]]
+        direction = direction_args[args[1]]
     else:
         direction = direction_args['x']
 
@@ -177,13 +191,13 @@ if __name__ == "__main__":
     phases = {} # for index k, the phase between k and its neighbour along the specified direction
     phase_sums = [] # for index k, the accumulated phase along the path in the specified direction starting at k
 
-    # Get information from case.win 
-    f_win = open(case_name + '.win', 'r')
-    dimensions = parse_win_mp_grid(f_win)
+    # Get k-mesh information from case.win
+    f_win = open(case_name + '.win' + spOption, 'r')
+    kmesh = parse_win_mp_grid(f_win)
     f_win.close()
 
     # Calculate the neighbours of interest
-    nnkpts, neighbour_graph = determine_neighbours(dimensions, direction, [2, 1, 0])
+    nnkpts, neighbour_graph = determine_neighbours(kmesh, direction, [2, 1, 0])
     #  > we need the pairs list (nnkpts) to discriminate values found in the
     #    case.mmn file
     #  > we need the neighbour graph (neighbour_graph) in order to find the sum
@@ -192,8 +206,12 @@ if __name__ == "__main__":
     if VERBOSE:
         print nnkpts
 
-    # Open file containing Mmn data (case.mmn) 
-    f_mmn = open(case_name + '.mmn', 'r')
+    # Open file containing Mmn data (case.mmn)
+    if soOption == 'so':
+        opt = 'so' # file *.mmnso in case of spin-orbit
+    else:
+        opt = spOption # file *.mmn(up/dn) for SP case without SO
+    f_mmn = open(case_name + '.mmn' + opt, 'r')
     f_mmn.readline() # Ignore first line
 
     n_energy, n_pairs, n_neighbours = parse_mmn_info_line(f_mmn.readline())
@@ -219,15 +237,16 @@ if __name__ == "__main__":
                     # Put value into matrix
                     pair_matrix[a, b] = element_value
 
-            # Determine the phase between the pair from the matrix determinant 
+            # Determine the phase between the pair from the matrix determinant
             det_Mmn = numpy.linalg.det(pair_matrix)
             phases[k1] = numpy.angle(det_Mmn)
 
             if VERBOSE:
-                print (k1, k2, G)
-                print pair_matrix
-                print det_Mmn
-                print numpy.angle(det_Mmn)
+                print "(k1, k2, G)=", (k1, k2, G)
+                print "pair_matrix Mmn=", pair_matrix
+                print "eig(pair_matrix)=", numpy.linalg.eig(pair_matrix)[0]
+                print "det_Mmn=", det_Mmn
+                print "numpy.angle(det_Mmn)=", numpy.angle(det_Mmn)
                 print '---'
         else:
             if VERBOSE:
@@ -270,7 +289,7 @@ if __name__ == "__main__":
     phase_sums.sort(key=lambda x:x[0]) # TODO use sorted
 
     # Write out path phases
-    f_pathphase = open(case_name + '.pathphase', 'w')
+    f_pathphase = open(case_name + '.pathphase' + spOption, 'w')
 
     # Write out number of paths 
     f_pathphase.write('%4d\n' % len(phase_sums))
@@ -283,6 +302,16 @@ if __name__ == "__main__":
         f_pathphase.write(' %6d    %.12f\n' % (k, phase_sum))
 
     f_pathphase.close()
+
+    return phase_sums
+
+###############################################################################
+# end MAIN
+###############################################################################
+
+if __name__ == "__main__":
+
+    main(sys.argv[1:]) # path all arguments except for the first one
 
 ###############################################################################
 

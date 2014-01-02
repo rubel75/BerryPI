@@ -142,16 +142,20 @@ def parse_win_unit_cell_cart(f):
 
     return real_lattice, reciprocal(real_lattice) 
 
-def parse_win(case_name):
-    f = open(case_name + '.win', 'r')
+def parse_win(case_name,spinLable):
+    # define extension file
+    ext = '.win' + spinLable
+    file_name = case_name + ext
+
+    f = open(file_name, 'r')
     real_lattice, recip_lattice = parse_win_unit_cell_cart(f)
     f.close()
 
-    f = open(case_name + '.win', 'r')
+    f = open(file_name, 'r')
     dimensions = parse_win_mp_grid(f)
     f.close()
 
-    f = open(case_name + '.win', 'r')
+    f = open(file_name, 'r')
     kpoints = parse_win_kpoints(f)
     f.close()
 
@@ -159,9 +163,24 @@ def parse_win(case_name):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 2:
+    spCalc = False # no spin polarization by default
+    spinLable = "" # no spins
+    if len(sys.argv) < 2:
         print >> sys.stderr, "Error: no case provided"
-        print >> sys.stderr, "Usage: {0} case".format(sys.argv[0])
+        print >> sys.stderr, "Usage: {0} case (-up/-dn)".format(sys.argv[0])
+        exit(1)
+    elif len(sys.argv) == 3: # spin polarized?
+        if sys.argv[2] in ('-up', '-dn'):
+            spCalc = True
+            spinOption = sys.argv[2]
+            spinLable = spinOption.replace("-","")
+        else:
+            print >> sys.stderr, "Error: the second input argument should -up/-dn"
+            print >> sys.stderr, "Usage: {0} case (-up/-dn)".format(sys.argv[0])
+            exit(1)
+    elif len(sys.argv) > 3:
+        print >> sys.stderr, "Error: too many arguments"
+        print >> sys.stderr, "Usage: {0} case (-up/-dn)".format(sys.argv[0])
         exit(1)
 
     # Parameters
@@ -169,7 +188,7 @@ if __name__ == "__main__":
     permutation = [2,1,0] # Permutation vector (changes "order" of dimensions)
 
     # Parse input
-    real_lattice, recip_lattice, dimensions, kpoints = parse_win(case_name)
+    real_lattice, recip_lattice, dimensions, kpoints = parse_win(case_name,spinLable)
 
     # Calculate nnkpts
     nnkpts = calculate_nnkpts(dimensions)

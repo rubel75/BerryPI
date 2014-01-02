@@ -11,10 +11,10 @@ be created automatically.
 #######################################################
 
 #fix for location of python file locations when executing from the python commandline
-DEFAULT_BIN_PATH=''
+DEFAULT_BIN_PATH='/home/oleg/BerryPItest/'
 
 #Fix for python path to make sure it grabs the latest version
-DEFAULT_PYTHON_PATH=''
+DEFAULT_PYTHON_PATH='/home/oleg/.local/bin/python2.7'
 
 ########################################################
 ####Some default values for the automation of each case
