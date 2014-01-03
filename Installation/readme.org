@@ -1,6 +1,3 @@
-* Current Version
-BerryPI 1.0
-
 * Automated Installation
     - 1. Download BerryPI
     
