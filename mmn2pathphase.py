@@ -166,9 +166,6 @@ def main(args):
             spOption = 'up'
         elif arg == '-dn':
             spOption = 'dn'
-        elif arg == '-so':
-            spOption = 'up' # keep up spin for spin-orbit ('dn' should not make a difference)
-            soOption = 'so'
 
     # Get case name from arguments
     case_name = args[0]
@@ -206,12 +203,8 @@ def main(args):
     if VERBOSE:
         print nnkpts
 
-    # Open file containing Mmn data (case.mmn)
-    if soOption == 'so':
-        opt = 'so' # file *.mmnso in case of spin-orbit
-    else:
-        opt = spOption # file *.mmn(up/dn) for SP case without SO
-    f_mmn = open(case_name + '.mmn' + opt, 'r')
+    # Open file containing Mmn data (case.mmn[up/dn])
+    f_mmn = open(case_name + '.mmn' + spOption, 'r')
     f_mmn.readline() # Ignore first line
 
     n_energy, n_pairs, n_neighbours = parse_mmn_info_line(f_mmn.readline())

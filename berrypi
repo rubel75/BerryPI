@@ -93,13 +93,39 @@ def rawBerryPhase(configFile):
     oldCurrentWorkingDirectory = os.getcwd()
     newWorkingDirectory = configFile['Structure Path']
     changeToWorkingDirectory(newWorkingDirectory)
+
     #ensure background env is also in the right directory
     os.system('cd ' + newWorkingDirectory)
     print DEFAULT_PREFIX + 'New working directory: ' + newWorkingDirectory
+
+    # setup wien2k, berrypi path and python path
+    w2kpath = os.getenv('WIENROOT')
+    if w2kpath == "":
+        print DEFAULT_PREFIX, 'ERROR: Unable to find the WIENROOT enviroment variable'
+        print '             check the existance by executing "echo $WIENROOT"'
+        print '             or set it up by "export WIENROOT=/path/to/wien2k"'
+        sys.exit(2)
+    else:
+        print DEFAULT_PREFIX, 'w2kpath =', w2kpath
+    pypath = os.getenv('BERRYPI_PYTHON', DEFAULT_PYTHON_PATH)
+    if pypath == "":
+        print DEFAULT_PREFIX, 'ERROR: Unable to find BERRYPI_PYTHON enviroment variable'
+        print '             check the existance by executing "echo $BERRYPI_PYTHON"'
+        print '             or set it up by "export BERRYPI_PYTHON=/path/to/python"'
+        sys.exit(2)
+    else:
+        print DEFAULT_PREFIX, 'pypath =', pypath
+    bppath = os.getenv('BERRYPI_PATH', DEFAULT_BIN_PATH)
+    if bppath == "":
+        print DEFAULT_PREFIX, 'ERROR: Unable to find BERRYPI_PATH enviroment variable'
+        print '             check the existance by executing "echo $BERRYPI_PATH"'
+        print '             or set it up by "export BERRYPI_PYTHON=/path/to/berrypi"'
+        sys.exit(2)
+    else:
+        print DEFAULT_PREFIX, 'bppath =', bppath
     
     #check to make sure certain files exist
     structureName = configFile['Structure Name']
-
     tempFileName = structureName + '.struct'
     if not b_PyError.fileExists(tempFileName):
         string = DEFAULT_PREFIX + str(tempFileName)
@@ -392,32 +418,27 @@ def rawBerryPhase(configFile):
             elif
         '''
 
-        #####################################
-        # create input list for write_w2win #
-        #####################################
-        #get our input parameters from the configuration file
-        numWannierFunctions = configFile['Number of Wannier Functions']
-        centerAtomAndCharacter = configFile['Center Atom and Character']
+        ####################################
+        # create input list for write_inwf #
+        ####################################
         nb = blochBandSettings[spinIndex][1] # last occupied band
-        inputListing = [
-            reduce(lambda i,j: str(i) + ' ' + str(j), [1, nb]),
-            str(numWannierFunctions),
-            str(centerAtomAndCharacter),
-            ]
+        inputListing = '-mode BOTH -bands 1 ' + str(nb) # TODO: MMN optionwhen w2waddsp fixed
 
-        #######################
-        # execute write_w2win #
-        #######################
-        exe = 'write_w2win' + ' ' + spinOption
-        shell_write_w2win = b_PySubProcess.VirtualShellInstance(
-            exe, str(structureName),
-            input=inputListing,
+
+        ######################
+        # execute write_inwf #
+        ######################
+        exe = 'write_inwf'
+        shell_write_inwf = b_PySubProcess.VirtualShellInstance(
+            pypath,
+            w2kpath + '/' + exe,
+            inputListing,
             )
         try:
-            shell_write_w2win.run()
+            shell_write_inwf.run()
         except subprocess.CalledProcessError, err:
             print DEFAULT_PREFIX + "ERROR: in automation of " + str(structureName) 
-            print DEFAULT_PREFIX + "ERROR --> " + shell_write_w2win.getCommandString()
+            print DEFAULT_PREFIX + "ERROR --> " + shell_write_inwf.getCommandString()
             print str(err)
             return False
 
@@ -425,9 +446,9 @@ def rawBerryPhase(configFile):
         #####################
         # execute write_win #
         #####################
-        exe = 'write_win' + ' ' + spinOption
+        exe = 'write_win'
         shell_write_win = b_PySubProcess.VirtualShellInstance(
-            exe, str(structureName),
+            exe,
             )
         try:
             shell_write_win()
@@ -436,41 +457,72 @@ def rawBerryPhase(configFile):
             print DEFAULT_PREFIX + "ERROR --> " + shell_write_win.getCommandString()
             print str(err)
             return False
+        if not spinLable == "": # for spin-polarized calc.
+            case = str(structureName)
+            fnameold = case + '.win'
+            fnamenew = fnameold + spinLable
+            shutil.copy(fnameold, fnamenew) # copy case.win to case.win[up/dn]
 
 
         #######################
         # execute win2nnkp.py #
         #######################
         shell_win2nnkp = b_PySubProcess.VirtualShellInstance(
-                DEFAULT_PYTHON_PATH +" "+ DEFAULT_BIN_PATH + 'win2nnkp.py',
-                str(structureName), spinOption,
+                pypath,
+                bppath + '/' + 'win2nnkp.py',
+                str(structureName), # spinOption,
                 )
         try:
             shell_win2nnkp()
         except subprocess.CalledProcessError, err:
-            print DEFAULT_PREFIX + "ERROR: in automation of " + str(structureName) + suffix
-            print DEFAULT_PREFIX + "ERROR --> " + shell_win2nnkp.getCommandString()
+            print DEFAULT_PREFIX + "ERROR: in automation of " + \
+                  str(structureName) + suffix
+            print DEFAULT_PREFIX + "ERROR --> " + \
+                  shell_win2nnkp.getCommandString()
             print str(err)
             return False
 
 
-        #############################################################
-        # execute write_w2wdef to prepare a definition file for w2w #
-        #############################################################
-        if soCalc:
-            opt = '-so' + spinLable
+        #####################
+        # create case.fermi #
+        #####################
+        case = str(structureName)
+        fname = case + '.scf2' + spinLable
+        if os.path.isfile(fname): # check the presence of case.scf2
+            print DEFAULT_PREFIX, 'file', fname, 'found; will extract the Fermi energy'
         else:
-            opt = spinOption
-        shell_write_w2wdef = b_PySubProcess.VirtualShellInstance(
-            'write_w2wdef', opt, str(structureName),
-            )
-        try:
-            shell_write_w2wdef()
-        except subprocess.CalledProcessError, err:
-            print DEFAULT_PREFIX + "ERROR: in automation of " + str(structureName) 
-            print DEFAULT_PREFIX + "ERROR --> " + shell_write_w2wdef.getCommandString()
-            print str(err)
-            return False
+            print DEFAULT_PREFIX, 'ERROR: file', fname, 'not found'
+            sys.exit(2)
+        for line in open(fname):
+            if ":FER" in line:
+                print line.rstrip()
+                break
+        if not ":FER" in line:
+            print DEFAULT_PREFIX, 'ERROR: unable to locate :FER line in', fname
+            print 'you probably need to rerun LAPW2'
+            sys.exit(2)
+        Ef = line.split("=")[-1] # extract Fermi energy
+        Ef = Ef.lstrip() # eliminate spaces
+        Ef = Ef.rstrip() # remove end of line
+        if not Ef == "": # check if string is not empty
+            print DEFAULT_PREFIX, 'Ef =', Ef, 'Ry'
+        else:
+            print DEFAULT_PREFIX, 'ERROR: unable to determine the Fermi energy'
+            print 'in line', line
+            sys.exit(2)
+        fname = case + '.fermi' + spinLable # write Fermi energy to case.fermi file
+        if os.path.isfile(fname): # remove old case.fermi if present
+            print DEFAULT_PREFIX, fname, 'is present and will be removed'
+            os.remove(fname)
+            if not os.path.isfile(fname):
+                print '             ... done'
+            else:
+                print DEFAULT_PREFIX, 'unable to remove', fname
+                print '             will continue at your own risk'
+        file = open(fname, "w")
+        file.write(Ef + '\n') # add end of line
+        file.close()
+        print DEFAULT_PREFIX, 'Fermi energy is written to', fname
 
 
         ###############
@@ -478,11 +530,10 @@ def rawBerryPhase(configFile):
         ###############
         if soCalc: # for spin-orbit call executables directly
             shell_w2w = b_PySubProcess.VirtualShellInstance( \
-                'w2wc w2w.def' );
+                'x w2w -so', spinOption );
         else:
             shell_w2w = b_PySubProcess.VirtualShellInstance( \
-                'w2w'+spOption.replace("-",""), spinOption, \
-                str(structureName) );
+                'x w2w', spinOption );
         try:
             shell_w2w()
         except subprocess.CalledProcessError, err:
@@ -492,12 +543,12 @@ def rawBerryPhase(configFile):
             return False
 
 
-        #############################
-        # execute combine_spinfiles #
-        #############################
+        ####################
+        # execute w2waddsp #
+        ####################
         if soCalc and spinLable=='dn': # spin-orbit last passage
             shell_csf = b_PySubProcess.VirtualShellInstance( \
-                'combine_spinfiles', str(structureName) );
+                'x w2waddsp' );
             try:
                 shell_csf()
             except subprocess.CalledProcessError, err:
