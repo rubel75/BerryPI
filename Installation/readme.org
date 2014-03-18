@@ -46,8 +46,8 @@
   to get a list of prefix options.
 
 * Dependencies
-  - WIEN2k (tested against 12.1 Release 22/07/2012)
-  - WIEN2WANNIER (tested against 0.96)
+  - WIEN2k (tested against 13.1 Release 25 June 2013)
+  - WIEN2WANNIER (tested against v1.0-beta2)
   - Python (tested against 2.7.4)
   - NumPy (tested against 1.6.2)
   
