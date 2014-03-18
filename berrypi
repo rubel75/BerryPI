@@ -422,7 +422,7 @@ def rawBerryPhase(configFile):
         # create input list for write_inwf #
         ####################################
         nb = blochBandSettings[spinIndex][1] # last occupied band
-        inputListing = '-mode BOTH -bands 1 ' + str(nb) # TODO: MMN optionwhen w2waddsp fixed
+        inputListing = '-mode MMN -bands 1 ' + str(nb)
 
 
         ######################
