@@ -10,10 +10,11 @@
    - 2. Extract BerryPI out of ZIP compression (Ex: unzip master.zip, tar -xzvf master.zip)
    - 3. Rename the folder whatever you want and place the folder in any directory you want
    - 4. Execute the bash script init.sh in the BerryPI folder following all prompts until completion
+   - 5. Source .bashrc file: $ source ~/.bashrc
 
  Optional:
-   - 5. Verify that in config.py both DEFAULT_BIN_PATH and DEFAULT_PYTHON_PATH are not equal to ''
-   - 6. Verify that .bashrc has BerryPI related enviroment variables( Ex: alias berrypi="${BERRYPI_PYTHON} ${BERRYPI_PATH}/berrypi")
+   - 6. Verify that in config.py both DEFAULT_BIN_PATH and DEFAULT_PYTHON_PATH are not equal to ''
+   - 7. Verify that .bashrc has BerryPI related enviroment variables BERRYPI_PYTHON, Ex: alias berrypi="${BERRYPI_PYTHON} ${BERRYPI_PATH}/berrypi")
     
 * Manual Installation:
    - 1. Download BerryPI
