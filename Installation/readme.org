@@ -13,9 +13,11 @@
    - 5. Source .bashrc file: $ source ~/.bashrc
 
  Optional:
-   - 6. Verify that in config.py both DEFAULT_BIN_PATH and DEFAULT_PYTHON_PATH are not equal to ''
-   - 7. Verify that .bashrc has BerryPI related enviroment variables BERRYPI_PYTHON, Ex: alias berrypi="${BERRYPI_PYTHON} ${BERRYPI_PATH}/berrypi")
-    -	a. Download BerryPI off the Github repository via 'Download ZIP'
+   - 6. Verify that in config.py both DEFAULT_BIN_PATH and DEFAULT_PYTHON_PATH are not empty
+   - 7. Verify that .bashrc has BerryPI related enviroment variables:
+    -	export BERRYPI_PATH=/path/to/BerryPI
+    -	export BERRYPI_PYTHON=/path/to/your/python2.7
+    -	alias berrypi="${BERRYPI_PYTHON} ${BERRYPI_PATH}/berrypi"
     
 * Manual Installation:
    - 1. Download BerryPI
