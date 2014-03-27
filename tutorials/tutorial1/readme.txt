@@ -24,10 +24,7 @@ Important: Do not use iterative diagonalization (-it switch) during standard SCF
 
 1.4 Run BerryPI
  
-$ berrypi
-
-Enter 6:6:6 at the prompt
-
+$ berrypi -k6:6:6
 
 6:6:6 means the calculation is being done using 6*6*6 k-mesh in the full Brillouin zone (non symmetric) with a total of 216 k points.
 
@@ -84,9 +81,7 @@ $ run_lapw
 
 2.8 Run BerryPI 
 
-$ berrypi
-
-Enter 6:6:6 at the prompt
+$ berrypi -k6:6:6
 
 2.9 Once the calculation is completed the results will be printed like this
 
