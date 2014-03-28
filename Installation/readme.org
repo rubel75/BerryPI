@@ -26,7 +26,7 @@
     
     -	b. wget https://github.com/spichardo/BerryPI/archive/master.zip
     
-    -	c. curl -O https://github.com/spichardo/BerryPI/archive/master.zip
+    -	c. cd ${WIENROOT}; git clone https://github.com/spichardo/BerryPI.git
     
    - 2. Extract BerryPI out of ZIP compression (Ex: unzip master.zip, tar -xzvf master.zip)
    - 3. Rename the folder whatever you want and place the folder in any directory you want
