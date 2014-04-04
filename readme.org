@@ -12,7 +12,7 @@ BerryPI 1.2
 - [[https://github.com/spichardo/BerryPI/wiki/Tutorial:-Non-orthogonal-lattice-vectors][Tutorial 3 - Non-orthogonal lattice vectors (same as Tutorial 2)]]
 
 * Limitation
-The present version is restricted to cases when the lattice vectors correspond to cartesian directions. For example, the zinc-blend or NaCl structures should be regarded as an 8 atom cell instead of the conventional 2 atom basis.
+The present version is restricted to cases when the lattice vectors correspond to cartesian directions. For example, the zinc-blend or NaCl structures should be regarded as an 8 atom cell instead of the conventional 2 atom basis. This restriction is partly lifted (see - [[https://github.com/spichardo/BerryPI/wiki/Tutorial:-Non-orthogonal-lattice-vectors][Tutorial 3]])
 
 * To Do
 - Non-orthogonal lattice vectors: Extending the capability of "BerryPI" to computing of polarization for structures with non-orthogonal lattice vectors
