@@ -1,18 +1,18 @@
 ** Current Version
 BerryPI 1.2
-* [[https://github.com/spichardo/BerryPI/blob/master/licencing.txt][Licensing Conditions]]
-* [[https://github.com/spichardo/BerryPI/releases][Download the whole package here]]
-* [[https://github.com/spichardo/BerryPI/blob/master/Installation][Installation Guide]]
-* Citation
+** [[https://github.com/spichardo/BerryPI/blob/master/licencing.txt][Licensing Conditions]]
+** [[https://github.com/spichardo/BerryPI/releases][Download the whole package here]]
+** [[https://github.com/spichardo/BerryPI/blob/master/Installation][Installation Guide]]
+** Citation
         S.J. Ahmed, J. Kivinen, B. Zaporzan, L. Curiel, S. Pichardo, O. Rubel, Comp. Phys. Commun. 184, 647 (2013) ([[http://www.sciencedirect.com/science/article/pii/S0010465512003712?v=s5][Full Text]])
 
-* Tutorials
+** Tutorials
 - [[https://github.com/spichardo/BerryPI/tree/master/tutorials/tutorial1][Tutorial 1 - Spontaneous polarization calculation of BaTiO3]]
 - [[https://github.com/spichardo/BerryPI/tree/master/tutorials/tutorial2][Tutorial 2 - Born Effective Charges of GaAs]]
 - [[https://github.com/spichardo/BerryPI/wiki/Tutorial:-Non-orthogonal-lattice-vectors][Tutorial 3 - Non-orthogonal lattice vectors (same as Tutorial 2)]]
 
-* Limitation
+** Limitation
 The present version is restricted to cases when the lattice vectors correspond to cartesian directions. For example, the zinc-blend or NaCl structures should be regarded as an 8 atom cell instead of the conventional 2 atom basis. This restriction is partly lifted (see - [[https://github.com/spichardo/BerryPI/wiki/Tutorial:-Non-orthogonal-lattice-vectors][Tutorial 3]])
 
-* To Do
+** To Do
 - Non-orthogonal lattice vectors: Extending the capability of "BerryPI" to computing of polarization for structures with non-orthogonal lattice vectors
