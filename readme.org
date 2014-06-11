@@ -2,8 +2,8 @@
 BerryPI 1.2
 *** [[https://github.com/spichardo/BerryPI/blob/master/licencing.txt][Licensing Conditions]]
 *** [[https://github.com/spichardo/BerryPI/releases][Download the whole package here]]
-*** [[https://github.com/spichardo/BerryPI/blob/master/Installation][Installation Guide]]
-*** Citation
+*** [[https://github.com/spichardo/BerryPI/wiki][Documentation]]
+*** Suggested citation
         S.J. Ahmed, J. Kivinen, B. Zaporzan, L. Curiel, S. Pichardo, O. Rubel, Comp. Phys. Commun. 184, 647 (2013) ([[http://www.sciencedirect.com/science/article/pii/S0010465512003712?v=s5][Full Text]])
 
 *** Tutorials
