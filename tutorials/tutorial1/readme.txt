@@ -20,8 +20,6 @@ $ run_lapw
 
 in order to optimize the electron density.
 
-Important: Do not use iterative diagonalization (-it switch) during standard SCF cycle. This will lead to incorrect polarization value.
-
 1.4 Run BerryPI
  
 $ berrypi -k6:6:6

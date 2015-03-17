@@ -123,6 +123,12 @@ def rawBerryPhase(configFile):
         sys.exit(2)
     else:
         print DEFAULT_PREFIX, 'bppath =', bppath
+
+    # print version
+    with open(bppath+'/version.info', 'r') as versionFile: # open version file
+        print DEFAULT_PREFIX + versionFile.read()
+    print DEFAULT_PREFIX + "Python version: " + sys.version[:5]
+    print DEFAULT_PREFIX + "Numpy version: " + numpy.version.version
     
     #check to make sure certain files exist
     structureName = configFile['Structure Name']
@@ -239,29 +245,7 @@ def rawBerryPhase(configFile):
                     print str(err)
                     return False
 
-    ''' # 
-    ###################
-    # run orb -up/-dn #
-    ###################
-    if orbCalc and runLAPW: # spin polarized mode + orbital potential
-        spOptions = ['-up', '-dn']
-        for suffix in spOptions:
-            shell_x_orb = b_PySubProcess.VirtualShellInstance(
-                'x', 'orb', suffix
-                )
 
-            try:
-                shell_x_orb()
-            except subprocess.CalledProcessError, err:
-                print DEFAULT_PREFIX + "ERROR: in automation of " + \
-                    str(structureName);
-                print DEFAULT_PREFIX + "ERROR --> " + \
-                    shell_x_orb.getCommandString();
-                print str(err)
-                return False
-    '''
-
-    ''' (Parallel calculation is not implemented yet)
     ##################
     # Parallel mode? #
     ##################
@@ -269,7 +253,6 @@ def rawBerryPhase(configFile):
         pOpt = '-p'
     else:
         pOpt = ''
-    '''
 
     ##############################
     # run lapw1 (-up/-dn) (-orb) #
@@ -280,14 +263,14 @@ def rawBerryPhase(configFile):
         else: # regular (non-spin polarized calc.)
             spOptions = ' ' # need space here!
         for suffix in spOptions:
-            #suffix = suffix + ' ' + pOpt # take care of parallel mode
+            suffix = suffix + ' ' + pOpt # take care of parallel mode
             if orbCalc:
                 suffix = suffix + ' ' + '-orb' # activate OP switch
             shell_x_lapw1 = b_PySubProcess.VirtualShellInstance(
                 'x', 'lapw1', suffix
                 );
 
-            try: # [OLEG] implement an option for skipping lapw1
+            try:
                 shell_x_lapw1()
             except subprocess.CalledProcessError, err:
                 print DEFAULT_PREFIX + "ERROR: in automation of " + str(structureName)
@@ -303,7 +286,7 @@ def rawBerryPhase(configFile):
     #########################
     if soCalc and runLAPW: # spin-orbit coupling ONLY
         suffix = '-up'
-        #suffix = suffix + ' ' + pOpt # take care of parallel mode
+        suffix = suffix + ' ' + pOpt # take care of parallel mode
         if orbCalc: # OP option
             suffix = suffix + ' ' + '-orb'
 
@@ -536,12 +519,13 @@ def rawBerryPhase(configFile):
         ###############
         # execute w2w #
         ###############
+        suffix = pOpt # take care of parallel mode
         if soCalc: # for spin-orbit call executables directly
             shell_w2w = b_PySubProcess.VirtualShellInstance( \
-                'x w2w -so', spinOption );
+                'x w2w -so', spinOption, suffix );
         else:
             shell_w2w = b_PySubProcess.VirtualShellInstance( \
-                'x w2w', spinOption );
+                'x w2w', spinOption, suffix );
         try:
             shell_w2w()
         except subprocess.CalledProcessError, err:
@@ -713,23 +697,16 @@ if __name__ == "__main__":
         
     try:
         opts, args = getopt.getopt(sys.argv[1:], \
-            "S:hvp:nk:lb:soj", \
+            "S:hvpnk:lb:soj", \
             ["help", "structure-name=", \
             "bloch-band=", "spin-polarized", "no-auto", "kdiv=", "no-lapw1", \
-            "parallel=", "verbose", "orb-potential", "spin-orbit"]);
+            "parallel", "verbose", "orb-potential", "spin-orbit"]);
     except getopt.GetoptError, err:
         # print help information and exit:
         print helpInfo()
         print "ERRORR"
         print str(err) # will print something like "option -a not recognized"
         sys.exit(2)
-
-    bppath = os.getenv('BERRYPI_PATH') # get path to BerryPI
-    print DEFAULT_PREFIX + "BERRYPI_PATH = " + bppath
-    with open(bppath+'/version.info', 'r') as versionFile: # open version file
-        print DEFAULT_PREFIX + versionFile.read()
-    print DEFAULT_PREFIX + "Python version: " + sys.version[:5]
-    print DEFAULT_PREFIX + "Numpy version: " + numpy.version.version
 
     #boolean for whether to check config for
     #configuration dicts
@@ -809,10 +786,9 @@ if __name__ == "__main__":
 
         #Determines whether to run lapw1 in parallel on the clustrer
         elif argName in ('-p', '--parallel'):
-            print DEFAULT_PREFIX+"Parallel iption is not "+ \
-                "yet implemented. Proceed in the serial mode.";
-            pCalc = False # turn to True when implementation finished
-            npParal = argValue # number of parallel processes
+            print DEFAULT_PREFIX+"Parallel calculation is activated";
+            print "            it is assumed that you have .machines file ready"
+            pCalc = True # turn to True when implementation finished
 
         elif argName in ('-b', '--bloch-band'):
             print DEFAULT_PREFIX+"Option band-by-band decomposition "+ \
@@ -869,8 +845,9 @@ if __name__ == "__main__":
             sys.exit(2)
 			
     #Determines whether or not W2WANNIER is installed
+    wienroot = os.getenv('WIENROOT') # get path to Wien2k installation
     try:
-        with open('/act/W2WANNIER/util/w2w'): pass
+        with open(wienroot + '/w2w'): pass
     except IOError:
         print('Please make sure that W2W is installed before trying to run BerryPI')
 		
