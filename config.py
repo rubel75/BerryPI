@@ -11,10 +11,10 @@ be created automatically.
 #######################################################
 
 #fix for location of python file locations when executing from the python commandline
-DEFAULT_BIN_PATH=''
+DEFAULT_BIN_PATH='/home/rubel/BerryPI'
 
 #Fix for python path to make sure it grabs the latest version
-DEFAULT_PYTHON_PATH=''
+DEFAULT_PYTHON_PATH='/software/CentOS-6/tools/python-2.7.3/bin/python'
 
 ########################################################
 ####Some default values for the automation of each case
