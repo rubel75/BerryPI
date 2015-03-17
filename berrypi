@@ -661,11 +661,11 @@ if __name__ == "__main__":
         polarization based on those data. In this case the k-mesh will be
         read from case.klist file
 
-        (option is not implemented yet) --parallel=NUM, -pNUM
+        -p
 
-        Enable parallel caulculation where it run "x lapw1" in parallel
-        mode NUM should match to the number of cores to be used, since
-        we need to call 'join_vectorfiles case NUM' from W2W package
+        Enable parallel caulculation where it run "x lapw1 -p", "x lapwso -p"
+        and "x w2w -p" in parallel mode. It implies that you have .machines file
+        prepared accorning to Wien2k documentation
 
 
         EXAMPLES:
