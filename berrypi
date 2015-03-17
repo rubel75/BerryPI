@@ -628,9 +628,9 @@ if __name__ == "__main__":
         print '''
 
         DEPENDENCIES:
-        - WIEN2k (tested against 13.1 Release 17/06/2013)
-        - WIEN2WANNIER (tested against 0.97)
-        - Python (tested against 2.7.4)
+        - WIEN2k (tested against 14.2 Release 15/10/2014)
+        - WIEN2WANNIER (tested against 1.00)
+        - Python (tested against 2.7.3)
         - NumPy (tested against 1.6.2)
 
         Once you have all the dependencies installed.
@@ -724,7 +724,8 @@ if __name__ == "__main__":
         print str(err) # will print something like "option -a not recognized"
         sys.exit(2)
 
-    bppath = os.getenv('BERRYPI_PATH') # get path to BerryPI 
+    bppath = os.getenv('BERRYPI_PATH') # get path to BerryPI
+    print DEFAULT_PREFIX + "BERRYPI_PATH = " + bppath
     with open(bppath+'/version.info', 'r') as versionFile: # open version file
         print DEFAULT_PREFIX + versionFile.read()
     print DEFAULT_PREFIX + "Python version: " + sys.version[:5]
