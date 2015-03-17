@@ -289,6 +289,7 @@ class MainCalculationContainer:
         print "-"*87
         # find path-average phase
         phaseDirSpinWrp11 = self.pathAvrgPhase(phaseDirSpinPathWrp11)
+        phaseDirSpinWrp11 = self.wrp11(phaseDirSpinWrp11);
         nspins = numpy.shape(phaseDirSpinWrp11)[1]
         for spinIndex in range(0,nspins):
             print "Berry phase (rad) [-pi ... +pi]    sp(%1i)" \
