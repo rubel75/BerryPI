@@ -288,7 +288,8 @@ class MainCalculationContainer:
             "|   ", "dir(2)   ", "|   ", "dir(3)"
         print "-"*87
         # find path-average phase
-        phaseDirSpinWrp11 = self.pathAvrgPhase(phaseDirSpinPathWrp11)
+        phaseDirSpinWrp11 = self.pathAvrgPhase(phaseDirSpinPathWrp11);
+        # wrap the average phase again as it can go out of bounds [-pi..+pi]
         phaseDirSpinWrp11 = self.wrp11(phaseDirSpinWrp11);
         nspins = numpy.shape(phaseDirSpinWrp11)[1]
         for spinIndex in range(0,nspins):
@@ -367,12 +368,22 @@ class MainCalculationContainer:
         # IN can be any array of phases in (rad)
         x = IN/numpy.pi # it will be easier to work with numbers [-1..+1]
         # apply to all elements of the array
-        y = numpy.piecewise(x, [numpy.absolute(x)>1], \
+        inisarray = isinstance(x, (numpy.ndarray));
+        if inisarray: # check if input is an array
+            inshape = x.shape
+            x = x.flatten() # flaten input array into 1D vector
+                            # need for compatibility with NumPy 1.9.2
+        # do wrapping [-1..+1]
+        absx = numpy.absolute(x);
+        y = numpy.piecewise(x, [absx > 1], \
             [lambda x: x + numpy.sign((-1)*numpy.array(x))* \
-            numpy.round(numpy.absolute(x)/2)*2, lambda x: x]);
+                       numpy.round(numpy.absolute(x)/2)*2, \
+             lambda x: x]);
             # last 'x' is needed as _else_ condition
             # (i.e., no change in x)
-        OUT = y*numpy.pi # get back to radians
+        OUT = y*numpy.pi # get back to radians [-pi..+pi]
+        if inisarray: # restore output array dimensions to match input
+            OUT.resize(inshape)
         return OUT
 
 
