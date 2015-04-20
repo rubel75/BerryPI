@@ -1,6 +1,9 @@
 #!/bin/bash 
 #
 # execution: $ source run_tutor
+#
+# Developed by Anton Bokhanchuk
+
 clear
 echo "######################################################"
 echo Type the test number and press ENTER to run that test:
