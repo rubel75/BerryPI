@@ -392,9 +392,9 @@ class MainCalculationContainer:
         # List = [direction(x/y/z), spin, k-path, [start k-point, phase]]
         #
         # OUT = average phase[direction(x/y/z), spin]
-        listSize = numpy.shape(List) # determine the input size
         # allocate output array based on number of directions and spins
-        OUT = numpy.zeros( listSize[:2] )
+        nspins = numpy.shape(List[0])[0]
+        OUT = numpy.zeros((3,nspins)) # 3 spece directions X num. spins
         icoord = -1
         for coord in List:
             icoord = icoord + 1
