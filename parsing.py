@@ -387,10 +387,15 @@ class MainOutputstParser(AbstractParser):
         
         #remove repeating lines
         theMainStringTemp = []
-        for element in theMainString:
-            if re.match(r' +[A-Za-z]+ +RHFS',element) and element in theMainStringTemp:
-                continue
-            theMainStringTemp.append(element)
+        for i in range(0,len(theMainString)-3):
+            if re.match(r' +[A-Za-z]+ +RHFS',theMainString[i]) and \
+               re.match(r' *TOTAL CHARGE FOR SPIN +[12] : +[0-9.]+',theMainString[i+1]) and \
+               re.match(r' *TOTAL CHARGE FOR SPIN +[12] : +[0-9.]+',theMainString[i+2]) and \
+               re.match(r' *TOTAL CORE-CHARGE: +[0-9.]+',theMainString[i+3]):
+                theMainStringTemp.append(theMainString[i])
+                theMainStringTemp.append(theMainString[i+1])
+                theMainStringTemp.append(theMainString[i+2])
+                theMainStringTemp.append(theMainString[i+3])
         theMainString = theMainStringTemp
         self['Element List'] = {}
         #some regular expression magic

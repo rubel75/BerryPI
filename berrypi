@@ -568,11 +568,11 @@ def rawBerryPhase(configFile):
                 args = [str(structureName), direction, opt]
                 pathPhases = mmn2pathphase.main(args)
                 if   direction == 'x':
-    								phaseX[spinIndex,:,:] = pathPhases
+                    phaseX[spinIndex,:,:] = pathPhases
                 elif direction == 'y':
-    								phaseY[spinIndex,:,:] = pathPhases
+                    phaseY[spinIndex,:,:] = pathPhases
                 elif direction == 'z':
-    								phaseZ[spinIndex,:,:] = pathPhases
+                    phaseZ[spinIndex,:,:] = pathPhases
     # END OF THE MAIN LOOP FOR BERRY PHASE CALCULATION+++++++++++++++++++
     results = [phaseX,phaseY,phaseZ]
 
