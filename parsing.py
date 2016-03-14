@@ -379,28 +379,28 @@ class MainOutputstParser(AbstractParser):
 
         #get specific parts of given file based on regular expressions
         regexTagsCompileList = [
-            re.compile(r' +[A-Za-z]+ +RHFS'),
+            re.compile(r' +[^0-9]+ +RHFS'), # fix for Watson spheres in *.inst
             re.compile(r' *TOTAL CHARGE FOR SPIN +[12] : +[0-9.]+'),
             re.compile(r' *TOTAL CORE-CHARGE: +[0-9.]+'),
             ]
         theMainString = [ i for i in theMainString for j in regexTagsCompileList if j.match(i) ]
-        
+ 
         #remove repeating lines
         theMainStringTemp = []
         counter = 3 #added so as to add the three lines after if not in list
         for element in theMainString:
             #check if correct regex type and then if element in list, if not add
-            if re.match(r' +[A-Za-z]+ +RHFS',element) and element not in theMainStringTemp:
+            if re.match(r' +[^0-9]+ +RHFS',element) and element not in theMainStringTemp:
                 theMainStringTemp.append(element)                
                 counter = 0 #counter to add the three following spin lines
             #check if within 3 lines (which only happens if new element)
-            elif counter <3 and not re.match(r' +[A-Za-z]+ +RHFS',element):
+            elif counter <3 and not re.match(r' +[^0-9]+ +RHFS',element):
                 theMainStringTemp.append(element)
                 counter +=1
         theMainString = theMainStringTemp
         self['Element List'] = {}
         #some regular expression magic
-        re_mainElementParse = re.compile(r'\s*(?P<elementName>[A-Za-z]+)\s+RHFS\s+')
+        re_mainElementParse = re.compile(r'\s*(?P<elementName>[A-Za-z]+)\s.+RHFS\s+')
         re_chargePerSpinOne = re.compile(
             r'^ TOTAL CHARGE FOR SPIN +1 : +(?P<spinValueOne>[0-9.]+ +$)')
         re_chargePerSpinTwo = re.compile(
