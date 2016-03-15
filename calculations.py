@@ -540,13 +540,10 @@ class MainCalculationContainer:
                         theValence = []
                         for spin in [1, 2]:
                             theValence.append( \
-                                -theElement['Core Value']/2 + \
-                                theElement['Spin Value '+repr(spin)]
+                                atom['Zatom']/2 - theElement['Core Value']/2 \
                             );
                     else:
-                        theValence = -theElement['Core Value'] + \
-                            theElement['Spin Value 1'] + \
-                            theElement['Spin Value 2'];
+                        theValence = atom['Zatom'] - theElement['Core Value'];
                     xCoordinate = atom['X-Coord'][i]
                     yCoordinate = atom['Y-Coord'][i]
                     zCoordinate = atom['Z-Coord'][i] 
@@ -565,7 +562,7 @@ class MainCalculationContainer:
         #### CALCULATION ####
         xPolarIon, yPolarIon, zPolarIon = (0., 0., 0.)
         print "="*87
-        print "Elem.|  Fractional coord.  |  spin |valence|", \
+        print "Elem.|  Fractional coord.  |  spin | Zion |", \
             "   dir(1)   ", \
             "|   ", "dir(2)   ", "|   ", "dir(3)"
         print "-"*87

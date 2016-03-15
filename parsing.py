@@ -112,6 +112,7 @@ class MainStructParser(AbstractParser):
         re_coordinates = re.compile(r'X= ?(?P<xCoordinate>[0-9.]+) +Y= ?(?P<yCoordinate>[0-9.]+) +Z= ?(?P<zCoordinate>[0-9.]+)')
         re_mult = re.compile(r'MULT= *(?P<multValue>[0-9]+)')
         re_element = re.compile(r'(?P<elementName>[A-Z][a-z]{0,2}) ?(?P<elementNumber>[0-9]*) +NPT')
+        re_zatom = re.compile(r'.*RMT=.*Z:\s*(?P<Zatom>[0-9.]+)') 
         for atom in atomListing:
             theAtom = {}
             for line in atom:
@@ -145,6 +146,9 @@ class MainStructParser(AbstractParser):
                     else:
 			    theAtom['Element Number'] = 1
 
+                zatomMatches = re_zatom.search(line)
+                if zatomMatches:
+                    theAtom['Zatom'] = float(zatomMatches.group('Zatom'))
             #issue -- if it contains no values, it doesn't return an exception
             if theAtom:
                 #before appending, check to see if it has all of the required values
@@ -153,6 +157,7 @@ class MainStructParser(AbstractParser):
                                                 'MULT',
                                                 'Element Name',
                                                 'Element Number',
+                                                'Zatom',
                                                 ])
                 
                 if MissingTags:
