@@ -540,10 +540,10 @@ class MainCalculationContainer:
                         theValence = []
                         for spin in [1, 2]:
                             theValence.append( \
-                                atom['Zatom']/2 - theElement['Core Value']/2 \
+                                atom['Znucl']/2 - theElement['Core Value']/2 \
                             );
                     else:
-                        theValence = atom['Zatom'] - theElement['Core Value'];
+                        theValence = atom['Znucl'] - theElement['Core Value'];
                     xCoordinate = atom['X-Coord'][i]
                     yCoordinate = atom['Y-Coord'][i]
                     zCoordinate = atom['Z-Coord'][i] 
