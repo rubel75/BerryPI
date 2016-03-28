@@ -835,7 +835,7 @@ if __name__ == "__main__":
 		
      #Determines the upper size limit of the kmesh
     elif max(structure_kmesh)>20:
-        print('Calculations with a dimension of more than 10 will take a long time to calculate. Are you sure you want to continue?')
+        print('Calculations with a dimension of more than 20 will take a long time to calculate. Are you sure you want to continue?')
 
         check_20 = raw_input('Type in "Y" to continue or press any other button to exit\n')
 
