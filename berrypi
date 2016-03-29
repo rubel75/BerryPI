@@ -144,9 +144,9 @@ def rawBerryPhase(configFile):
 
     #remove the broyd file
     #$rm $filename.broyd*  
-    tempFileName = structureName + '.broyd*'
-    broydRemoval = b_PySubProcess.VirtualShellInstance('rm -f ' + tempFileName)
-    broydRemoval()
+#    tempFileName = structureName + '.broyd*'
+#    broydRemoval = b_PySubProcess.VirtualShellInstance('rm -f ' + tempFileName)
+#    broydRemoval()
 
 
     ######################################
