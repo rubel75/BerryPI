@@ -144,9 +144,9 @@ def rawBerryPhase(configFile):
 
     #remove the broyd file
     #$rm $filename.broyd*  
-#    tempFileName = structureName + '.broyd*'
-#    broydRemoval = b_PySubProcess.VirtualShellInstance('rm -f ' + tempFileName)
-#    broydRemoval()
+    tempFileName = structureName + '.broyd*'
+    broydRemoval = b_PySubProcess.VirtualShellInstance('rm -f ' + tempFileName)
+    broydRemoval()
 
 
     ######################################
@@ -389,6 +389,17 @@ def rawBerryPhase(configFile):
     args = zip(spinIndexes, spinLables, spinOptions)
     for spinIndex, spinLable, spinOption in args: # LOOP OVER SPINS
 
+        '''     (Parallel calculation is not implemented yet)
+        ##########################################################
+        # join vector files if parallel:                         #
+        # join_vectorfiles [-up/-dn/-soup/-sodn] [-c] case NPROC #
+        ##########################################################
+        if pCalc: # parallel only
+            suffix = ''
+            if spCalc and not soCalc:
+                suffix = suffix + spinOption
+            elif
+        '''
 
         ####################################
         # create input list for write_inwf #
@@ -442,6 +453,16 @@ def rawBerryPhase(configFile):
         if not spinLable == "": # for spin-polarized calc.
             fnamenew = fnameold + spinLable
             shutil.copy(fnameold, fnamenew) # copy case.win to case.win[up/dn]
+
+        ######################################
+        # move case.inwf -> case.inwf[up/dn] #
+        ######################################
+        if not spinLable == "": # for spin-polarized calc.
+            case = str(structureName)
+            fnameold = case + '.inwf'
+            fnamenew = fnameold + spinLable
+            print DEFAULT_PREFIX + "Move " + fnameold + " into " + fnamenew
+            shutil.move(fnameold, fnamenew) # move case.inwf to case.inwf[up/dn] 
 
 
         #######################
@@ -509,41 +530,34 @@ def rawBerryPhase(configFile):
         # execute w2w #
         ###############
         suffix = pOpt # take care of parallel mode
-        suffix = pOpt # take care of parallel mode
-        if runW2W:
-            if soCalc: # for spin-orbit call executables directly
-                shell_w2w = b_PySubProcess.VirtualShellInstance( \
-                    'x w2w -so', spinOption, suffix );
-            else:
-                shell_w2w = b_PySubProcess.VirtualShellInstance( \
-                    'x w2w', spinOption, suffix );
-            try:
-                shell_w2w()
-            except subprocess.CalledProcessError, err:
-                print DEFAULT_PREFIX + "ERROR: in automation of " + str(structureName)
-                print DEFAULT_PREFIX + "ERROR --> " + shell_w2w.getCommandString()
-                print str(err)
-                return False
+        if soCalc: # for spin-orbit call executables directly
+            shell_w2w = b_PySubProcess.VirtualShellInstance( \
+                'x w2w -so', spinOption, suffix );
         else:
-            print DEFAULT_PREFIX + "Skip W2W run due to --lw option"
+            shell_w2w = b_PySubProcess.VirtualShellInstance( \
+                'x w2w', spinOption, suffix );
+        try:
+            shell_w2w()
+        except subprocess.CalledProcessError, err:
+            print DEFAULT_PREFIX + "ERROR: in automation of " + str(structureName) 
+            print DEFAULT_PREFIX + "ERROR --> " + shell_w2w.getCommandString()
+            print str(err)
+            return False
 
 
         ####################
         # execute w2waddsp #
         ####################
-        if runW2W:
-            if soCalc and spinLable=='dn': # spin-orbit last passage
-                shell_csf = b_PySubProcess.VirtualShellInstance( \
-                    'x w2waddsp' );
-                try:
-                    shell_csf()
-                except subprocess.CalledProcessError, err:
-                    print DEFAULT_PREFIX + "ERROR: in automation of " + str(structureName)
-                    print DEFAULT_PREFIX + "ERROR --> " + shell_csf.getCommandString()
-                    print str(err)
-                    return False
-        else:
-            print DEFAULT_PREFIX + "Skip W2WADDSP run due to --lw option"
+        if soCalc and spinLable=='dn': # spin-orbit last passage
+            shell_csf = b_PySubProcess.VirtualShellInstance( \
+                'x w2waddsp' );
+            try:
+                shell_csf()
+            except subprocess.CalledProcessError, err:
+                print DEFAULT_PREFIX + "ERROR: in automation of " + str(structureName) 
+                print DEFAULT_PREFIX + "ERROR --> " + shell_csf.getCommandString()
+                print str(err)
+                return False
 
 
         ######################################################
@@ -564,11 +578,11 @@ def rawBerryPhase(configFile):
                 args = [str(structureName), direction, opt]
                 pathPhases = mmn2pathphase.main(args)
                 if   direction == 'x':
-                    phaseX[spinIndex,:,:] = pathPhases
+    								phaseX[spinIndex,:,:] = pathPhases
                 elif direction == 'y':
-                    phaseY[spinIndex,:,:] = pathPhases
+    								phaseY[spinIndex,:,:] = pathPhases
                 elif direction == 'z':
-                    phaseZ[spinIndex,:,:] = pathPhases
+    								phaseZ[spinIndex,:,:] = pathPhases
     # END OF THE MAIN LOOP FOR BERRY PHASE CALCULATION+++++++++++++++++++
     results = [phaseX,phaseY,phaseZ]
 
@@ -657,10 +671,6 @@ if __name__ == "__main__":
         polarization based on those data. In this case the k-mesh will be
         read from case.klist file
 
-        --lw
-
-        Skip both lapw1 and w2w (see above).
-
         -p
 
         Enable parallel caulculation where it run "x lapw1 -p", "x lapwso -p"
@@ -678,11 +688,6 @@ if __name__ == "__main__":
         k-mesh and skipping LAPW1
 
         $ berrypi -l
-
-        Subsequent rerun of BerryPI in the same folder without changing
-        k-mesh and skipping both LAPW1 and W2W
-
-        $ berrypi --lw
 
         Spin-polarized calculation
 
@@ -705,7 +710,7 @@ if __name__ == "__main__":
             "S:hvpnk:lb:soj", \
             ["help", "structure-name=", \
             "bloch-band=", "spin-polarized", "no-auto", "kdiv=", "no-lapw1", \
-            "parallel", "verbose", "orb-potential", "spin-orbit", "lw"]);
+            "parallel", "verbose", "orb-potential", "spin-orbit"]);
     except getopt.GetoptError, err:
         # print help information and exit:
         print helpInfo()
@@ -728,7 +733,6 @@ if __name__ == "__main__":
     structure_kmesh = config.DEFAULT_KMESH_DIVISIONS
     structure_bloch = None
     runLAPW = True
-    runW2W = True
     VERBOSE = False
 
     helpOpt = False
@@ -790,11 +794,6 @@ if __name__ == "__main__":
         elif argName in ('-l', '--no-lapw'):
             runLAPW = False
 
-        #Determines whether you should include lapw1 and w2w in the automation
-        elif argName in ('--lw'):
-            runLAPW = False
-            runW2W = False
-
         #Determines whether to run lapw1 in parallel on the clustrer
         elif argName in ('-p', '--parallel'):
             print DEFAULT_PREFIX+"Parallel calculation is activated";
@@ -845,15 +844,16 @@ if __name__ == "__main__":
         sys.exit(2)
 		
      #Determines the upper size limit of the kmesh
-    elif max(structure_kmesh)>20:
-        print('Calculations with a dimension of more than 20 will take a long time to calculate. Are you sure you want to continue?')
-
-        check_20 = raw_input('Type in "Y" to continue or press any other button to exit\n')
-
-        if check_20=='Y':
-            pass
-        else:
-            sys.exit(2)
+#    elif max(structure_kmesh)>10:
+#        print('Calculations with a dimension of more than 10 will take a long time to calculate. Are you sure you want to continue?')
+#
+#        check_10 = raw_input('Type in "Y" to continue or press any other button to exit\n')
+#
+#        if check_10=='Y':
+#            pass
+#        else:
+#            pass
+#            #sys.exit(2)
 			
     #Determines whether or not W2WANNIER is installed
     wienroot = os.getenv('WIENROOT') # get path to Wien2k installation
@@ -934,7 +934,7 @@ Suggested reference:
 
 Questions and comments are to be directed to
     Dr. Oleg Rubel
-    Department of Materials Science and Engineering
+    Department of Material Science and Engineering
     McMaster University
     1280 Main Street West, Hamilton, ON Canada L8S 4L8
     Tel: +1-905-5259140, ext. 24094
