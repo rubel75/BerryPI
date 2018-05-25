@@ -38,11 +38,14 @@ def write_projections(f): # TODO
     f.write('begin projections\n')
     f.write('end projections\n\n')
 
-def write_nnkpts(f, nnkpts):
+def write_nnkpts(f, nnkpts,wCalc):
     neighbours_per_kpoint = 3 # x, y, z
 
     f.write('begin nnkpts\n')
-    f.write('{0:4d}\n'.format(neighbours_per_kpoint))
+    if wCalc:
+        f.write('{0:4d}\n'.format(1)) # one neightbor for Weyl k-path
+    else:
+        f.write('{0:4d}\n'.format(neighbours_per_kpoint))
     for p in nnkpts:
         f.write(' {0:5d} {1:5d}    {2:3d} {3:3d} {4:3d}\n'.format(*p))
     f.write('end nnkpts\n\n')
@@ -55,8 +58,11 @@ def write_exclude_bands(f): # TODO
 # Turn `line`, a string of a `delimiter` delimited list of `T`s, into a list of `T`s.
 parse_line_list = lambda line, delimiter, T : [T(y) for y in [x.strip() for x in line.strip().split(delimiter)] if y] 
 
-def calculate_nnkpts(D):
+def calculate_nnkpts(D,wCalc,nkpt):
     '''Calculates neighbours pairs for all paths. 
+        D - k-mesh (#,#,#)
+        wCalc - Logical var to indicate Weyl path calculation (True/False)
+        nkpt - number of k-points in the list
     '''
 
     # Helper functions
@@ -98,6 +104,12 @@ def calculate_nnkpts(D):
     
                     # Remember neighbours
                     nnkpts.append((i, i_neighbour, G[0], G[1], G[2]));
+
+    if wCalc: # alternative calculation for a k-path of point listed in order
+        nnkpts = []
+        for i in range(nkpt-1): # except for last k-point
+            nnkpts.append((i+1, i+2, 0, 0, 0)); # list of NN kpt1 - kpt2, etc.
+        nnkpts.append((nkpt, 1, 0, 0, 0)); # last point is linked to the first
 
     return nnkpts
 
@@ -164,6 +176,7 @@ def parse_win(case_name,spinLable):
 
 if __name__ == "__main__":
     spCalc = False # no spin polarization by default
+    wCalc = False # no Weyl path by default
     spinLable = "" # no spins
     if len(sys.argv) < 2:
         print >> sys.stderr, "Error: no case provided"
@@ -174,6 +187,8 @@ if __name__ == "__main__":
             spCalc = True
             spinOption = sys.argv[2]
             spinLable = spinOption.replace("-","")
+        elif sys.argv[2] in ('-w'):
+            wCalc = True # Weyl path option
         else:
             print >> sys.stderr, "Error: the second input argument should -up/-dn"
             print >> sys.stderr, "Usage: {0} case (-up/-dn)".format(sys.argv[0])
@@ -191,7 +206,7 @@ if __name__ == "__main__":
     real_lattice, recip_lattice, dimensions, kpoints = parse_win(case_name,spinLable)
 
     # Calculate nnkpts
-    nnkpts = calculate_nnkpts(dimensions)
+    nnkpts = calculate_nnkpts(dimensions,wCalc,len(kpoints))
 
     # Write output
     f = open(case_name + '.nnkp', 'w')
@@ -202,7 +217,7 @@ if __name__ == "__main__":
     write_recip_lattice(f, recip_lattice)
     write_kpoints(f, kpoints)
     write_projections(f) # TODO
-    write_nnkpts(f, nnkpts)
+    write_nnkpts(f, nnkpts, wCalc)
     write_exclude_bands(f) # TODO
 
     f.close()

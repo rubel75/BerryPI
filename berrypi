@@ -83,11 +83,14 @@ def rawBerryPhase(configFile):
     processes to be batched.
     '''
     print(DEFAULT_PREFIX + \
-      "Starting BerryPI Automation for {}").format( \
+      "Starting BerryPI for {}").format( \
       configFile['Structure Name'] );
 
     # get calculation parameters and options
     runLAPW = configFile['Perform LAPW']
+
+    # get bands
+    bands = configFile['Bloch Band']
     
     #get the starting directory and switch to it
     oldCurrentWorkingDirectory = os.getcwd()
@@ -162,7 +165,7 @@ def rawBerryPhase(configFile):
     ################
     # execute kgen #
     ################
-    if runLAPW:
+    if runLAPW and not wCalc:
         #get our input parameters from the configuration file
         numKpoints = configFile['Number of K-Points']
         numKDivisions = configFile['K-Mesh Divisions']
@@ -183,7 +186,7 @@ def rawBerryPhase(configFile):
             print DEFAULT_PREFIX + "ERROR --> " + shell_x_kgen.getCommandString()
             print str(err)
             return False
-    else:
+    elif not runLAPW:
         print DEFAULT_PREFIX + "Skip k-mesh generation, since you "+ \
             "opted for not performing LAPW.\n Proceed assuming that " + \
             "the proper k-mesh generated in the FULL BZ and vector "+ \
@@ -198,6 +201,27 @@ def rawBerryPhase(configFile):
                 numKDivisions;
             break
         f.close()
+
+
+    ####################################
+    # get length of k-path (-w option) #
+    ####################################
+    if wCalc:
+        numKDivisions = [0]*3; # creale list [0,0,0]
+        print(type(numKDivisions), numKDivisions)
+        print DEFAULT_PREFIX + "k-path will be read from case.klist file"
+        f = open( str(structureName)+'.klist' , 'r' )
+        word = ("END", "end")
+        numKDivisions[0] = 0
+        numKDivisions[1] = 1
+        numKDivisions[2] = 1
+        for line in f:
+            if any(s in line for s in word): # check if end of list
+                break
+            numKDivisions[0] += 1
+        f.close()
+        print DEFAULT_PREFIX + "The following k-path length will be used:", \
+            numKDivisions;
 
 
     ##########################################
@@ -404,8 +428,11 @@ def rawBerryPhase(configFile):
         ####################################
         # create input list for write_inwf #
         ####################################
-        nb = blochBandSettings[spinIndex][1] # last occupied band
-        inputListing = '-mode MMN -bands 1 ' + str(nb)
+        if bands != [] and wCalc: # range of bands is specified
+            inputListing = '-mode MMN -bands ' + str(bands[0]) + ' ' + str(bands[1])
+        else: # no range of bands is specified (default)
+            nb = blochBandSettings[spinIndex][1] # last occupied band
+            inputListing = '-mode MMN -bands 1 ' + str(nb)
 
 
         ######################
@@ -454,6 +481,7 @@ def rawBerryPhase(configFile):
             fnamenew = fnameold + spinLable
             shutil.copy(fnameold, fnamenew) # copy case.win to case.win[up/dn]
 
+
         ######################################
         # move case.inwf -> case.inwf[up/dn] #
         ######################################
@@ -468,10 +496,14 @@ def rawBerryPhase(configFile):
         #######################
         # execute win2nnkp.py #
         #######################
+        if wCalc:
+            wOption = '-w'
+        else:
+            wOption = ''
         shell_win2nnkp = b_PySubProcess.VirtualShellInstance(
                 pypath,
                 bppath + '/' + 'win2nnkp.py',
-                str(structureName), # spinOption,
+                str(structureName), wOption,
                 )
         try:
             shell_win2nnkp()
@@ -559,7 +591,6 @@ def rawBerryPhase(configFile):
                 print str(err)
                 return False
 
-
         ######################################################
         # Compute Berry phase:                               #
         # python ./mmn2pathphase.py case x/y/z (-up/-dn/-so) #
@@ -575,14 +606,17 @@ def rawBerryPhase(configFile):
                     opt = spinOption
                 else:
                     opt = '-so' # work around for spin-orbit
+                if wCalc:
+                    opt = opt + ' ' + '-w'
                 args = [str(structureName), direction, opt]
                 pathPhases = mmn2pathphase.main(args)
                 if   direction == 'x':
-    								phaseX[spinIndex,:,:] = pathPhases
+    		    phaseX[spinIndex,:,:] = pathPhases
                 elif direction == 'y':
-    								phaseY[spinIndex,:,:] = pathPhases
+    		    phaseY[spinIndex,:,:] = pathPhases
                 elif direction == 'z':
-    								phaseZ[spinIndex,:,:] = pathPhases
+    		    phaseZ[spinIndex,:,:] = pathPhases
+
     # END OF THE MAIN LOOP FOR BERRY PHASE CALCULATION+++++++++++++++++++
     results = [phaseX,phaseY,phaseZ]
 
@@ -622,15 +656,14 @@ if __name__ == "__main__":
         print '''
 
         DEPENDENCIES:
-        - WIEN2k (tested against 14.2 Release 15/10/2014)
-        - WIEN2WANNIER (tested against 1.00)
-        - Python (tested against 2.7.3)
-        - NumPy (tested against 1.6.2)
+        - WIEN2k + WIEN2WANNIER (tested against v17.1)
+        - Python (tested against 2.7.1)
+        - NumPy (tested against 1.12.0)
 
         Once you have all the dependencies installed.
         To run "BerryPI" after standard WIEN2k scf cycle run the following command
 
-        berrypi -kNUM:NUM:NUM [+options see below]
+        berrypi -k NUM:NUM:NUM [+options see below]
 
         OPTIONS:
 
@@ -657,7 +690,7 @@ if __name__ == "__main__":
 
         Activate spin orbit coupling
 
-	      (option abandoned) --bloch-band=NUM:NUM, -bNUM:NUM
+	--bloch-band=NUM:NUM, -b NUM:NUM
 
         Used to manually set the bloch band for band by band decomposition.
         By default, it is parsing out the bloch band based on the number
@@ -676,6 +709,11 @@ if __name__ == "__main__":
         Enable parallel caulculation where it run "x lapw1 -p", "x lapwso -p"
         and "x w2w -p" in parallel mode. It implies that you have .machines file
         prepared accorning to Wien2k documentation
+
+        -w
+
+        Compute Berry phase along a specific k-path given in the case.klist file.
+        It is used to characterize Weyl-points.
 
 
         EXAMPLES:
@@ -707,7 +745,7 @@ if __name__ == "__main__":
         
     try:
         opts, args = getopt.getopt(sys.argv[1:], \
-            "S:hvpnk:lb:soj", \
+            "S:hvpnk:lb:sojw", \
             ["help", "structure-name=", \
             "bloch-band=", "spin-polarized", "no-auto", "kdiv=", "no-lapw1", \
             "parallel", "verbose", "orb-potential", "spin-orbit"]);
@@ -731,7 +769,7 @@ if __name__ == "__main__":
     structure_name = ''
     structure_path = ''
     structure_kmesh = config.DEFAULT_KMESH_DIVISIONS
-    structure_bloch = None
+    bands = []
     runLAPW = True
     VERBOSE = False
 
@@ -739,7 +777,8 @@ if __name__ == "__main__":
     pCalc = False   # calculation is serial by defaul
     spCalc = False  # no spin polarization by default
     orbCalc = False # no additional orbital potential by default
-    soCalc = False  # nos spin-orbit coupling by default
+    soCalc = False  # no spin-orbit coupling by default
+    wCalc = False # no k-path specified by default
     
     # Set default case name and path based on where berrypi is executed
     structure_path = os.getcwd()
@@ -787,7 +826,7 @@ if __name__ == "__main__":
             try: structure_kmesh = [ int(i) for i in argValue.split(':') ] 
             except ValueError:
                 print('Value Error: Please enter the integers '+\
-                    'into kmesh in the format of "-kx:x:x"');
+                    'into kmesh in the format of "-k NX:NY:NZ"');
                 sys.exit(2)      
 
         #Determines whether you should include lapw1 in the automation
@@ -801,9 +840,16 @@ if __name__ == "__main__":
             pCalc = True # turn to True when implementation finished
 
         elif argName in ('-b', '--bloch-band'):
-            print DEFAULT_PREFIX+"Option band-by-band decomposition "+ \
-                "was abandoned. All occupied bands will be considered.";
-	    structure_bloch = [ int(i) for i in argValue.split(':') ]
+            print DEFAULT_PREFIX+"Only selected range of bands will be used ";
+	    bands = [ int(i) for i in argValue.split(':') ]
+            print DEFAULT_PREFIX, "bands=", bands
+
+        elif argName in ('-w'):
+            print DEFAULT_PREFIX+"Enable Berry phase calculation along a "+\
+                "specific k-path given in the case.klist file. "
+            print DEFAULT_PREFIX+"Any input of the k-mesh (-k ... option) "+\
+                "will be ignored";
+            wCalc = True
 
         elif argName in ('-v', '--verbose'):
             VERBOSE = True
@@ -823,8 +869,9 @@ if __name__ == "__main__":
                     'kmesh in the format of "x:x:x"');
                 sys.exit(2)
         else:
-            print DEFAULT_PREFIX+'Proceed with the k-mesh', \
-                structure_kmesh;
+            if not wCalc:
+                print DEFAULT_PREFIX+'Proceed with the k-mesh', \
+                    structure_kmesh;
 
     #Makes sure that the length of the tuple is 3
     if len(structure_kmesh)!=3:
@@ -873,7 +920,7 @@ if __name__ == "__main__":
                 'Number of K-Points' : config.DEFAULT_NUMBER_OF_KPOINTS,
                 'K-Mesh Divisions' : structure_kmesh,
                 'K-Mesh Shift' : config.DEFAULT_KMESH_SHIFT, 
-                'Bloch Band' : structure_bloch,
+                'Bloch Band' : bands,
                 'Number of Wannier Functions' : config.DEFAULT_WANNIER_FUNCTIONS,
                 'Center Atom and Character' : config.DEFAULT_CENTER_ATOM_AND_CHARACTER,
                 'Perform LAPW' : runLAPW,

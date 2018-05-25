@@ -11,6 +11,26 @@ def parse_win_mp_grid(f):
             # Split in two by :, take second half
             return parse_line_list(line.split(':')[1], ' ', int)
 
+
+### Read file case.nnkp between lines "begin nnkpts" and "end nnkpts"
+def parse_nnkp_nnkpts(f):
+    nnkpts = []
+    with f as input_data:
+        for line in input_data:
+            if line.strip() == 'begin nnkpts':
+                break
+        for line in input_data:
+            if line.strip() == 'end nnkpts':
+                break
+            line1 = line.strip()
+            line2 = line1.split()
+            line3 = map(int, line2)
+            line4 = tuple(line3) # change type for compatibility
+            if len(line2) == 5: # fits to format (kp1, kp2, G1, G2, G3)
+                nnkpts.append(line4)
+    return nnkpts
+
+
 ### case.mmn parsing
 def parse_pair_info_line(line):
     '''Converts a pair-info line into k1, k2, and a G vector
@@ -139,8 +159,9 @@ def determine_neighbours(D, d, P = [0,1,2]):
     return nnkpts, neighbour_graph
 
 def print_usage():
-    print >> sys.stderr, "Usage: mmn2pathphase case [direction]"
+    print >> sys.stderr, "Usage: mmn2pathphase case [direction] [-w]"
     print >> sys.stderr, " direction    x, y, or z; for <x, y, z> (default x)"
+    print >> sys.stderr, " -w option is for Weyl k-path calculation"
 
 
 ###############################################################################
@@ -156,16 +177,18 @@ def main(args):
     parse_line_list = lambda line, delimiter, T : [T(y) for y in [x.strip() for x in line.strip().split(delimiter)] if y]
 
     if len(args) < 2:
-        print >> sys.stderr, "Error: no case provided"
+        print >> sys.stderr, "Error: no case or direction provided"
         exit(1)
 
     spOption = '' # no spin polarization by default
-    soOption = '' # no spin-orbit by default
-    for arg in args: # check for spin polarization in arguments
-        if arg == '-up':
+    wCalc = False # no Weyl point path by default
+    for arg in args: # check for spin polarization and Weyl path in arguments
+        if '-up' in arg:
             spOption = 'up'
-        elif arg == '-dn':
+        elif '-dn' in arg:
             spOption = 'dn'
+        elif '-w' in arg:
+            wCalc = True
 
     # Get case name from arguments
     case_name = args[0]
@@ -193,12 +216,17 @@ def main(args):
     kmesh = parse_win_mp_grid(f_win)
     f_win.close()
 
-    # Calculate the neighbours of interest
-    nnkpts, neighbour_graph = determine_neighbours(kmesh, direction, [2, 1, 0])
-    #  > we need the pairs list (nnkpts) to discriminate values found in the
-    #    case.mmn file
-    #  > we need the neighbour graph (neighbour_graph) in order to find the sum
-    #    of the phase differences along each path in the given direction
+    # Determine the k(i)-k(i+1) neighbours of interest
+    if wCalc: # read from case.nnkp file
+        f_nnkp = open(case_name + '.nnkp' + spOption, 'r')
+        nnkpts = parse_nnkp_nnkpts(f_nnkp)
+        f_nnkp.close()
+    else: # Calculate the neighbours of interest
+        nnkpts, neighbour_graph = determine_neighbours(kmesh, direction, [2, 1, 0])
+        #  > we need the pairs list (nnkpts) to discriminate values found in the
+        #    case.mmn file
+        #  > we need the neighbour graph (neighbour_graph) in order to find the sum
+        #    of the phase differences along each path in the given direction
 
     if VERBOSE:
         print nnkpts
@@ -252,6 +280,12 @@ def main(args):
                     parse_matrix_element_line(f_mmn.readline())
 
     f_mmn.close()
+
+    if wCalc:
+        print("Berry phase along the path (rad) =",phases.values())
+        print("Berry phase sum (rad) =",sum(phases.values()))
+        sys.exit()
+
 
     # Get the sum of phases for each path
     for k, neighbours in neighbour_graph.iteritems():
