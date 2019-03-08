@@ -11,10 +11,10 @@ be created automatically.
 #######################################################
 
 #fix for location of python file locations when executing from the python commandline
-DEFAULT_BIN_PATH = '/home/rubel/project/rubel/WIEN2k_17.1/SRC_BerryPI/BerryPI'
+DEFAULT_BIN_PATH = '/home/rubel/WIEN2k_18.2/SRC_BerryPI/BerryPI'
 
 #Fix for python path to make sure it grabs the latest version
-DEFAULT_PYTHON_PATH = '/cvmfs/soft.computecanada.ca/nix/var/nix/profiles/python-2.7.13/bin/python'
+DEFAULT_PYTHON_PATH = '/cvmfs/soft.computecanada.ca/easybuild/software/2017/Core/python/2.7.14/bin/python'
 
 ########################################################
 ####Some default values for the automation of each case

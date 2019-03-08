@@ -40,7 +40,7 @@ def postProcBerryPhase(configFile, phasesRaw, spCalc):
     Pass a config file to it in order to perform the final calculation
     on the simulation. Returns the main calculation as the class object
     '''
-    #first, check to see if the folder contains all of the necessary files
+    #set up path, case name, file extensions
     structurePath = configFile['Structure Path']
     changeToWorkingDirectory(configFile['Structure Path'])
     structName = configFile['Structure Name']
@@ -51,14 +51,6 @@ def postProcBerryPhase(configFile, phasesRaw, spCalc):
         'outputd' : '.outputd',
         'outputst' : '.outputst'
         }
-    for extension in structFileExtensions.values():
-        tempFilename = structName + extension
-        #TODO change to a logging system
-        print(DEFAULT_PREFIX + "Checking existance of {}").format(tempFilename)
-        if not b_PyError.fileExists(tempFilename):
-            print( DEFAULT_PREFIX + "{} does not exist, cannot finish calculation").format(tempFilename)
-            exit(2)
-        else: print DEFAULT_PREFIX + '-- OK'
 
     #perform the main calculation
     mainCalculation = b_PyCalc.MainCalculationContainer(
@@ -130,20 +122,26 @@ def rawBerryPhase(configFile):
     # print version
     with open(bppath+'/version.info', 'r') as versionFile: # open version file
         print DEFAULT_PREFIX + versionFile.read()
-    print DEFAULT_PREFIX + "Python version: " + sys.version[:5]
+    print DEFAULT_PREFIX + "Python version: " + sys.version
     print DEFAULT_PREFIX + "Numpy version: " + numpy.version.version
     
     #check to make sure certain files exist
     structureName = configFile['Structure Name']
-    tempFileName = structureName + '.struct'
-    if not b_PyError.fileExists(tempFileName):
-        string = DEFAULT_PREFIX + str(tempFileName)
-        string += ' does not exist'
-        print string
-        print(DEFAULT_PREFIX + 'The [case].struct file has not been '+ \
-            'found. BerryPI will now close ...');
-        sys.exit(2)		
-        return False
+    print DEFAULT_PREFIX + "Checking prerequisite files for " + structureName
+    structFileExtensions = {
+        'struct' : '.struct',
+        'scf' : '.scf',
+        'outputd' : '.outputd',
+        'outputst' : '.outputst'
+        }
+    for extension in structFileExtensions.values():
+        tempFilename = structureName + extension
+        #TODO change to a logging system
+        print(DEFAULT_PREFIX + "Checking existance of {}").format(tempFilename)
+        if not b_PyError.fileExists(tempFilename):
+            print( DEFAULT_PREFIX + "{} does not exist, cannot finish calculation").format(tempFilename)
+            exit(2)
+        else: print DEFAULT_PREFIX + '-- OK'
 
     #remove the broyd file
     #$rm $filename.broyd*  
