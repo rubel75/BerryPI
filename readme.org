@@ -1,3 +1,5 @@
+BerryPI is a software for the calculation of Berry phase, curvature and flux with WIEN2k density functional package.
+
 *** Current Version
 Version Aug 19, 2020
 *** [[https://github.com/spichardo/BerryPI/blob/master/licencing.txt][Licensing Conditions]]
