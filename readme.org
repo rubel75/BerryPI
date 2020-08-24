@@ -13,7 +13,7 @@ Version Aug 19, 2020
 - [[https://github.com/spichardo/BerryPI/tree/master/tutorials/tutorial2][Tutorial 2 - Born Effective Charges of GaAs]]
 - [[https://github.com/spichardo/BerryPI/tree/master/tutorials/tutorial3][Tutorial 3 - Non-orthogonal lattice vectors (same as Tutorial 2)]]
 - [[https://github.com/spichardo/BerryPI/wiki/Tutorial-4:-Polarization-in-GaN][Tutorial 4 - Polarization in wurtzite GaN]]
-- [[https://github.com/spichardo/BerryPI/wiki/Tutorial-5:-Weyl-points-characterization-in-TaAs]][Weyl points characterization in TaAs]
+- [[https://github.com/spichardo/BerryPI/wiki/Tutorial-5:-Weyl-points-characterization-in-TaAs][Weyl points characterization in TaAs]]
 
 *** Limitation
 - Python 3.* is not supported
