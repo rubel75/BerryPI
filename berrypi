@@ -31,6 +31,22 @@ from config import BERRY_FILE_EXTENSION, DEFAULT_BIN_PATH, DEFAULT_PYTHON_PATH
 
 import mmn2pathphase
 
+class Logger(object): # redirect stdout to case.outputberry file and console
+    def __init__(self):
+        self.terminal = sys.stdout
+        # case mane is taken from structure_name
+        outputFileName = structure_name + '.outputberry'
+        self.log = open(outputFileName, "w")
+
+    def write(self, message):
+        self.terminal.write(message)
+        self.log.write(message)  
+
+    def flush(self):
+        #this flush method is needed for python 3 compatibility.
+        #this handles the flush command by doing nothing.
+        #you might want to specify some extra behavior here.
+        pass    
 
 def changeToWorkingDirectory(path):
     os.chdir(path)
@@ -119,6 +135,7 @@ def rawBerryPhase(configFile):
     else:
         print DEFAULT_PREFIX, 'bppath =', bppath
 
+
     # print version
     with open(bppath+'/version.info', 'r') as versionFile: # open version file
         print DEFAULT_PREFIX + versionFile.read()
@@ -145,9 +162,9 @@ def rawBerryPhase(configFile):
 
     #remove the broyd file
     #$rm $filename.broyd*  
-    tempFileName = structureName + '.broyd*'
-    broydRemoval = b_PySubProcess.VirtualShellInstance('rm -f ' + tempFileName)
-    broydRemoval()
+    #tempFileName = structureName + '.broyd*'
+    #broydRemoval = b_PySubProcess.VirtualShellInstance('rm -f ' + tempFileName)
+    #broydRemoval()
 
 
     ######################################
@@ -781,6 +798,10 @@ if __name__ == "__main__":
     # Set default case name and path based on where berrypi is executed
     structure_path = os.getcwd()
     structure_name = os.path.split(os.getcwd())[-1]
+    
+    # redirect stdout to case.outputberry file and console
+    # case mane is taken from structure_name
+    sys.stdout = Logger()
 
     #begin checking command line arguments
     for argName, argValue in opts:
