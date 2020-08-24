@@ -1,12 +1,20 @@
 BerryPI is a software for the calculation of Berry phase and related properties of solids (including topological materials) with WIEN2k density functional package.
 
 *** Current Version
+
 Version Aug 19, 2020
-*** [[https://github.com/spichardo/BerryPI/blob/master/licencing.txt][Licensing Conditions]]
-*** [[https://github.com/spichardo/BerryPI/releases][Download the whole package here]]
-*** [[https://github.com/spichardo/BerryPI/wiki][Documentation]]
-*** Suggested citation
-        S.J. Ahmed, J. Kivinen, B. Zaporzan, L. Curiel, S. Pichardo, O. Rubel, Comp. Phys. Commun. 184, 647 (2013) ([[http://www.sciencedirect.com/science/article/pii/S0010465512003712?v=s5][Full Text]])
+
+[[https://github.com/spichardo/BerryPI/blob/master/licencing.txt][Licensing Conditions]]
+
+[[https://github.com/spichardo/BerryPI/releases][Download the whole package here]]
+
+[[https://github.com/spichardo/BerryPI/wiki][Documentation]]
+
+*** Suggested citations
+
+[1] S.J. Ahmed, J. Kivinen, B. Zaporzan, L. Curiel, S. Pichardo, and O. Rubel "BerryPI: A software for studying polarization of crystalline solids with WIEN2k density functional all-electron package", Comp. Phys. Commun. 184, 647 (2013) ([[http://www.sciencedirect.com/science/article/pii/S0010465512003712?v=s5][Full Text]])
+
+[2] H. Saini, M. Laurien, P. Blaha, and O. Rubel "WloopPHI: A tool for ab initio characterization of Weyl semimetals", arXiv:2008.08124 [cond-mat.mtrl-sci] (2020) ([[https://arxiv.org/abs/2008.08124][Full Text]])
 
 *** Tutorials
 - [[https://github.com/spichardo/BerryPI/wiki/Tutorial-1:-Spontaneous-Polarization-in-BaTiO3][Tutorial 1 - Spontaneous polarization calculation of BaTiO3]]
