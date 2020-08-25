@@ -37,6 +37,7 @@ class Logger(object): # redirect stdout to case.outputberry file and console
         # case mane is taken from structure_name
         outputFileName = structure_name + '.outputberry'
         self.log = open(outputFileName, "w")
+        print("Output will also be written in " + outputFileName)
 
     def write(self, message):
         self.terminal.write(message)
