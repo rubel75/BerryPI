@@ -370,7 +370,8 @@ def rawBerryPhase(configFile):
         	      blochBandSettings = configFile['Bloch Band']
             else:
                 blochBandRange = [ 1 , \
-                    int(blochBandCalculation.getNumberOfBands(spCalc,soCalc)) ];
+                    int(blochBandCalculation.getNumberOfBands(spCalc,soCalc, \
+                    orbCalc,wCalc)) ];
                 print DEFAULT_PREFIX + " "*4 + \
                     "Number of bloch bands is {}".format(blochBandRange);
                 blochBandSettings.append(blochBandRange)
@@ -381,15 +382,17 @@ def rawBerryPhase(configFile):
                 b_PyCalc.CalculateNumberOfBands(structureName + '.scf2');
             # it is better to take *.scf2 file instead of
         except b_PyError.ParseError, err:
-            print DEFAULT_PREFIX + "ERROR: in automation of " + str(structureName) 
+            print DEFAULT_PREFIX + "ERROR: in automation of " + \
+                str(structureName) 
             print DEFAULT_PREFIX + str(err)
             print DEFAULT_PREFIX + "ERROR: missing tags: " + str(err.errorTags)
             return False
         if configFile['Bloch Band']:
-    	      blochBandSettings = configFile['Bloch Band']
+            blochBandSettings = configFile['Bloch Band']
         else:
             blochBandSettings = [[ 1, \
-                int(blochBandCalculation.getNumberOfBands(spCalc,soCalc)) ]];
+                int(blochBandCalculation.getNumberOfBands(spCalc,soCalc, \
+                orbCalc,wCalc)) ]];
             print DEFAULT_PREFIX + " "*4 + \
                 "Number of bloch bands is {}".format(blochBandSettings);
 

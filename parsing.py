@@ -104,9 +104,6 @@ class MainStructParser(AbstractParser):
             else:
                 break
 
-        ############################
-        #######################
-
         #parse each individual atom into a list
         self['Atom Listing'] = []
         re_coordinates = re.compile(r'X= ?(?P<xCoordinate>[0-9.]+) +Y= ?(?P<yCoordinate>[0-9.]+) +Z= ?(?P<zCoordinate>[0-9.]+)')

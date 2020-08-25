@@ -126,7 +126,7 @@ class CalculateNumberOfBands:
         self.parser = b_PyParse.MainSCFParser(self.text)
         self.parser.parse()
 
-    def getNumberOfBands(self, spCalc, soCalc):
+    def getNumberOfBands(self, spCalc, soCalc, orbCalc, wCalc):
         bandList = self.parser['Band List']
         #produce list from dictionary values with only the occupancy
         #and band range where occupancy is not 0
@@ -135,16 +135,19 @@ class CalculateNumberOfBands:
         fHOMO = theList[-1][1] # occupancy of the HOMO band
         # check if bands have an insulator occupancy (the method does not
         # work for metallic bands)
-        if not spCalc and not soCalc: # regular calculation without SP or SOC
-            if fHOMO != 2.0: # occupancy must be 2 only
-                print "HOMO band index =", iHOMO
-                print "HOMO band occupancy =", fHOMO
-                raise Exception("The HOMO band should have occupancy of 2")
-        elif spCalc or soCalc: # SP or SOC calculation (1e per band max)
-            if fHOMO != 1.0: # occupancy must be 1 only
-                print "HOMO band index =", iHOMO
-                print "HOMO band occupancy =", fHOMO
-                raise Exception("The HOMO band should have occupancy of 1")
+        if not wCalc: # do not do the check for Weyl point calculations
+            if not spCalc and not soCalc and not orbCalc:
+                # regular calculation without SP or SOC
+                if fHOMO != 2.0: # occupancy must be 2 only
+                    print "HOMO band index =", iHOMO
+                    print "HOMO band occupancy =", fHOMO
+                    raise Exception("The HOMO band should have occupancy of 2")
+            elif spCalc or soCalc or orbCalc:
+                # SP or SOC calculation (1e per band max)
+                if fHOMO != 1.0: # occupancy must be 1 only
+                    print "HOMO band index =", iHOMO
+                    print "HOMO band occupancy =", fHOMO
+                    raise Exception("The HOMO band should have occupancy of 1")
         # return the HOMO band index
         return iHOMO
 
