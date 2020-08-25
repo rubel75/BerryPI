@@ -370,7 +370,7 @@ def rawBerryPhase(configFile):
         	      blochBandSettings = configFile['Bloch Band']
             else:
                 blochBandRange = [ 1 , \
-                    int(blochBandCalculation.getNumberOfBands()) ];
+                    int(blochBandCalculation.getNumberOfBands(spCalc,soCalc)) ];
                 print DEFAULT_PREFIX + " "*4 + \
                     "Number of bloch bands is {}".format(blochBandRange);
                 blochBandSettings.append(blochBandRange)
@@ -389,7 +389,7 @@ def rawBerryPhase(configFile):
     	      blochBandSettings = configFile['Bloch Band']
         else:
             blochBandSettings = [[ 1, \
-                int(blochBandCalculation.getNumberOfBands()) ]];
+                int(blochBandCalculation.getNumberOfBands(spCalc,soCalc)) ]];
             print DEFAULT_PREFIX + " "*4 + \
                 "Number of bloch bands is {}".format(blochBandSettings);
 

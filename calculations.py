@@ -126,13 +126,27 @@ class CalculateNumberOfBands:
         self.parser = b_PyParse.MainSCFParser(self.text)
         self.parser.parse()
 
-    def getNumberOfBands(self):
+    def getNumberOfBands(self, spCalc, soCalc):
         bandList = self.parser['Band List']
         #produce list from dictionary values with only the occupancy
         #and band range where occupancy is not 0
         theList = [ (i['band range'], i['occupancy']) for i in bandList if i['occupancy'] ]
-        # return the last occupancy
-        return theList[-1][0]
+        iHOMO = theList[-1][0] # highest occupied band index
+        fHOMO = theList[-1][1] # occupancy of the HOMO band
+        # check if bands have an insulator occupancy (the method does not
+        # work for metallic bands)
+        if not spCalc and not soCalc: # regular calculation without SP or SOC
+            if fHOMO != 2.0: # occupancy must be 2 only
+                print "HOMO band index =", iHOMO
+                print "HOMO band occupancy =", fHOMO
+                raise Exception("The HOMO band should have occupancy of 2")
+        elif spCalc or soCalc: # PS or SOC calculation
+            if fHOMO != 1.0: # occupancy must be 1 only
+                print "HOMO band index =", iHOMO
+                print "HOMO band occupancy =", fHOMO
+                raise Exception("The HOMO band should have occupancy of 1")
+        # return the HOMO band index
+        return iHOMO
 
     
         
@@ -209,35 +223,14 @@ class MainCalculationContainer:
         # - Cell Volume
         self._calculationValues['Cell Volume in bohr^3'] = \
             parser_scf_handle['Cell Volume'];
-        self._calculationValues['Cell Volume in m^3'] = \
-            bohrToMeters(self._calculationValues['Cell Volume in bohr^3'],3);
 
         #### *.outputd handle
         # - BR2_DIR matrix (v_x, v_y, v_z)
-        # - number of atoms in cell
         # - Lattice Constants (x,y,z)
-      	laticematrix=parser_outputd_handle['BR2_DIR Matrix']
-      	latticematrixa1=laticematrix[0]
-      	self._calculationValues['Lattice Matrix a1 in bohr'] = \
-            latticematrixa1;
-      	latticematrixa2=laticematrix[1]
-      	self._calculationValues['Lattice Matrix a2 in bohr'] = \
-            latticematrixa2;
-      	latticematrixa3=laticematrix[2]
-      	self._calculationValues['Lattice Matrix a3 in bohr'] = \
-            latticematrixa3;
         self._calculationValues['Lattice Matrix in bohr'] = \
             parser_outputd_handle['BR2_DIR Matrix'];
-        self._calculationValues['Lattice Matrix in m'] = \
-            [[ bohrToMeters(i) for i in j ] for j in \
-            self._calculationValues['Lattice Matrix in bohr']];
-        self._calculationValues['Number of Atoms in Unit Cell'] = \
-            parser_outputd_handle['Number of Atoms in Unit Cell'];
         self._calculationValues['Lattice Constants in bohr'] = \
             parser_outputd_handle['Lattice Constants'];
-        self._calculationValues['Lattice Constants in m'] = \
-            [ bohrToMeters(i) for i in \
-            self._calculationValues['Lattice Constants in bohr']];
 
         #### *.outputst handle
         # for each element:

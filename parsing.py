@@ -75,7 +75,7 @@ class MainStructParser(AbstractParser):
         theText = self.getFileContent()
         #split up file into individual atom listings
         atomLineIndex = []
-	atomLineNumber = []
+        atomLineNumber = []
         #fix for ATOM being used with MULT > 1
         re_atomListing = re.compile(r'ATOM +(?P<atomNumber>-?[0-9]+):')
         for num, line in enumerate(theText):
@@ -145,6 +145,7 @@ class MainStructParser(AbstractParser):
 	                    theAtom['Element Number'] = int(elementMatches.group('elementNumber'))
                     else:
 			    theAtom['Element Number'] = 1
+			    
 
                 zatomMatches = re_zatom.search(line)
                 if zatomMatches:
@@ -168,11 +169,9 @@ class MainStructParser(AbstractParser):
                 self['Atom Listing'].append(theAtom)
             
 
-class MainOutputDParser(AbstractParser):
+class MainOutputDParser(AbstractParser): # parse case.outputd
     def parse(self):
         theText = self.getFileContent()
-
-
         re_lattice_type = re.compile(r'LATTICE += ?(?P<latticeType>[A-Za-z]+)')
         re_lattice_constants = re.compile(r'LATTICE CONSTANTS ARE += +(?P<xLattice>[0-9.]+) +(?P<yLattice>[0-9.]+) +(?P<zLattice>[0-9.]+)')
         re_numAtoms = re.compile(r'NUMBER OF ATOMS IN UNITCELL += +(?P<numAtoms>[0-9]+)')
@@ -216,118 +215,6 @@ class MainOutputDParser(AbstractParser):
         if MissingTags:
             raise ParseError("ERROR: Missing data in *.outputd file", MissingTags)
 
-
-# THIS IS THE ORIGINAL CLASS (Sat 09 Nov 2013 06:27:43 PM CST)
-#class MainSCFParser(AbstractParser):
-#    def parse(self):
-#        tempText = self.getFileContent()
-#
-#        tagList = [
-#            re.compile(r':BAN[0-9]+'),
-#            re.compile(r':VOL'),
-#            re.compile(r':ITE(?P<num>[0-9]+)'),
-#        ]
-#        #strip out all of the iterations, volume and band lines
-#        theText = []
-#        for line in tempText:
-#            for tag in tagList:
-#                if tag.search(line):
-#                    theText.append(line)
-#
-#        #grab the last iteration
-#        theIterationIndex, theIterationNumber = 0,0
-#        for number, line in enumerate(theText):
-#            result_theIterationNum = tagList[2].search(line) #ITE regex
-#            if result_theIterationNum:
-#                theIterationNumber = int(result_theIterationNum.group('num'))
-#                theIterationIndex = number
-#                #i'm assuming the last one it finds is the last iteration
-#
-#        #delete up to the last iteration
-#        theText = theText[theIterationIndex:]
-#
-#        re_volumeSize = re.compile(r':VOL +: +UNIT CELL VOLUME = +(?P<cellVolume>[0-9.]+)')
-#        re_bandListing = re.compile(r':BAN[0-9]+: +(?P<bandNum>[0-9]+) +[0-9.-]+ +[0-9.-]+ +(?P<occupancy>[0-9.]+)')
-#
-#        self['Band List'] = []
-#        for line in theText:
-#            #volume
-#            result_volumeSize = re_volumeSize.search(line)
-#            if result_volumeSize:
-#                self['Cell Volume'] = float(result_volumeSize.group('cellVolume'))
-
-#            #band listings
-#            result_bandListing = re_bandListing.search(line)
-#            if result_bandListing:
-#                theDict = {
-#                    'band range' : int(result_bandListing.group('bandNum')),
-#                    'occupancy' : int(float(result_bandListing.group('occupancy'))),
-#                    }
-#                self['Band List'].append(theDict)
-#        MissingTags = checkForTags(self, [
-#            'Cell Volume',
-#            ])
-#        # if missing any tags, or have nothing within the band list
-#        if MissingTags:
-#            raise ParseError("ERROR: Missing data in *.scf file", MissingTags)
-#        if not self['Band List']:
-#            raise ParseError('ERROR: Missing band list in *.scf file', ())
-
-#class MainSCFParser(AbstractParser):
-#    def parse(self):
-#        tempText = self.getFileContent()
-#
-#        tagList = [
-#            re.compile(r':BAN[0-9]+'),
-#            re.compile(r':VOL'),
-#            re.compile(r':ITE(?P<num>[0-9]+)'),
-#        ]
-#        #strip out all of the iterations, volume and band lines
-#        theText = []
-#        for line in tempText:
-#            for tag in tagList:
-#                if tag.search(line):
-#                    theText.append(line)
-#
-#        #grab the last iteration
-#        theIterationIndex, theIterationNumber = 0,0
-#        for number, line in enumerate(theText):
-#            result_theIterationNum = tagList[2].search(line) #ITE regex
-#            if result_theIterationNum:
-#                theIterationNumber = int(result_theIterationNum.group('num'))
-#                theIterationIndex = number
-#                #i'm assuming the last one it finds is the last iteration
-#
-#        #delete up to the last iteration
-#        theText = theText[theIterationIndex:]
-#
-#        re_volumeSize = re.compile(r':VOL +: +UNIT CELL VOLUME = +(?P<cellVolume>[0-9.]+)')
-#        re_bandListing = re.compile(r':BAN[0-9]+: +(?P<bandNum>[0-9]+) +[0-9.-]+ +[0-9.-]+ +(?P<occupancy>[0-9.]+)')
-#
-#        self['Band List'] = []
-#        for line in theText:
-#            #volume
-#            result_volumeSize = re_volumeSize.search(line)
-#            if result_volumeSize:
-#                self['Cell Volume'] = float(result_volumeSize.group('cellVolume'))
-
-#            #band listings
-#            result_bandListing = re_bandListing.search(line)
-#            if result_bandListing:
-#                theDict = {
-#                    'band range' : int(result_bandListing.group('bandNum')),
-#                    'occupancy' : int(float(result_bandListing.group('occupancy'))),
-#                    }
-#                self['Band List'].append(theDict)
-#        MissingTags = checkForTags(self, [
-#            'Cell Volume',
-#            ])
-#        # if missing any tags, or have nothing within the band list
-#        if MissingTags:
-#            raise ParseError("ERROR: Missing data in *.scf file", MissingTags)
-#        if not self['Band List']:
-#            raise ParseError('ERROR: Missing band list in *.scf file', ())
-      
 
 # Modified by OR (Sat 09 Nov 2013 06:37:11 PM CST)
 # it is restricted to determining the band range and cell volume only
