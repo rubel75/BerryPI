@@ -140,7 +140,7 @@ class CalculateNumberOfBands:
                 print "HOMO band index =", iHOMO
                 print "HOMO band occupancy =", fHOMO
                 raise Exception("The HOMO band should have occupancy of 2")
-        elif spCalc or soCalc: # PS or SOC calculation
+        elif spCalc or soCalc: # SP or SOC calculation (1e per band max)
             if fHOMO != 1.0: # occupancy must be 1 only
                 print "HOMO band index =", iHOMO
                 print "HOMO band occupancy =", fHOMO
@@ -148,8 +148,6 @@ class CalculateNumberOfBands:
         # return the HOMO band index
         return iHOMO
 
-    
-        
 
 class MainCalculationContainer:
     '''
