@@ -8,6 +8,8 @@ and easily changed for later use
 
 import os.path, os, pprint
 import re
+import struct
+import numpy as np
 
 from errorCheck import ParseError
 
@@ -70,15 +72,257 @@ class AbstractParser(dict):
             theList.append(spacedList)
         return theList
 
+
 class MainStructParser(AbstractParser):
+# Parse case.struct file and extract the following info:
+# - lattice type
+# - number of atoms
+# - atomic positions
+# - multiplicity of atoms
+# - element name
+# - nuclear charge
+# - cell volume
+# - real and reciprocal lattice vectors
     def parse(self):
+        def lattVec(lattic,aa,bb,cc,alphadeg):
+            # calculate real and reciprocal lattice vectors; cell volume
+            # lattic - lattice type
+            # aa,bb,cc - lattice parameters
+            # alpha[0:2] - lattice angles
+            # NOTE: calculations are based on WIEN2k_19.2/SRC_dstart/module.F
+            #       SUBROUTINE latgen_struct
+            sqrt3=np.sqrt(3)
+            test=1e-5 # small
+            # convert deg -> rad
+            alpha = np.zeros(3) # allocate
+            alpha[0] = alphadeg[0]*np.pi/180
+            alpha[1] = alphadeg[1]*np.pi/180
+            alpha[2] = alphadeg[2]*np.pi/180
+            pia = np.zeros(3) # allocate
+            pia[0] = 2*np.pi/aa
+            pia[1] = 2*np.pi/bb
+            pia[2] = 2*np.pi/cc
+            cosab = np.cos(alpha[2])
+            cosac = np.cos(alpha[1])
+            cosbc = np.cos(alpha[0])
+            sinab = np.sin(alpha[2])
+            sinbc = np.sin(alpha[0])
+            # allocate reciprocal lattice vectors
+            br1_rec = np.zeros((3,3))
+            br2_rec = np.zeros((3,3))
+            # select proper lattice type
+            if lattic == "H": # hexagonal lattice
+                br1_rec[0,0] = 2/sqrt3*pia[0]
+                br1_rec[0,1] = 1/sqrt3*pia[0]
+                br1_rec[1,1] = pia[1]
+                br1_rec[2,2] = pia[2]
+                br2_rec = br1_rec
+                rvfac = 2/sqrt3
+                ortho = False
+            elif lattic == "S" or lattic == "P": # primitive lattice
+                wurzel = np.sqrt(sinbc**2-cosac**2-cosab**2+2*cosbc*cosac*cosab)
+                br1_rec[0,0] = sinbc/wurzel*pia[0]
+                br1_rec[0,1] = (-cosab+cosbc*cosac)/(sinbc*wurzel)*pia[1]
+                br1_rec[0,2] = (cosbc*cosab-cosac)/(sinbc*wurzel)*pia[2]
+                br1_rec[1,1] = pia[1]/sinbc
+                br1_rec[1,2] = -pia[2]*cosbc/sinbc
+                br1_rec[2,2] = pia[2]
+                br2_rec = br1_rec
+                rvfac = 1/wurzel
+                ortho = True
+                if abs(alpha[0]-np.pi/2) > test:
+                    ortho= False
+                if abs(alpha[1]-np.pi/2) > test:
+                    ortho= False
+                if abs(alpha[2]-np.pi/2) > test:
+                    ortho= False
+            elif lattic == "F": # FCC lattice
+                br1_rec[0,0] = pia[0]
+                br1_rec[1,1] = pia[1]
+                br1_rec[2,2] = pia[2]
+                # definitions according to column, rows convention for br2_rec
+                br2_rec[0,0] = -pia[0]
+                br2_rec[0,1] = pia[0]
+                br2_rec[0,2] = pia[0]
+                br2_rec[1,0] = pia[1]
+                br2_rec[1,1] = -pia[1]
+                br2_rec[1,2] = pia[1]
+                br2_rec[2,0] = pia[2]
+                br2_rec[2,1] = pia[2]
+                br2_rec[2,2] = -pia[2]
+                rvfac = 4
+                ortho = True
+            elif lattic == "B": # BCC lattice
+                br1_rec[0,0] = pia[0]
+                br1_rec[1,1] = pia[1]
+                br1_rec[2,2] = pia[2]
+                br2_rec[0,0] = 0
+                br2_rec[0,1] = pia[0]
+                br2_rec[0,2] = pia[0]
+                br2_rec[1,0] = pia[1]
+                br2_rec[1,1] = 0
+                br2_rec[1,2] = pia[1]
+                br2_rec[2,0] = pia[2]
+                br2_rec[2,1] = pia[2]
+                br2_rec[2,2] = 0
+                rvfac = 2
+                ortho = True
+            elif lattic == "CXY": # C-base-centered (orthorhombic only)
+                br1_rec[0,0] = pia[0]
+                br1_rec[1,1] = pia[1]
+                br1_rec[2,2] = pia[2]
+                br2_rec[0,0] = pia[0]
+                br2_rec[0,1] = pia[0]
+                br2_rec[0,2] = 0
+                br2_rec[1,0] =-pia[1]
+                br2_rec[1,1] = pia[1]
+                br2_rec[1,2] = 0
+                br2_rec[2,0] = 0
+                br2_rec[2,1] = 0
+                br2_rec[2,2] = pia[2]
+                rvfac = 2
+                ortho= True
+            elif lattic == "CXZ": # B-base-centered (orthorh. and monoclinic
+                                  # symmetry)
+                if abs(alpha[2]-np.pi/2) < 0:
+                    br1_rec[0,0]=pia[0]
+                    br1_rec[1,1]=pia[1]
+                    br1_rec[2,2]=pia[2]
+                    br2_rec[0,0]= pia[0]
+                    br2_rec[0,1]= 0
+                    br2_rec[0,2]= pia[0]
+                    br2_rec[1,0]= 0
+                    br2_rec[1,1]= pia[1]
+                    br2_rec[1,2]= 0
+                    br2_rec[2,0]=-pia[2]
+                    br2_rec[2,1]= 0
+                    br2_rec[2,2]= pia[2]
+                    rvfac=2
+                    ortho=True
+                else:
+                    print "  gamma not equal 90" # CXZ monoclinic case
+                    br1_rec[0,0]= pia[0]/sinab
+                    br1_rec[0,1]= -pia[1]*cosab/sinab
+                    br1_rec[1,1]= pia[1]
+                    br1_rec[2,2]= pia[2]
+                    br2_rec[0,0]= pia[0]/sinab
+                    br2_rec[0,1]= -pia[1]*cosab/sinab
+                    br2_rec[0,2]= pia[0]/sinab
+                    br2_rec[1,0]= 0
+                    br2_rec[1,1]= pia[1]
+                    br2_rec[1,2]= 0
+                    br2_rec[2,0]=-pia[2]
+                    br2_rec[2,1]= 0
+                    br2_rec[2,2]= pia[2]
+                    rvfac=2.0/sinab
+                    ortho=False
+            elif lattic == "CYZ": # A-base-centered (orthorhombic only)
+                br1_rec[0,0]=pia[0]
+                br1_rec[1,1]=pia[1]
+                br1_rec[2,2]=pia[2]
+                br2_rec[0,0]= pia[0]
+                br2_rec[0,1]= 0
+                br2_rec[0,2]= 0
+                br2_rec[1,0]= 0
+                br2_rec[1,1]= pia[1]
+                br2_rec[1,2]= pia[1]
+                br2_rec[2,0]= 0
+                br2_rec[2,1]=-pia[2]
+                br2_rec[2,2]= pia[2]
+                rvfac=2
+                ortho=True
+            elif lattic == "R": # rhombohedral
+                br1_rec[0,0]=1/sqrt3*pia[0]
+                br1_rec[0,1]=1/sqrt3*pia[0]
+                br1_rec[0,2]=-2/sqrt3*pia[0]
+                br1_rec[1,0]=-1*pia[1]
+                br1_rec[1,1]=1*pia[1]
+                br1_rec[1,2]=0
+                br1_rec[2,0]=pia[2]
+                br1_rec[2,1]=pia[2]
+                br1_rec[2,2]=pia[2]
+                br2_rec=br1_rec
+                rvfac=6/sqrt3
+                ortho=False
+            else: # error
+                raise Exception("Lattice type is not known")
+            # cell volume
+            vol=aa*bb*cc/rvfac
+            # real space lattice vectors from reciprocal once by matrix invers.
+            br1_dir = np.linalg.inv(br1_rec)
+            br2_dir = np.linalg.inv(br2_rec)
+            det = 0
+            for i in range(0, 2):
+                det = det + br1_dir[i,0]*br1_rec[i,0]
+            br1_dir = br1_dir*2*np.pi/det
+            det = 0
+            for i in range(0, 2):
+                det = det + br2_dir[i,0]*br2_rec[i,0]
+            br2_dir = br2_dir*2*np.pi/det
+            # return function output lattice vectors and cell volume
+            return (br1_dir,br2_dir,br1_rec,br2_rec,vol)
+            # END lattVec
+        print "Reading case.struct file"
         theText = self.getFileContent()
         #split up file into individual atom listings
         atomLineIndex = []
         atomLineNumber = []
         #fix for ATOM being used with MULT > 1
         re_atomListing = re.compile(r'ATOM +(?P<atomNumber>-?[0-9]+):')
+        # go through case.struct file line-by-line
         for num, line in enumerate(theText):
+            if num == 1: # 2nd line case.struct file
+                # read lattice type and number of atoms using FORMAT(A4,23X,I3)
+                (lattic,dum,nat) = \
+                    struct.unpack("4s23s3s", \
+                    line[0:30])
+                lattic = lattic.strip() # rm white spaces
+                nat = int(nat)
+                print "  Lattice type:", lattic
+                print "  Number of inequivalent atoms:", nat
+            if num == 3: # 4th line case.struct file
+                # read lattice parameters using FORMAT(6F10.7)
+                (aa,bb,cc,alpha0,alpha1,alpha2) = \
+                    struct.unpack("10s10s10s10s10s10s", \
+                    line[0:60])
+                aa = float(aa)
+                bb = float(bb)
+                cc = float(cc)
+                alpha = np.zeros(3)
+                alpha[0] = float(alpha0)
+                alpha[1] = float(alpha1)
+                alpha[2] = float(alpha2)
+                print " "*1, "a =", aa, "bohr"
+                print " "*1, "b =", bb, "bohr"
+                print " "*1, "c =", cc, "bohr"
+                print " "*1, "alpha =", alpha[0], "deg"
+                print " "*1, "beta  =", alpha[1], "deg"
+                print " "*1, "gamma =", alpha[2], "deg"
+                # determine real and reciprocal lattice vectors based on 
+                # the lattice type and lattice parameters
+                (br1_dir,br2_dir,br1_rec,br2_rec,vol) = \
+                    lattVec(lattic,aa,bb,cc,alpha)
+                self['cell volume'] = vol
+                self['lattice constants'] = [aa,bb,cc]
+                self['real space lattice vectors'] = br2_dir
+                self['reciprocal lattice vectors'] = br2_rec
+                print " "*1, "Reciprocal lattice vectors br1_rec (rad/bohr):"
+                print " "*3, br1_rec[0,:]
+                print " "*3, br1_rec[1,:]
+                print " "*3, br1_rec[2,:]
+                print " "*1, "Reciprocal lattice vectors br2_rec (rad/bohr):"
+                print " "*3, br2_rec[0,:]
+                print " "*3, br2_rec[1,:]
+                print " "*3, br2_rec[2,:]
+                print " "*1, "Real space lattice vectors br1_dir (bohr):"
+                print " "*3, br1_dir[0,:]
+                print " "*3, br1_dir[1,:]
+                print " "*3, br1_dir[2,:]
+                print " "*1, "Real space lattice vectors br2_dir (bohr):"
+                print " "*3, br2_dir[0,:]
+                print " "*3, br2_dir[1,:]
+                print " "*3, br2_dir[2,:]
+                print " "*1, "Unit cell volume:", vol, "bohr3"
             atomListingMatch = re_atomListing.search(line)
             if atomListingMatch:
                 atomLineIndex.append(num)
@@ -164,53 +408,44 @@ class MainStructParser(AbstractParser):
 
                 #append to the atom listing
                 self['Atom Listing'].append(theAtom)
-            
 
-class MainOutputDParser(AbstractParser): # parse case.outputd
+
+class MainIncParser(AbstractParser):
+# Parse case.inc file and extract the following info:
+# - number of core electrons per non-equivalent atom type
     def parse(self):
+        print "Reading case.inc file"
         theText = self.getFileContent()
-        re_lattice_type = re.compile(r'LATTICE += ?(?P<latticeType>[A-Za-z]+)')
-        re_lattice_constants = re.compile(r'LATTICE CONSTANTS ARE += +(?P<xLattice>[0-9.]+) +(?P<yLattice>[0-9.]+) +(?P<zLattice>[0-9.]+)')
-        re_numAtoms = re.compile(r'NUMBER OF ATOMS IN UNITCELL += +(?P<numAtoms>[0-9]+)')
-        BR2_matrices = []
-        for num, line in enumerate(theText):
-            #lattice type
-            latticeTypeMatches = re_lattice_type.search(line)
-            if latticeTypeMatches:
-                self['Lattice Type'] = latticeTypeMatches.group('latticeType')
-
-            #lattice constants
-            latticeConstantMatches = re_lattice_constants.search(line)
-            if latticeConstantMatches:
-                self['Lattice Constants'] = [
-                    float(latticeConstantMatches.group('xLattice')),
-                    float(latticeConstantMatches.group('yLattice')),
-                    float(latticeConstantMatches.group('zLattice'))
-                    ]
-
-            #grabbing BR2_DIR and slicing out text for matrix
-            if 'BR2_DIR' in line:
-                BR2_matrices = theText[num+1:num+4]
-
-            #num atoms in unit cell
-            numAtomsMatches = re_numAtoms.search(line)
-            if numAtomsMatches:
-                self['Number of Atoms in Unit Cell'] = int(numAtomsMatches.group('numAtoms'))
-            
-        #clean up BR2_matrices
-        BR2_matrices = [ [float(i.strip().strip('\n')) for i in line.split()]
-                         for line in BR2_matrices ]
-        self['BR2_DIR Matrix'] = BR2_matrices
-
-        #exception handling
-        MissingTags = checkForTags(self, [
-            'Lattice Type',
-            'Lattice Constants',
-            'BR2_DIR Matrix',
-            'Number of Atoms in Unit Cell',
-            ])
-        if MissingTags:
-            raise ParseError("ERROR: Missing data in *.outputd file", MissingTags)
+        nlines = len(theText) # number of lines in the file
+        fileEnd = False
+        iline = 0 # 1st line
+        coreCharges = [] # list of core charge for each atom in case.inc
+        while not fileEnd:
+            line = theText[iline]
+            line = line.split()
+            nrorb = line[0] # number of core orbitals
+            nrorb = int(nrorb)
+            Zcore = 0
+            for i in range(iline+1, iline+nrorb+1):
+                line = theText[i] # "1,-1,2               ( N,KAPPA,OCCUP)"
+                line = line.split(",") # split line at commas
+                line = line[2] # get "2               ( N"
+                line = line.split() # split line at apsces
+                occup = line[0]
+                occup = int(occup)
+                Zcore = Zcore + occup
+            coreCharges.append(Zcore) # append the list with core charge
+            iline = iline+nrorb+1 # next block of data starts at this line
+            line = theText[iline]
+            if line.strip() == "0" or iline >= nlines-1: # end of file?
+                fileEnd = True
+                break # exit while loop
+        print " "*1, "Core charge for individual non-equivalent atoms:", coreCharges
+        if len(coreCharges) == 0: # for some reason unable to find any atoms
+            raise Exception("Error reading case.inc file. "+ \
+                "For some reason unable to find any atoms.")
+        self['core charges'] = coreCharges # pass data to the main code
+# END MainIncParser
 
 
 # Modified by OR (Sat 09 Nov 2013 06:37:11 PM CST)
@@ -246,104 +481,8 @@ class MainSCFParser(AbstractParser):
         # if have nothing within the band list
         if not self['Band List']:
             raise ParseError('ERROR: Missing band list in SCF* file', ())
-
-        # determine the volume of unit cell
-        re_volumeSize = re.compile(r':VOL +: +UNIT CELL VOLUME = +(?P<cellVolume>[0-9.]+)')
-        self['Cell Volume'] = []
-        for line in theText:
-            result_volumeSize = re_volumeSize.search(line)
-            if result_volumeSize:
-                self['Cell Volume'] = float(result_volumeSize.group('cellVolume'))
-                # Last value :VOL in *scf will be stored and used in
-                # calculations. No check for empty volume here,
-                # since *.scf2 file does not contain volume info
-
 # END MainSCFParser (Sat 09 Nov 2013 06:36:44 PM CST)
 
-
-class MainOutputstParser(AbstractParser):
-    def parse(self):
-        theList = self.textToList()
-        theMainString = self.getFileContent()
-
-        #get specific parts of given file based on regular expressions
-        regexTagsCompileList = [
-            re.compile(r' +[^0-9]+ +RHFS'), # fix for Watson spheres in *.inst
-            re.compile(r' *TOTAL CHARGE FOR SPIN +[12] : +[0-9.]+'),
-            re.compile(r' *TOTAL CORE-CHARGE: +[0-9.]+'),
-            ]
-        theMainString = [ i for i in theMainString for j in regexTagsCompileList if j.match(i) ]
- 
-        #remove repeating lines
-        theMainStringTemp = []
-        counter = 3 #added so as to add the three lines after if not in list
-        for element in theMainString:
-            #check if correct regex type and then if element in list, if not add
-            if re.match(r' +[^0-9]+ +RHFS',element) and element not in theMainStringTemp:
-                theMainStringTemp.append(element)                
-                counter = 0 #counter to add the three following spin lines
-            #check if within 3 lines (which only happens if new element)
-            elif counter <3 and not re.match(r' +[^0-9]+ +RHFS',element):
-                theMainStringTemp.append(element)
-                counter +=1
-        theMainString = theMainStringTemp
-        self['Element List'] = {}
-        #some regular expression magic
-        re_mainElementParse = re.compile(r'\s*(?P<elementName>[A-Za-z]+)\s.+RHFS\s+')
-        re_chargePerSpinOne = re.compile(
-            r'^ TOTAL CHARGE FOR SPIN +1 : +(?P<spinValueOne>[0-9.]+ +$)')
-        re_chargePerSpinTwo = re.compile(
-            r'^ TOTAL CHARGE FOR SPIN +2 : +(?P<spinValueTwo>[0-9.]+ +$)')
-        re_coreValue = re.compile(
-            r'^ TOTAL CORE-CHARGE: +(?P<coreValue>[0-9.]+)')
-
-        #begin iterating over each line finding the regex
-        elementName = None
-        for line in theMainString:
-            result_elementName = re_mainElementParse.search(line)
-
-            #When the element name is found, we append our dictionary,
-            #assuming we have retrieved sufficient data for the
-            #previous element. From there, we start a new element
-            #dictionary.
-            if result_elementName:
-                if elementName:
-                     self['Element List'][elementName] = elementDict
-                elementName = result_elementName.group('elementName')
-                elementDict = {}
-
-            #find the first TOTAL CHARGE FOR SPIN:
-            result_valueOne = re_chargePerSpinOne.search(line)
-            if result_valueOne:
-                valueOne = result_valueOne.group('spinValueOne')
-                elementDict['Spin Value 1'] = float(valueOne.strip())
-
-            #find the second TOTAL CHARGE FOR SPIN
-            result_valueTwo = re_chargePerSpinTwo.search(line)
-            if result_valueTwo:
-                valueTwo = result_valueTwo.group('spinValueTwo')
-                elementDict['Spin Value 2'] = float(valueTwo.strip())
-
-            result_coreValue = re_coreValue.search(line)
-            if result_coreValue:
-                theCoreValue = result_coreValue.group('coreValue')
-                elementDict['Core Value'] = float(theCoreValue.strip())
-
-        #for the final element, we append outside of the for loop
-        self['Element List'][elementName] = elementDict
-        
-        #exception handling
-        #make sure all of the required values were found
-        for atom in self['Element List']:
-            missingTags = checkForTags(elementDict, [
-                'Spin Value 1',
-                'Spin Value 2',
-                'Core Value',
-                ])
-            if missingTags:
-                raise ParseError("ERROR: Missing data in *.outputst file", missingTags)
-        
-        
 
 class MainPathphaseParser(AbstractParser):
     def parse(self):
@@ -375,24 +514,17 @@ if __name__ == "__main__":
     testStruct2.parse()
     print testStruct2.getDictionaryKeysString()
 
-    print ".outputd file"
-    textString = open('./tests/testStruct.outputd', 'r').readlines()
-    testStruct = MainOutputDParser(textString)
+    print ".inc file"
+    textString = open('./tests/testStruct.inc', 'r').readlines()
+    testStruct = MainIncParser(textString)
     testStruct.parse()
     print testStruct.getDictionaryKeysString()
 
-    print ".scf file"
-    textString = open('./tests/testStruct.scf', 'r').readlines()
+    print ".scf2 file"
+    textString = open('./tests/testStruct.scf2', 'r').readlines()
     testStruct = MainSCFParser(textString)
     testStruct.parse()
     print testStruct.getDictionaryKeysString()
-
-    print ".outputst file"
-    textString = open('./tests/testStruct.outputst', 'r').readlines()
-    testStruct = MainOutputstParser(textString)
-    testStruct.parse()
-    print testStruct.getDictionaryKeysString()
-    print testStruct.prettyPrint()
 
     print ".pathphase file"
     textString = open('/home/stud2/BaTiO3-berry/BaTiO3-tetra/experimentalBaTiO3/BaTiO3newwien2k/BaTiO3min/BaTiO3min-x.pathphase', 'r').readlines()

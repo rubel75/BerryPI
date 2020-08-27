@@ -64,9 +64,8 @@ def postProcBerryPhase(configFile, phasesRaw, spCalc):
     print DEFAULT_PREFIX + "Performing main calculation on " + structName
     structFileExtensions = {
         'struct' : '.struct',
-        'scf' : '.scf',
-        'outputd' : '.outputd',
-        'outputst' : '.outputst'
+        'scf2' : '.scf2',
+        'inc' : '.inc',
         }
 
     #perform the main calculation
@@ -77,9 +76,8 @@ def postProcBerryPhase(configFile, phasesRaw, spCalc):
         so = soCalc,
         kmesh = configFile['K-Mesh Divisions'],
         file_struct = structName + structFileExtensions['struct'],
-        file_scf = structName + structFileExtensions['scf'],
-        file_outputd = structName + structFileExtensions['outputd'],
-        file_outputst = structName + structFileExtensions['outputst'],
+        file_inc = structName + structFileExtensions['inc'],
+        file_scf = structName + structFileExtensions['scf2'],
         );
     finalPolarizationValue = mainCalculation()
     return mainCalculation
@@ -146,12 +144,15 @@ def rawBerryPhase(configFile):
     #check to make sure certain files exist
     structureName = configFile['Structure Name']
     print DEFAULT_PREFIX + "Checking prerequisite files for " + structureName
-    structFileExtensions = {
-        'struct' : '.struct',
-        'scf' : '.scf',
-        'outputd' : '.outputd',
-        'outputst' : '.outputst'
-        }
+    if not wCalc: # any calculation except for Weyl points/Wilson loop
+        structFileExtensions = {
+            'struct' : '.struct',
+            'inc' : '.inc'
+            }
+    else: # case.scf2 and case.inc files are not needed for Weyl points/Wilson loop
+        structFileExtensions = {
+            'struct' : '.struct',
+            }
     for extension in structFileExtensions.values():
         tempFilename = structureName + extension
         #TODO change to a logging system
@@ -160,12 +161,6 @@ def rawBerryPhase(configFile):
             print( DEFAULT_PREFIX + "{} does not exist, cannot finish calculation").format(tempFilename)
             exit(2)
         else: print DEFAULT_PREFIX + '-- OK'
-
-    #remove the broyd file
-    #$rm $filename.broyd*  
-    #tempFileName = structureName + '.broyd*'
-    #broydRemoval = b_PySubProcess.VirtualShellInstance('rm -f ' + tempFileName)
-    #broydRemoval()
 
 
     ######################################
@@ -299,6 +294,7 @@ def rawBerryPhase(configFile):
     ##############################
     if runLAPW:
         if spCalc or soCalc or orbCalc: # spin polarized mode
+            # SOC calculation needs a faked SP (for w2w reasons)
             spOptions = ['-up', '-dn']
         else: # regular (non-spin polarized calc.)
             spOptions = ' ' # need space here!
@@ -321,11 +317,11 @@ def rawBerryPhase(configFile):
         print DEFAULT_PREFIX + "Skipping 'x lapw1'"
 
 
-    #########################
-    # run lapwso -up (-orb) #
-    #########################
+    ###########################
+    # run lapwso (-up) (-orb) #
+    ###########################
     if soCalc and runLAPW: # spin-orbit coupling ONLY
-        suffix = '-up'
+        suffix = '-up' # SOC calculation needs a faked SP (for w2w reasons)
         suffix = suffix + ' ' + pOpt # take care of parallel mode
         if orbCalc: # OP option
             suffix = suffix + ' ' + '-orb'
@@ -344,58 +340,92 @@ def rawBerryPhase(configFile):
             print str(err)
             return False
 
+    ###########################################
+    # run lapw2 -fermi (-so) (-up/-dn) (-orb) #
+    ###########################################
+    # the purpose is to generate case.scf2 file that contains band occupancies
+    if not wCalc and bands == []:
+        # do not run LAPW2 with pre-set band range
+        # also not in the case of Weyl point analysys/Wilson loop
+        if spCalc or soCalc or orbCalc: # spin polarized mode
+            # SOC calculation needs a faked SP (for w2w reasons)
+            spOptions = ['-up', '-dn']
+        else: # regular (non-spin polarized calc. or SOC)
+            spOptions = ' ' # need space here!
+        for suffix in spOptions:
+            suffix = suffix + ' ' + pOpt # take care of parallel mode
+            if orbCalc:
+                suffix = suffix + ' ' + '-orb' # activate OP switch
+            elif soCalc: # SOC
+                suffix = suffix + ' ' + '-so'
+            shell_x_lapw1 = b_PySubProcess.VirtualShellInstance(
+                'x', 'lapw2 -fermi', suffix
+                );
+
+            try:
+                shell_x_lapw1()
+            except subprocess.CalledProcessError, err:
+                print DEFAULT_PREFIX + "ERROR: in automation of " + \
+                    str(structureName)
+                print DEFAULT_PREFIX + "ERROR --> " + \
+                    shell_x_lapw1.getCommandString()
+                print str(err)
+                return False
+
 
     #############################################
     # Calculation to get the occupied blochBand #
     #############################################
-    if spCalc or soCalc or orbCalc: # spin polarized mode
-        print DEFAULT_PREFIX + "Determine number of bloch bands " + \
-            "in spin-polarized mode based on *.scf2(up/dn)"
-        spinList = ['up', 'dn'] # TODO: move this somewhere up
-        blochBandSettings = [] # allocate array for the range of bands
-        for spin in spinList: # loop over spins
-            print DEFAULT_PREFIX + " "*2 + "spin = " + spin
-            try:
-                blochBandCalculation = \
-                    b_PyCalc.CalculateNumberOfBands(structureName + \
-                    '.scf2' + spin);
-            except b_PyError.ParseError, err:
-                print DEFAULT_PREFIX + "ERROR: in automation of " + \
-                    str(structureName);
-                print DEFAULT_PREFIX + str(err)
-                print DEFAULT_PREFIX + "ERROR: missing tags: " + \
-                    str(err.errorTags);
-                return False
-            if configFile['Bloch Band']:
-        	      blochBandSettings = configFile['Bloch Band']
-            else:
+    if bands == []: # band range is not specified
+        if spCalc or soCalc or orbCalc: # spin polarized mode
+            print DEFAULT_PREFIX + "Determine number of bloch bands " + \
+                "in spin-polarized mode based on *.scf2(up/dn)"
+            spinList = ['up', 'dn'] # TODO: move this somewhere up
+            blochBandSettings = [] # allocate array for the range of bands
+            for spin in spinList: # loop over spins
+                print DEFAULT_PREFIX + " "*2 + "spin = " + spin
+                try:
+                    blochBandCalculation = \
+                        b_PyCalc.CalculateNumberOfBands(structureName + \
+                        '.scf2' + spin);
+                except b_PyError.ParseError, err:
+                    print DEFAULT_PREFIX + "ERROR: in automation of " + \
+                        str(structureName);
+                    print DEFAULT_PREFIX + str(err)
+                    print DEFAULT_PREFIX + "ERROR: missing tags: " + \
+                        str(err.errorTags);
+                    return False
                 blochBandRange = [ 1 , \
                     int(blochBandCalculation.getNumberOfBands(spCalc,soCalc, \
                     orbCalc,wCalc)) ];
                 print DEFAULT_PREFIX + " "*4 + \
                     "Number of bloch bands is {}".format(blochBandRange);
                 blochBandSettings.append(blochBandRange)
-    else: # regular (non-spin polarized calc.)
-        print DEFAULT_PREFIX + "Determine number of bloch bands in non-sp mode"
-        try:
-            blochBandCalculation = \
-                b_PyCalc.CalculateNumberOfBands(structureName + '.scf2');
-            # it is better to take *.scf2 file instead of
-        except b_PyError.ParseError, err:
-            print DEFAULT_PREFIX + "ERROR: in automation of " + \
-                str(structureName) 
-            print DEFAULT_PREFIX + str(err)
-            print DEFAULT_PREFIX + "ERROR: missing tags: " + str(err.errorTags)
-            return False
-        if configFile['Bloch Band']:
-            blochBandSettings = configFile['Bloch Band']
-        else:
+        else: # regular (non-spin polarized calc.)
+            print DEFAULT_PREFIX + \
+                "Determine number of bloch bands in non-sp mode"
+            try:
+                blochBandCalculation = \
+                    b_PyCalc.CalculateNumberOfBands(structureName + '.scf2');
+                # it is better to take *.scf2 file instead of
+            except b_PyError.ParseError, err:
+                print DEFAULT_PREFIX + "ERROR: in automation of " + \
+                    str(structureName) 
+                print DEFAULT_PREFIX + str(err)
+                print DEFAULT_PREFIX + "ERROR: missing tags: " + \
+                    str(err.errorTags)
+                return False
             blochBandSettings = [[ 1, \
                 int(blochBandCalculation.getNumberOfBands(spCalc,soCalc, \
                 orbCalc,wCalc)) ]];
             print DEFAULT_PREFIX + " "*4 + \
                 "Number of bloch bands is {}".format(blochBandSettings);
-
+    else: # the band range is specified
+        blochBandSettings = []
+        blochBandSettings.append(configFile['Bloch Band'])
+        if spCalc or soCalc or orbCalc: # spin polarized mode
+            # append the same band range again for the 2nd spin chanel
+            blochBandSettings.append(configFile['Bloch Band'])
 
     ###########################################
     # allocate an array for storing the pases #
@@ -539,29 +569,6 @@ def rawBerryPhase(configFile):
         # create case.fermi #
         #####################
         case = str(structureName)
-        fname = case + '.scf2' + spinLable
-        if os.path.isfile(fname): # check the presence of case.scf2
-            print DEFAULT_PREFIX, 'file', fname, 'found; will extract the Fermi energy'
-        else:
-            print DEFAULT_PREFIX, 'ERROR: file', fname, 'not found'
-            sys.exit(2)
-        for line in open(fname):
-            if ":FER" in line:
-                print line.rstrip()
-                break
-        if not ":FER" in line:
-            print DEFAULT_PREFIX, 'ERROR: unable to locate :FER line in', fname
-            print 'you probably need to rerun LAPW2'
-            sys.exit(2)
-        Ef = line.split("=")[-1] # extract Fermi energy
-        Ef = Ef.lstrip() # eliminate spaces
-        Ef = Ef.rstrip() # remove end of line
-        if not Ef == "": # check if string is not empty
-            print DEFAULT_PREFIX, 'Ef =', Ef, 'Ry'
-        else:
-            print DEFAULT_PREFIX, 'ERROR: unable to determine the Fermi energy'
-            print 'in line', line
-            sys.exit(2)
         fname = case + '.fermi' + spinLable # write Fermi energy to case.fermi file
         if os.path.isfile(fname): # remove old case.fermi if present
             print DEFAULT_PREFIX, fname, 'is present and will be removed'
@@ -572,9 +579,12 @@ def rawBerryPhase(configFile):
                 print DEFAULT_PREFIX, 'unable to remove', fname
                 print '             will continue at your own risk'
         file = open(fname, "w")
-        file.write(Ef + '\n') # add end of line
+        # write Ef = 0. The value makes no difference for w2w (only file with 
+        # a value should be present). The value is important only for a Wannier
+        # interpolated band structure plot.
+        file.write("0.0" + '\n') # add end of line
         file.close()
-        print DEFAULT_PREFIX, 'Fermi energy is written to', fname
+        print DEFAULT_PREFIX + 'Fermi energy file', fname, 'created'
 
 
         ###############

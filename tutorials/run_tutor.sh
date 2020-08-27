@@ -6,14 +6,18 @@
 
 clear
 echo "######################################################"
-echo Type the test number and press ENTER to run that test:
-echo 1 - Tutorial 1: Lambda1 and Lambda0
-echo 2 - Tutorial 2: Lambda1 and Lambda2
-echo 3 - Tutorial 3: GaAs1 and GaAs2
-echo 4 - Tutorial 4: GaN-W and GaN-ZB
-echo 5 - All Tests
-echo 6 - Clean All
-echo Vesrion 1.05 Build Sept 3, 2014
+echo "Type the test number and press ENTER to run that test:"
+echo "1 - Tutorial 1: Lambda1 and Lambda0"
+echo "2 - Tutorial 2: Lambda1 and Lambda2"
+echo "3 - Tutorial 3: GaAs1 and GaAs2"
+echo "4 - Tutorial 4: GaN-W and GaN-ZB"
+echo "5 - All Tests"
+echo "6 - Clean All"
+echo "7 - Tutorial 1: Lambda1 (-s) spin polarization"
+echo "8 - Tutorial 1: Lambda1 (-j) spin orbit"
+echo "9 - Tutorial 1: Lambda1 (-o) orb. potential +U (spin polarization implied)"
+echo "10 - Tutorial 1: Lambda1 (-s -j) spin polarization & SOC"
+echo "11 - Tutorial 1: Lambda1 (-o -j) SOC & orb. potential +U (spin polarization implied) DOES NOT WORK!"
 echo "######################################################"
 read choice
 
@@ -123,6 +127,96 @@ case "$choice" in
 	  CleanTut_3
 	  CleanTut_4
 	  rm -rf Summary.out
+	  ;;
+	7)
+	  echo "Running Tutorial 1 (sp)"
+	  flag=0
+	  while [ "$flag" == "0" ]; do
+	  echo "Would you like to clean the tutotial directory (y/n)?"
+	  read opt
+	    if [ "$opt" == "y" ] || [ "$opt" == "Y" ]; then
+		  CleanTut_1
+		  flag=1
+	    elif [ "$opt" == "n" ] || [ "$opt" == "N" ]; then
+	         echo "No files were removed!"
+		  flag=1
+	    else
+		  echo "Unknown option!"
+	    fi
+	  done
+	  Tutorial_7
+	  ;;
+    8)
+	  echo "Running Tutorial 1 (sp)"
+	  flag=0
+	  while [ "$flag" == "0" ]; do
+	  echo "Would you like to clean the tutotial directory (y/n)?"
+	  read opt
+	    if [ "$opt" == "y" ] || [ "$opt" == "Y" ]; then
+		  CleanTut_1
+		  flag=1
+	    elif [ "$opt" == "n" ] || [ "$opt" == "N" ]; then
+	         echo "No files were removed!"
+		  flag=1
+	    else
+		  echo "Unknown option!"
+	    fi
+	  done
+	  Tutorial_8
+	  ;;
+    9)
+	  echo "Running Tutorial 1 (sp)"
+	  flag=0
+	  while [ "$flag" == "0" ]; do
+	  echo "Would you like to clean the tutotial directory (y/n)?"
+	  read opt
+	    if [ "$opt" == "y" ] || [ "$opt" == "Y" ]; then
+		  CleanTut_1
+		  flag=1
+	    elif [ "$opt" == "n" ] || [ "$opt" == "N" ]; then
+	         echo "No files were removed!"
+		  flag=1
+	    else
+		  echo "Unknown option!"
+	    fi
+	  done
+	  Tutorial_9
+	  ;;
+    10)
+	  echo "Running Tutorial 1 (sp)"
+	  flag=0
+	  while [ "$flag" == "0" ]; do
+	  echo "Would you like to clean the tutotial directory (y/n)?"
+	  read opt
+	    if [ "$opt" == "y" ] || [ "$opt" == "Y" ]; then
+		  CleanTut_1
+		  flag=1
+	    elif [ "$opt" == "n" ] || [ "$opt" == "N" ]; then
+	         echo "No files were removed!"
+		  flag=1
+	    else
+		  echo "Unknown option!"
+	    fi
+	  done
+	  Tutorial_10
+	  ;;
+    11)
+	  echo "Running Tutorial 1 (sp)"
+	  flag=0
+	  while [ "$flag" == "0" ]; do
+	  echo "Would you like to clean the tutotial directory (y/n)?"
+	  read opt
+	    if [ "$opt" == "y" ] || [ "$opt" == "Y" ]; then
+		  CleanTut_1
+		  flag=1
+	    elif [ "$opt" == "n" ] || [ "$opt" == "N" ]; then
+	         echo "No files were removed!"
+		  flag=1
+	    else
+		  echo "Unknown option!"
+	    fi
+	  done
+	  Tutorial_11
 	  ;;
 	*)
 	  echo "Unknown option"
@@ -478,38 +572,127 @@ echo "Time elapsed: $((endtime-starttime))sec" >> ../Tutorial4_2.out
 cd ../../
 }
 
-if [ -n "$BERRYPI_PATH" ]; then
-	echo BERRYPI found
-else
-	echo BERRYPI not found
-	return
-fi
+######################################################################################
+# spin polarized test
+######################################################################################
+Tutorial_7 () {
+starttime=$(date +%s)
+cd tutorial1/lambda1
+init_lapw -b -rkmax 4 -vxc 13 -ecut -6 -numk 230 -sp
+runsp_lapw -ec 0.0001 -cc 0.001
+berrypi -k6:6:6 -s
+echo "EXPECTED LAMBDA1:
+=======================================================================================
+Value                           |  spin   |    dir(1)    |    dir(2)    |    dir(3)
+---------------------------------------------------------------------------------------
+Electronic polarization (C/m2)     sp(1)  [-4.498363e-14,  1.760273e-14,  2.402083e-01]
+Ionic polarization (C/m2)          sp(1)  [ 0.000000e+00,  0.000000e+00, -8.802849e-02]
+Tot. spin polariz.=Pion+Pel (C/m2) sp(1)  [-4.498363e-14,  1.760273e-14,  1.521798e-01]
+---------------------------------------------------------------------------------------
+Electronic polarization (C/m2)     sp(2)  [ 3.805041e-14, -5.442720e-14,  2.402149e-01]
+Ionic polarization (C/m2)          sp(2)  [ 0.000000e+00,  0.000000e+00, -8.802849e-02]
+Tot. spin polariz.=Pion+Pel (C/m2) sp(2)  [ 3.805041e-14, -5.442720e-14,  1.521864e-01]
+---------------------------------------------------------------------------------------
+TOTAL POLARIZATION (C/m2)          both   [-6.933224e-15, -3.682447e-14,  3.043662e-01]
+======================================================================================="
+cd ../../
+}
 
-if [ -n "$WIENROOT" ]; then
-	echo WIENROOT found
-else
-	echo WIENROOT not found
-	return
-fi
-echo > Summary.out
+######################################################################################
+# SOC test
+######################################################################################
+Tutorial_8 () {
+cd tutorial1/lambda1
+export EDITOR=cat
+init_lapw -b -rkmax 4 -vxc 13 -ecut -6 -numk 230
+echo -e "0 0 1\n\n\n\nN\n" | init_so_lapw
+run_lapw -so -ec 0.0001 -cc 0.001
+berrypi -k6:6:6 -j
+echo "EXPECTED LAMBDA1:
+=======================================================================================
+Value                           |  spin   |    dir(1)    |    dir(2)    |    dir(3)
+---------------------------------------------------------------------------------------
+Electronic polarization (C/m2)     sp(1)  [ 5.395795e-12,  8.790106e-12,  4.811830e-01]
+Ionic polarization (C/m2)          sp(1)  [ 0.000000e+00,  0.000000e+00, -1.760570e-01]
+Tot. spin polariz.=Pion+Pel (C/m2) sp(1)  [ 5.395795e-12,  8.790106e-12,  3.051260e-01]
+---------------------------------------------------------------------------------------
+TOTAL POLARIZATION (C/m2)          both   [ 5.395795e-12,  8.790106e-12,  3.051260e-01]
+======================================================================================="
+cd ../../
+}
+
+######################################################################################
+# ORB test
+######################################################################################
+Tutorial_9 () {
+cd tutorial1/lambda1
+export EDITOR=cat
+init_lapw -b -rkmax 4 -vxc 13 -ecut -6 -numk 230 -sp
+echo -e "Ti 2 0.0 0.0\n" | init_orb_lapw -orb # Ti d U=0 J=0
+runsp_lapw -orb -ec 0.0001 -cc 0.001
+berrypi -k6:6:6 -o
+echo "EXPECTED LAMBDA1:
+=======================================================================================
+Value                           |  spin   |    dir(1)    |    dir(2)    |    dir(3)
+---------------------------------------------------------------------------------------
+Electronic polarization (C/m2)     sp(1)  [ 2.834513e-14, -6.263655e-14,  2.403787e-01]
+Ionic polarization (C/m2)          sp(1)  [ 0.000000e+00,  0.000000e+00, -8.802849e-02]
+Tot. spin polariz.=Pion+Pel (C/m2) sp(1)  [ 2.834513e-14, -6.263655e-14,  1.523502e-01]
+---------------------------------------------------------------------------------------
+Electronic polarization (C/m2)     sp(2)  [ 8.199197e-14, -2.529278e-14,  2.403904e-01]
+Ionic polarization (C/m2)          sp(2)  [ 0.000000e+00,  0.000000e+00, -8.802849e-02]
+Tot. spin polariz.=Pion+Pel (C/m2) sp(2)  [ 8.199197e-14, -2.529278e-14,  1.523619e-01]
+---------------------------------------------------------------------------------------
+TOTAL POLARIZATION (C/m2)          both   [ 1.103371e-13, -8.792933e-14,  3.047122e-01]
+======================================================================================="
+cd ../../
+}
+
+######################################################################################
+# spin polarization + SOC test
+######################################################################################
+Tutorial_10 () {
+cd tutorial1/lambda1
+export EDITOR=cat
+init_lapw -b -rkmax 4 -vxc 13 -ecut -6 -numk 230 -sp
+echo -e "0 0 1\n\n\n\ny\ny\n230\nN\n" | init_so_lapw
+runsp_lapw -so -ec 0.0001 -cc 0.001
+berrypi -k6:6:6 -s -j
+echo "EXPECTED LAMBDA1:
+=======================================================================================
+Value                           |  spin   |    dir(1)    |    dir(2)    |    dir(3)
+---------------------------------------------------------------------------------------
+Electronic polarization (C/m2)     sp(1)  [-2.143365e-12, -1.213031e-12,  4.804996e-01]
+Ionic polarization (C/m2)          sp(1)  [ 0.000000e+00,  0.000000e+00, -1.760570e-01]
+Tot. spin polariz.=Pion+Pel (C/m2) sp(1)  [-2.143365e-12, -1.213031e-12,  3.044426e-01]
+---------------------------------------------------------------------------------------
+TOTAL POLARIZATION (C/m2)          both   [-2.143365e-12, -1.213031e-12,  3.044426e-01]
+======================================================================================="
+cd ../../
+}
+
+######################################################################################
+# SOC + ORB test DOES NOT WORK!
+######################################################################################
+Tutorial_11 () {
+cd tutorial1/lambda1
+export EDITOR=cat
+init_lapw -b -rkmax 4 -vxc 13 -ecut -6 -numk 230 -sp
+echo -e "Ti 2 0.0 0.0\n" | init_orb_lapw -orb # Ti d U=0 J=0
+echo -e "0 0 1\n\n\n\ny\ny\n230\nN\n" | init_so_lapw
+runsp_lapw -so -orb -ec 0.0001 -cc 0.001
+berrypi -k6:6:6 -j -o
+echo "EXPECTED LAMBDA1:
+=======================================================================================
+Value                           |  spin   |    dir(1)    |    dir(2)    |    dir(3)
+---------------------------------------------------------------------------------------
+Electronic polarization (C/m2)     sp(1)  [ 5.395795e-12,  8.790106e-12,  4.811830e-01]
+Ionic polarization (C/m2)          sp(1)  [ 0.000000e+00,  0.000000e+00, -1.760570e-01]
+Tot. spin polariz.=Pion+Pel (C/m2) sp(1)  [ 5.395795e-12,  8.790106e-12,  3.051260e-01]
+---------------------------------------------------------------------------------------
+TOTAL POLARIZATION (C/m2)          both   [ 5.395795e-12,  8.790106e-12,  3.051260e-01]
+======================================================================================="
+cd ../../
+}
 menu
-
-while read line 
-do
-    if [[ "$line" == *"EXPECTED"* ]]; then
-        for i in {1..10}
-        do
-	     echo -e "\e[0;31m $line \e[00m"	
-            read line 
-        done
-    fi
-    if [[ "$line" == *"OBTAINED"* ]]; then
-        for i in {1..10}
-        do
-	     echo -e "\e[1;33m $line \e[00m"  	
-            read line        
-        done
-    fi
-    echo $line
-done < Summary.out
 

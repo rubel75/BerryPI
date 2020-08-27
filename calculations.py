@@ -163,11 +163,8 @@ class MainCalculationContainer:
 
     file_struct(file path) - to structure .struct file
 
-    file_scf(file path) - to .scf file
+    file_inc(file path) - to .inc file
 
-    file_outputd(file path) - to .outputd file
-
-    file_outputst(file path) - to .outputst file
     '''
     def __init__(self, **args):
 
@@ -184,24 +181,11 @@ class MainCalculationContainer:
         parser_struct_handle = open(args['file_struct'], 'r').readlines()
         parser_struct_handle = b_PyParse.MainStructParser(parser_struct_handle)
         parser_struct_handle.parse()
-
-
-        #### *.scf file parser
-        parser_scf_handle = open(args['file_scf'], 'r').readlines()
-        parser_scf_handle = b_PyParse.MainSCFParser(parser_scf_handle)
-        parser_scf_handle.parse()
-
-
-        #### *.outputd parser
-        parser_outputd_handle = open(args['file_outputd'], 'r').readlines()
-        parser_outputd_handle = b_PyParse.MainOutputDParser(parser_outputd_handle)
-        parser_outputd_handle.parse()
-
         
-        #### *.outputst parser
-        parser_outputst_handle = open(args['file_outputst'], 'r').readlines()
-        parser_outputst_handle = b_PyParse.MainOutputstParser(parser_outputst_handle)
-        parser_outputst_handle.parse()
+        #### *.inc parser
+        parser_inc_handle = open(args['file_inc'], 'r').readlines()
+        parser_inc_handle = b_PyParse.MainIncParser(parser_inc_handle)
+        parser_inc_handle.parse()
 
 
         #####################################
@@ -215,33 +199,36 @@ class MainCalculationContainer:
         self._calculationValues = orderedDict();
         
         #### *.struct handle
-        # - determine name of atoms
-        # - determine MULT for each atom
+        # - name of atoms
+        # - MULT for each atom
+        # - coordinates
+        # - nuclear charge
         self._calculationValues['Atom Listing'] = \
-            parser_struct_handle['Atom Listing'];
-        
-        #### *.scf handle
+            parser_struct_handle['Atom Listing']
         # - Cell Volume
         self._calculationValues['Cell Volume in bohr^3'] = \
-            parser_scf_handle['Cell Volume'];
-
-        #### *.outputd handle
-        # - BR2_DIR matrix (v_x, v_y, v_z)
-        # - Lattice Constants (x,y,z)
-        self._calculationValues['Lattice Matrix in bohr'] = \
-            parser_outputd_handle['BR2_DIR Matrix'];
+            parser_struct_handle['cell volume']
+        # - Lattice Constants (a,b,c)
         self._calculationValues['Lattice Constants in bohr'] = \
-            parser_outputd_handle['Lattice Constants'];
+            parser_struct_handle['lattice constants']
+        # - lattice vectors BR2_DIR matrix (v_x, v_y, v_z)
+        self._calculationValues['Lattice Matrix in bohr'] = \
+            parser_struct_handle['real space lattice vectors']
+            
+        ### *.inc handle
+        # - core charge for each non-eqivalent atom
+        self._calculationValues['Atom core charges'] = \
+            parser_inc_handle['core charges'];
 
-        #### *.outputst handle
-        # for each element:
-        # - Core Value
-        # - Spin Value 1
-        # - Spin Value 2
-        self._calculationValues['Element Listing'] = \
-            parser_outputst_handle['Element List'];
+        # check consistency of case.struct and case.inc files
+        if len(self._calculationValues['Atom core charges']) != \
+            len(self._calculationValues['Atom Listing']):
+            print "Number of non-equivalent atoms in case.struct:", \
+                len(self._calculationValues['Atom Listing'])
+            print "Number of non-equivalent atoms in case.inc:", \
+                len(self._calculationValues['Atom core charges'])
+            raise Exception("Inconsistent number of non-equivalent atoms")
 
-        ####
         
         ########################
         # get electronic phase #
@@ -525,32 +512,26 @@ class MainCalculationContainer:
             nspins = 2
         else:
             nspins = 1
-        for atom in atomListing:
+        iatom = -1 # atom index
+        Zcore = self._calculationValues['Atom core charges'] # non-equiv. atoms
+        for atom in atomListing: # loop over non-equivalent atoms
+            iatom = iatom+1
+            theElementName = atom['Element Name']
             for i in range(atom['MULT']):
-                theElementName = atom['Element Name']
-                if calcValues['Element Listing'].has_key(theElementName):
-                    theElement = calcValues['Element Listing'][theElementName]
-                    if nspins == 2:
-                        theValence = []
-                        for spin in [1, 2]:
-                            theValence.append( \
-                                atom['Znucl']/2 - theElement['Core Value']/2 \
-                            );
-                    else:
-                        theValence = atom['Znucl'] - theElement['Core Value'];
-                    xCoordinate = atom['X-Coord'][i]
-                    yCoordinate = atom['Y-Coord'][i]
-                    zCoordinate = atom['Z-Coord'][i] 
-
-                    #produce tuple from coordinates
-                    coordinates = (xCoordinate, yCoordinate, zCoordinate)
-                    calcIonValues.append((theElementName,coordinates, theValence))
+                if nspins == 2:
+                    theValence = []
+                    for spin in [1, 2]:
+                        theValence.append( \
+                            atom['Znucl']/2 - Zcore[iatom]/2 \
+                        );
                 else:
-                    print DEFAULT_PREFIX + 'ERROR: Missing element in element list'
-                    print DEFAULT_PREFIX + theElementName
-                    print DEFAULT_PREFIX + calcValues['Element List']
-                    print DEFAULT_PREFIX + 'Exiting....'
-                    sys.exit(1)
+                    theValence = atom['Znucl'] - Zcore[iatom];
+                xCoordinate = atom['X-Coord'][i]
+                yCoordinate = atom['Y-Coord'][i]
+                zCoordinate = atom['Z-Coord'][i] 
+                #produce tuple from coordinates
+                coordinates = (xCoordinate, yCoordinate, zCoordinate)
+                calcIonValues.append((theElementName,coordinates, theValence))
         self._calcIonValues = calcIonValues
 
         #### CALCULATION ####
@@ -724,9 +705,7 @@ if __name__ == "__main__":
         file_pathphase_y = './tests/testStruct-x.pathphase',
         file_pathphase_z = './tests/testStruct-x.pathphase',
         file_struct = './tests/testStruct.struct',
-        file_scf = './tests/testStruct.scf',
-        file_outputd = './tests/testStruct.outputd',
-        file_outputst = './tests/testStruct.outputst',
+        file_inst = './tests/testStruct.inc'
         )
     mainCalculation.prettyPrintCalculationValues()
     print mainCalculation.valuephaseMeanValues()
