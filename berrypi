@@ -462,18 +462,6 @@ def rawBerryPhase(configFile):
     args = zip(spinIndexes, spinLables, spinOptions)
     for spinIndex, spinLable, spinOption in args: # LOOP OVER SPINS
 
-        '''     (Parallel calculation is not implemented yet)
-        ##########################################################
-        # join vector files if parallel:                         #
-        # join_vectorfiles [-up/-dn/-soup/-sodn] [-c] case NPROC #
-        ##########################################################
-        if pCalc: # parallel only
-            suffix = ''
-            if spCalc and not soCalc:
-                suffix = suffix + spinOption
-            elif
-        '''
-
         ####################################
         # create input list for write_inwf #
         ####################################
@@ -747,12 +735,12 @@ if __name__ == "__main__":
 
         EXAMPLES:
 
-        Run regular calculation with 6x6x4 k-mesh
+        Run non spin-polarized calculation with 6x6x4 k-mesh
 
         $ berrypi -k6:6:4
 
-        Subsequent rerun of BerryPI in the same folder without changing
-        k-mesh and skipping LAPW1
+        Subsequent rerun of BerryPI in the same folder without 
+        changing k-mesh (skipping LAPW1)
 
         $ berrypi -l
 
@@ -763,11 +751,22 @@ if __name__ == "__main__":
         Spin-polarized calculation with spin-orbit coupling
 
         $ berrypi -s -j -k6:6:4
-              
-        Spin-polarized calculation with an additional orbital potential
+
+        Spin-polarized calculation with an additional orbital potential 
         (no need for -s option since it is implicitly assumed)
 
         $ berrypi -o -k6:6:4
+
+        Compute Berry phase along a specific k-path (loop) given in 
+        the case.klist file. It is used to characterize Weyl-points.
+
+        $ berrypi -w
+
+        Enable parallel calculation where it run x lapw1 -p, x lapwso -p 
+        and x w2w -p in parallel mode. It implies that you have .machines 
+        file prepared according to Wien2k documentation
+
+        $ berrypi -p -k6:6:4
         '''
         pass
 

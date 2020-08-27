@@ -13,11 +13,22 @@ echo "3 - Tutorial 3: GaAs1 and GaAs2"
 echo "4 - Tutorial 4: GaN-W and GaN-ZB"
 echo "5 - All Tests"
 echo "6 - Clean All"
-echo "7 - Tutorial 1: Lambda1 (-s) spin polarization"
-echo "8 - Tutorial 1: Lambda1 (-j) spin orbit"
-echo "9 - Tutorial 1: Lambda1 (-o) orb. potential +U (spin polarization implied)"
-echo "10 - Tutorial 1: Lambda1 (-s -j) spin polarization & SOC"
-echo "11 - Tutorial 1: Lambda1 (-o -j) SOC & orb. potential +U (spin polarization implied) DOES NOT WORK!"
+echo ""
+echo "T E S T S (serial):"
+echo "7 - Test BaTiO3: Lambda1"
+echo "8 - Test BaTiO3: Lambda1 (-s) spin polarization"
+echo "9 - Test BaTiO3: Lambda1 (-j) spin orbit"
+echo "10 - Test BaTiO3: Lambda1 (-o) orb. potential + U=0.1 Ry (spin polarization implied)"
+echo "11 - Test BaTiO3: Lambda1 (-s -j) spin polarization & SOC"
+echo "12 - Test BaTiO3: Lambda1 (-o -j) SOC & orb. potential + U=0.1 Ry (spin polarization implied) DOES NOT WORK!"
+echo ""
+echo "T E S T S (parallel):"
+echo "13 - Test BaTiO3: Lambda1 (-p) spin polarization (parallel 2 cores)"
+echo "14 - Test BaTiO3: Lambda1 (-s -p) spin polarization (parallel 2 cores)"
+echo "15 - Test BaTiO3: Lambda1 (-j) spin orbit (parallel 2 cores)"
+echo "16 - Test BaTiO3: Lambda1 (-o) orb. potential + U=0.1 Ry (spin polarization implied) (parallel 2 cores)"
+echo "17 - Test BaTiO3: Lambda1 (-s -j) spin polarization & SOC (parallel 2 cores)"
+echo "18 - Test BaTiO3: Lambda1 (-o -j) SOC & orb. potential + U=0.1 Ry (spin polarization implied) (parallel 2 cores) DOES NOT WORK!"
 echo "######################################################"
 read choice
 
@@ -129,94 +140,64 @@ case "$choice" in
 	  rm -rf Summary.out
 	  ;;
 	7)
-	  echo "Running Tutorial 1 (sp)"
-	  flag=0
-	  while [ "$flag" == "0" ]; do
-	  echo "Would you like to clean the tutotial directory (y/n)?"
-	  read opt
-	    if [ "$opt" == "y" ] || [ "$opt" == "Y" ]; then
-		  CleanTut_1
-		  flag=1
-	    elif [ "$opt" == "n" ] || [ "$opt" == "N" ]; then
-	         echo "No files were removed!"
-		  flag=1
-	    else
-		  echo "Unknown option!"
-	    fi
-	  done
+	  echo "Running test 7"
+      CleanTut_1
 	  Tutorial_7
 	  ;;
     8)
-	  echo "Running Tutorial 1 (sp)"
-	  flag=0
-	  while [ "$flag" == "0" ]; do
-	  echo "Would you like to clean the tutotial directory (y/n)?"
-	  read opt
-	    if [ "$opt" == "y" ] || [ "$opt" == "Y" ]; then
-		  CleanTut_1
-		  flag=1
-	    elif [ "$opt" == "n" ] || [ "$opt" == "N" ]; then
-	         echo "No files were removed!"
-		  flag=1
-	    else
-		  echo "Unknown option!"
-	    fi
-	  done
+	  echo "Running test 8"
+      CleanTut_1
 	  Tutorial_8
 	  ;;
     9)
-	  echo "Running Tutorial 1 (sp)"
-	  flag=0
-	  while [ "$flag" == "0" ]; do
-	  echo "Would you like to clean the tutotial directory (y/n)?"
-	  read opt
-	    if [ "$opt" == "y" ] || [ "$opt" == "Y" ]; then
-		  CleanTut_1
-		  flag=1
-	    elif [ "$opt" == "n" ] || [ "$opt" == "N" ]; then
-	         echo "No files were removed!"
-		  flag=1
-	    else
-		  echo "Unknown option!"
-	    fi
-	  done
+	  echo "Running test 9"
+      CleanTut_1
 	  Tutorial_9
 	  ;;
     10)
-	  echo "Running Tutorial 1 (sp)"
-	  flag=0
-	  while [ "$flag" == "0" ]; do
-	  echo "Would you like to clean the tutotial directory (y/n)?"
-	  read opt
-	    if [ "$opt" == "y" ] || [ "$opt" == "Y" ]; then
-		  CleanTut_1
-		  flag=1
-	    elif [ "$opt" == "n" ] || [ "$opt" == "N" ]; then
-	         echo "No files were removed!"
-		  flag=1
-	    else
-		  echo "Unknown option!"
-	    fi
-	  done
+	  echo "Running test 10"
+      CleanTut_1
 	  Tutorial_10
 	  ;;
     11)
-	  echo "Running Tutorial 1 (sp)"
-	  flag=0
-	  while [ "$flag" == "0" ]; do
-	  echo "Would you like to clean the tutotial directory (y/n)?"
-	  read opt
-	    if [ "$opt" == "y" ] || [ "$opt" == "Y" ]; then
-		  CleanTut_1
-		  flag=1
-	    elif [ "$opt" == "n" ] || [ "$opt" == "N" ]; then
-	         echo "No files were removed!"
-		  flag=1
-	    else
-		  echo "Unknown option!"
-	    fi
-	  done
+	  echo "Running test 11"
+      CleanTut_1
 	  Tutorial_11
+	  ;;
+    12)
+	  echo "Running test 12"
+      CleanTut_1
+	  Tutorial_12
+	  ;;
+    13)
+	  echo "Running test 13"
+      CleanTut_1
+	  Tutorial_13
+	  ;;
+    14)
+	  echo "Running test 14"
+      CleanTut_1
+	  Tutorial_14
+	  ;;
+    15)
+	  echo "Running test 15"
+      CleanTut_1
+	  Tutorial_15
+	  ;;
+    16)
+	  echo "Running test 16"
+      CleanTut_1
+	  Tutorial_16
+	  ;;
+    17)
+	  echo "Running test 17"
+      CleanTut_1
+	  Tutorial_17
+	  ;;
+    18)
+	  echo "Running test 18"
+      CleanTut_1
+	  Tutorial_18
 	  ;;
 	*)
 	  echo "Unknown option"
@@ -573,27 +554,47 @@ cd ../../
 }
 
 ######################################################################################
-# spin polarized test
+# simplest test
 ######################################################################################
 Tutorial_7 () {
-starttime=$(date +%s)
 cd tutorial1/lambda1
-init_lapw -b -rkmax 4 -vxc 13 -ecut -6 -numk 230 -sp
-runsp_lapw -ec 0.0001 -cc 0.001
-berrypi -k6:6:6 -s
+init_lapw -b -rkmax 4 -vxc 13 -ecut -6 -numk 100
+run_lapw -ec 0.0001 -cc 0.001
+berrypi -k4:4:4
 echo "EXPECTED LAMBDA1:
 =======================================================================================
 Value                           |  spin   |    dir(1)    |    dir(2)    |    dir(3)
 ---------------------------------------------------------------------------------------
-Electronic polarization (C/m2)     sp(1)  [-4.498363e-14,  1.760273e-14,  2.402083e-01]
+Electronic polarization (C/m2)     sp(1)  [-1.923689e-13, -1.887044e-14,  4.775890e-01]
+Ionic polarization (C/m2)          sp(1)  [ 0.000000e+00,  0.000000e+00, -1.760570e-01]
+Tot. spin polariz.=Pion+Pel (C/m2) sp(1)  [-1.923689e-13, -1.887044e-14,  3.015320e-01]
+---------------------------------------------------------------------------------------
+TOTAL POLARIZATION (C/m2)          both   [-1.923689e-13, -1.887044e-14,  3.015320e-01]
+======================================================================================="
+cd ../../
+}
+
+######################################################################################
+# spin polarized test
+######################################################################################
+Tutorial_8 () {
+cd tutorial1/lambda1
+init_lapw -b -rkmax 4 -vxc 13 -ecut -6 -numk 100 -sp
+runsp_lapw -ec 0.0001 -cc 0.001
+berrypi -k4:4:4 -s
+echo "EXPECTED LAMBDA1:
+=======================================================================================
+Value                           |  spin   |    dir(1)    |    dir(2)    |    dir(3)
+---------------------------------------------------------------------------------------
+Electronic polarization (C/m2)     sp(1)  [ 8.750656e-14, -1.187667e-13,  2.387163e-01]
 Ionic polarization (C/m2)          sp(1)  [ 0.000000e+00,  0.000000e+00, -8.802849e-02]
-Tot. spin polariz.=Pion+Pel (C/m2) sp(1)  [-4.498363e-14,  1.760273e-14,  1.521798e-01]
+Tot. spin polariz.=Pion+Pel (C/m2) sp(1)  [ 8.750656e-14, -1.187667e-13,  1.506878e-01]
 ---------------------------------------------------------------------------------------
-Electronic polarization (C/m2)     sp(2)  [ 3.805041e-14, -5.442720e-14,  2.402149e-01]
+Electronic polarization (C/m2)     sp(2)  [ 2.304258e-14,  7.144456e-14,  2.387355e-01]
 Ionic polarization (C/m2)          sp(2)  [ 0.000000e+00,  0.000000e+00, -8.802849e-02]
-Tot. spin polariz.=Pion+Pel (C/m2) sp(2)  [ 3.805041e-14, -5.442720e-14,  1.521864e-01]
+Tot. spin polariz.=Pion+Pel (C/m2) sp(2)  [ 2.304258e-14,  7.144456e-14,  1.507070e-01]
 ---------------------------------------------------------------------------------------
-TOTAL POLARIZATION (C/m2)          both   [-6.933224e-15, -3.682447e-14,  3.043662e-01]
+TOTAL POLARIZATION (C/m2)          both   [ 1.105491e-13, -4.732215e-14,  3.013949e-01]
 ======================================================================================="
 cd ../../
 }
@@ -601,22 +602,22 @@ cd ../../
 ######################################################################################
 # SOC test
 ######################################################################################
-Tutorial_8 () {
+Tutorial_9 () {
 cd tutorial1/lambda1
 export EDITOR=cat
-init_lapw -b -rkmax 4 -vxc 13 -ecut -6 -numk 230
+init_lapw -b -rkmax 4 -vxc 13 -ecut -6 -numk 100
 echo -e "0 0 1\n\n\n\nN\n" | init_so_lapw
 run_lapw -so -ec 0.0001 -cc 0.001
-berrypi -k6:6:6 -j
+berrypi -k4:4:4 -j
 echo "EXPECTED LAMBDA1:
 =======================================================================================
 Value                           |  spin   |    dir(1)    |    dir(2)    |    dir(3)
 ---------------------------------------------------------------------------------------
-Electronic polarization (C/m2)     sp(1)  [ 5.395795e-12,  8.790106e-12,  4.811830e-01]
+Electronic polarization (C/m2)     sp(1)  [-6.280788e-13,  3.212734e-13,  4.776611e-01]
 Ionic polarization (C/m2)          sp(1)  [ 0.000000e+00,  0.000000e+00, -1.760570e-01]
-Tot. spin polariz.=Pion+Pel (C/m2) sp(1)  [ 5.395795e-12,  8.790106e-12,  3.051260e-01]
+Tot. spin polariz.=Pion+Pel (C/m2) sp(1)  [-6.280788e-13,  3.212734e-13,  3.016041e-01]
 ---------------------------------------------------------------------------------------
-TOTAL POLARIZATION (C/m2)          both   [ 5.395795e-12,  8.790106e-12,  3.051260e-01]
+TOTAL POLARIZATION (C/m2)          both   [-6.280788e-13,  3.212734e-13,  3.016041e-01]
 ======================================================================================="
 cd ../../
 }
@@ -624,26 +625,26 @@ cd ../../
 ######################################################################################
 # ORB test
 ######################################################################################
-Tutorial_9 () {
+Tutorial_10 () {
 cd tutorial1/lambda1
 export EDITOR=cat
-init_lapw -b -rkmax 4 -vxc 13 -ecut -6 -numk 230 -sp
-echo -e "Ti 2 0.0 0.0\n" | init_orb_lapw -orb # Ti d U=0 J=0
+init_lapw -b -rkmax 4 -vxc 13 -ecut -6 -numk 100 -sp
+echo -e "Ti 2 0.1 0.0\n" | init_orb_lapw -orb # Ti d U=0.1Ry J=0
 runsp_lapw -orb -ec 0.0001 -cc 0.001
-berrypi -k6:6:6 -o
+berrypi -k4:4:4 -o
 echo "EXPECTED LAMBDA1:
 =======================================================================================
 Value                           |  spin   |    dir(1)    |    dir(2)    |    dir(3)
 ---------------------------------------------------------------------------------------
-Electronic polarization (C/m2)     sp(1)  [ 2.834513e-14, -6.263655e-14,  2.403787e-01]
+Electronic polarization (C/m2)     sp(1)  [ 7.114637e-14, -9.577591e-14,  2.366018e-01]
 Ionic polarization (C/m2)          sp(1)  [ 0.000000e+00,  0.000000e+00, -8.802849e-02]
-Tot. spin polariz.=Pion+Pel (C/m2) sp(1)  [ 2.834513e-14, -6.263655e-14,  1.523502e-01]
+Tot. spin polariz.=Pion+Pel (C/m2) sp(1)  [ 7.114637e-14, -9.577591e-14,  1.485733e-01]
 ---------------------------------------------------------------------------------------
-Electronic polarization (C/m2)     sp(2)  [ 8.199197e-14, -2.529278e-14,  2.403904e-01]
+Electronic polarization (C/m2)     sp(2)  [-9.326347e-15,  8.590123e-14,  2.366149e-01]
 Ionic polarization (C/m2)          sp(2)  [ 0.000000e+00,  0.000000e+00, -8.802849e-02]
-Tot. spin polariz.=Pion+Pel (C/m2) sp(2)  [ 8.199197e-14, -2.529278e-14,  1.523619e-01]
+Tot. spin polariz.=Pion+Pel (C/m2) sp(2)  [-9.326347e-15,  8.590123e-14,  1.485864e-01]
 ---------------------------------------------------------------------------------------
-TOTAL POLARIZATION (C/m2)          both   [ 1.103371e-13, -8.792933e-14,  3.047122e-01]
+TOTAL POLARIZATION (C/m2)          both   [ 6.182002e-14, -9.874680e-15,  2.971597e-01]
 ======================================================================================="
 cd ../../
 }
@@ -651,22 +652,22 @@ cd ../../
 ######################################################################################
 # spin polarization + SOC test
 ######################################################################################
-Tutorial_10 () {
+Tutorial_11 () {
 cd tutorial1/lambda1
 export EDITOR=cat
-init_lapw -b -rkmax 4 -vxc 13 -ecut -6 -numk 230 -sp
-echo -e "0 0 1\n\n\n\ny\ny\n230\nN\n" | init_so_lapw
+init_lapw -b -rkmax 4 -vxc 13 -ecut -6 -numk 100 -sp
+echo -e "0 0 1\n\n\n\ny\ny\n100\nN\n" | init_so_lapw
 runsp_lapw -so -ec 0.0001 -cc 0.001
-berrypi -k6:6:6 -s -j
+berrypi -k4:4:4 -s -j
 echo "EXPECTED LAMBDA1:
 =======================================================================================
 Value                           |  spin   |    dir(1)    |    dir(2)    |    dir(3)
 ---------------------------------------------------------------------------------------
-Electronic polarization (C/m2)     sp(1)  [-2.143365e-12, -1.213031e-12,  4.804996e-01]
+Electronic polarization (C/m2)     sp(1)  [-1.249460e-12,  2.728865e-13,  4.775250e-01]
 Ionic polarization (C/m2)          sp(1)  [ 0.000000e+00,  0.000000e+00, -1.760570e-01]
-Tot. spin polariz.=Pion+Pel (C/m2) sp(1)  [-2.143365e-12, -1.213031e-12,  3.044426e-01]
+Tot. spin polariz.=Pion+Pel (C/m2) sp(1)  [-1.249460e-12,  2.728865e-13,  3.014681e-01]
 ---------------------------------------------------------------------------------------
-TOTAL POLARIZATION (C/m2)          both   [-2.143365e-12, -1.213031e-12,  3.044426e-01]
+TOTAL POLARIZATION (C/m2)          both   [-1.249460e-12,  2.728865e-13,  3.014681e-01]
 ======================================================================================="
 cd ../../
 }
@@ -674,14 +675,14 @@ cd ../../
 ######################################################################################
 # SOC + ORB test DOES NOT WORK!
 ######################################################################################
-Tutorial_11 () {
+Tutorial_12 () {
 cd tutorial1/lambda1
 export EDITOR=cat
-init_lapw -b -rkmax 4 -vxc 13 -ecut -6 -numk 230 -sp
-echo -e "Ti 2 0.0 0.0\n" | init_orb_lapw -orb # Ti d U=0 J=0
-echo -e "0 0 1\n\n\n\ny\ny\n230\nN\n" | init_so_lapw
+init_lapw -b -rkmax 4 -vxc 13 -ecut -6 -numk 100 -sp
+echo -e "Ti 2 0.1 0.0\n" | init_orb_lapw -orb # Ti d U=0.1Ry J=0
+echo -e "0 0 1\n\n\n\ny\ny\n100\nN\n" | init_so_lapw
 runsp_lapw -so -orb -ec 0.0001 -cc 0.001
-berrypi -k6:6:6 -j -o
+berrypi -k4:4:4 -j -o
 echo "EXPECTED LAMBDA1:
 =======================================================================================
 Value                           |  spin   |    dir(1)    |    dir(2)    |    dir(3)
@@ -694,5 +695,161 @@ TOTAL POLARIZATION (C/m2)          both   [ 5.395795e-12,  8.790106e-12,  3.0512
 ======================================================================================="
 cd ../../
 }
-menu
 
+######################################################################################
+# BaTiO3 tutorial 1 (parallel)
+######################################################################################
+Tutorial_13 () {
+cd tutorial1/lambda1
+echo "1:localhost" > .machines
+echo "1:localhost" >> .machines
+init_lapw -b -rkmax 4 -vxc 13 -ecut -6 -numk 100
+run_lapw -ec 0.0001 -cc 0.001 -p
+berrypi -k4:4:4 -p
+echo "EXPECTED LAMBDA1:
+=======================================================================================
+Value                           |  spin   |    dir(1)    |    dir(2)    |    dir(3)
+---------------------------------------------------------------------------------------
+Electronic polarization (C/m2)     sp(1)  [-1.501550e-13, -2.089861e-13,  4.775890e-01]
+Ionic polarization (C/m2)          sp(1)  [ 0.000000e+00,  0.000000e+00, -1.760570e-01]
+Tot. spin polariz.=Pion+Pel (C/m2) sp(1)  [-1.501550e-13, -2.089861e-13,  3.015320e-01]
+---------------------------------------------------------------------------------------
+TOTAL POLARIZATION (C/m2)          both   [-1.501550e-13, -2.089861e-13,  3.015320e-01]
+======================================================================================="
+cd ../../
+}
+
+######################################################################################
+# spin polarized test (parallel)
+######################################################################################
+Tutorial_14 () {
+cd tutorial1/lambda1
+echo "1:localhost" > .machines
+echo "1:localhost" >> .machines
+init_lapw -b -rkmax 4 -vxc 13 -ecut -6 -numk 100 -sp
+runsp_lapw -ec 0.0001 -cc 0.001 -p
+berrypi -k4:4:4 -s -p
+echo "EXPECTED LAMBDA1:
+=======================================================================================
+Value                           |  spin   |    dir(1)    |    dir(2)    |    dir(3)
+---------------------------------------------------------------------------------------
+Electronic polarization (C/m2)     sp(1)  [-1.805765e-14,  6.261867e-16,  2.403157e-01]
+Ionic polarization (C/m2)          sp(1)  [ 0.000000e+00,  0.000000e+00, -8.802849e-02]
+Tot. spin polariz.=Pion+Pel (C/m2) sp(1)  [-1.805765e-14,  6.261867e-16,  1.522873e-01]
+---------------------------------------------------------------------------------------
+Electronic polarization (C/m2)     sp(2)  [ 1.778484e-14,  9.677115e-14,  2.403359e-01]
+Ionic polarization (C/m2)          sp(2)  [ 0.000000e+00,  0.000000e+00, -8.802849e-02]
+Tot. spin polariz.=Pion+Pel (C/m2) sp(2)  [ 1.778484e-14,  9.677115e-14,  1.523074e-01]
+---------------------------------------------------------------------------------------
+TOTAL POLARIZATION (C/m2)          both   [-2.728075e-16,  9.739734e-14,  3.045946e-01]
+======================================================================================="
+cd ../../
+}
+
+######################################################################################
+# SOC test (parallel)
+######################################################################################
+Tutorial_15 () {
+cd tutorial1/lambda1
+echo "1:localhost" > .machines
+echo "1:localhost" >> .machines
+export EDITOR=cat
+init_lapw -b -rkmax 4 -vxc 13 -ecut -6 -numk 100
+echo -e "0 0 1\n\n\n\nN\n" | init_so_lapw
+run_lapw -so -ec 0.0001 -cc 0.001 -p
+berrypi -k4:4:4 -j -p
+echo "EXPECTED LAMBDA1:
+=======================================================================================
+Value                           |  spin   |    dir(1)    |    dir(2)    |    dir(3)
+---------------------------------------------------------------------------------------
+Electronic polarization (C/m2)     sp(1)  [-4.850646e-13,  2.064955e-13,  4.808193e-01]
+Ionic polarization (C/m2)          sp(1)  [ 0.000000e+00,  0.000000e+00, -1.760570e-01]
+Tot. spin polariz.=Pion+Pel (C/m2) sp(1)  [-4.850646e-13,  2.064955e-13,  3.047623e-01]
+---------------------------------------------------------------------------------------
+TOTAL POLARIZATION (C/m2)          both   [-4.850646e-13,  2.064955e-13,  3.047623e-01]
+======================================================================================="
+cd ../../
+}
+
+######################################################################################
+# ORB test (parallel)
+######################################################################################
+Tutorial_16 () {
+cd tutorial1/lambda1
+echo "1:localhost" > .machines
+echo "1:localhost" >> .machines
+export EDITOR=cat
+init_lapw -b -rkmax 4 -vxc 13 -ecut -6 -numk 100 -sp
+echo -e "Ti 2 0.1 0.0\n" | init_orb_lapw -orb # Ti d U=0.1Ry J=0
+runsp_lapw -orb -ec 0.0001 -cc 0.001 -p
+berrypi -k4:4:4 -o -p
+echo "EXPECTED LAMBDA1:
+=======================================================================================
+Value                           |  spin   |    dir(1)    |    dir(2)    |    dir(3)
+---------------------------------------------------------------------------------------
+Electronic polarization (C/m2)     sp(1)  [ 1.368448e-13,  1.167429e-13,  2.381531e-01]
+Ionic polarization (C/m2)          sp(1)  [ 0.000000e+00,  0.000000e+00, -8.802849e-02]
+Tot. spin polariz.=Pion+Pel (C/m2) sp(1)  [ 1.368448e-13,  1.167429e-13,  1.501246e-01]
+---------------------------------------------------------------------------------------
+Electronic polarization (C/m2)     sp(2)  [-2.564290e-14, -8.124320e-14,  2.381660e-01]
+Ionic polarization (C/m2)          sp(2)  [ 0.000000e+00,  0.000000e+00, -8.802849e-02]
+Tot. spin polariz.=Pion+Pel (C/m2) sp(2)  [-2.564290e-14, -8.124320e-14,  1.501375e-01]
+---------------------------------------------------------------------------------------
+TOTAL POLARIZATION (C/m2)          both   [ 1.112019e-13,  3.549974e-14,  3.002621e-01]
+======================================================================================="
+cd ../../
+}
+
+######################################################################################
+# spin polarization + SOC test (parallel)
+######################################################################################
+Tutorial_17 () {
+cd tutorial1/lambda1
+echo "1:localhost" > .machines
+echo "1:localhost" >> .machines
+export EDITOR=cat
+init_lapw -b -rkmax 4 -vxc 13 -ecut -6 -numk 100 -sp
+echo -e "0 0 1\n\n\n\ny\ny\n100\nN\n" | init_so_lapw
+runsp_lapw -so -ec 0.0001 -cc 0.001 -p
+berrypi -k4:4:4 -s -j -p
+echo "EXPECTED LAMBDA1:
+=======================================================================================
+Value                           |  spin   |    dir(1)    |    dir(2)    |    dir(3)
+---------------------------------------------------------------------------------------
+Electronic polarization (C/m2)     sp(1)  [-3.197276e-14,  1.304973e-12,  4.807262e-01]
+Ionic polarization (C/m2)          sp(1)  [ 0.000000e+00,  0.000000e+00, -1.760570e-01]
+Tot. spin polariz.=Pion+Pel (C/m2) sp(1)  [-3.197276e-14,  1.304973e-12,  3.046692e-01]
+---------------------------------------------------------------------------------------
+TOTAL POLARIZATION (C/m2)          both   [-3.197276e-14,  1.304973e-12,  3.046692e-01]
+======================================================================================="
+cd ../../
+}
+
+######################################################################################
+# SOC + ORB test DOES NOT WORK!
+######################################################################################
+Tutorial_18 () {
+cd tutorial1/lambda1
+echo "1:localhost" > .machines
+echo "1:localhost" >> .machines
+export EDITOR=cat
+init_lapw -b -rkmax 4 -vxc 13 -ecut -6 -numk 100 -sp
+echo -e "Ti 2 0.1 0.0\n" | init_orb_lapw -orb # Ti d U=0.1Ry J=0
+echo -e "0 0 1\n\n\n\ny\ny\n100\nN\n" | init_so_lapw
+runsp_lapw -so -orb -ec 0.0001 -cc 0.001 -p
+berrypi -k4:4:4 -j -o -p
+echo "EXPECTED LAMBDA1:
+=======================================================================================
+Value                           |  spin   |    dir(1)    |    dir(2)    |    dir(3)
+---------------------------------------------------------------------------------------
+Electronic polarization (C/m2)     sp(1)  [ 5.395795e-12,  8.790106e-12,  4.811830e-01]
+Ionic polarization (C/m2)          sp(1)  [ 0.000000e+00,  0.000000e+00, -1.760570e-01]
+Tot. spin polariz.=Pion+Pel (C/m2) sp(1)  [ 5.395795e-12,  8.790106e-12,  3.051260e-01]
+---------------------------------------------------------------------------------------
+TOTAL POLARIZATION (C/m2)          both   [ 5.395795e-12,  8.790106e-12,  3.051260e-01]
+======================================================================================="
+cd ../../
+}
+
+# ceep next last line
+menu
