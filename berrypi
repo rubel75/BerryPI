@@ -490,35 +490,6 @@ def rawBerryPhase(configFile):
             return False
 
 
-        #####################
-        # execute write_win #
-        #####################
-        exe = 'write_win'
-        shell_write_win = b_PySubProcess.VirtualShellInstance(
-            exe,
-            )
-        case = str(structureName)
-        fnameold = case + '.win'
-        if os.path.isfile(fnameold): # remove old case.win if present
-            print DEFAULT_PREFIX, fnameold, 'is present and will be removed'
-            os.remove(fnameold)
-            if not os.path.isfile(fnameold):
-                print '             ... done'
-            else:
-                print DEFAULT_PREFIX, 'unable to remove', fnameold
-                print '             will continue at your own risk, w2w may crash'
-        try:
-            shell_write_win()
-        except subprocess.CalledProcessError, err:
-            print DEFAULT_PREFIX + "ERROR: in automation of " + str(structureName) 
-            print DEFAULT_PREFIX + "ERROR --> " + shell_write_win.getCommandString()
-            print str(err)
-            return False
-        if not spinLable == "": # for spin-polarized calc.
-            fnamenew = fnameold + spinLable
-            shutil.copy(fnameold, fnamenew) # copy case.win to case.win[up/dn]
-
-
         ######################################
         # move case.inwf -> case.inwf[up/dn] #
         ######################################
