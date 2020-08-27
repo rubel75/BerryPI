@@ -3,6 +3,7 @@
 # execution: $ source run_tutor
 #
 # Developed by Anton Bokhanchuk
+# revised and expanded by Oleg Rubel
 
 clear
 echo "######################################################"
