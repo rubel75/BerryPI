@@ -489,10 +489,10 @@ def rawBerryPhase(configFile):
             print str(err)
             return False
 
-        #####################
-        # execute write_win #
-        #####################
-        exe = 'write_win'
+        ##################################
+        # execute write_win -band nofile #
+        ##################################
+        exe = 'write_win -band nofile'
         shell_write_win = b_PySubProcess.VirtualShellInstance(
             exe,
             )
