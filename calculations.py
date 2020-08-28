@@ -141,12 +141,19 @@ class CalculateNumberOfBands:
                 if fHOMO != 2.0: # occupancy must be 2 only
                     print "HOMO band index =", iHOMO
                     print "HOMO band occupancy =", fHOMO
+                    print "Possible reasons for the error are:"
+                    print "* you have a metal (method does not work in this case)"
+                    print "* you have an insulator with a small band gap and selected TEMP smearing in case.in2(c)"
+                    print "In second case, switch to TETRA in case.in2(c) and re-run berrypi"
                     raise Exception("The HOMO band should have occupancy of 2")
             elif spCalc or soCalc or orbCalc:
                 # SP or SOC calculation (1e per band max)
                 if fHOMO != 1.0: # occupancy must be 1 only
                     print "HOMO band index =", iHOMO
                     print "HOMO band occupancy =", fHOMO
+                    print "* you have a metal (method does not work in this case)"
+                    print "* you have an insulator with a small band gap and selected TEMP smearing in case.in2(c)"
+                    print "In second case, switch to TETRA in case.in2(c) and re-run berrypi"
                     raise Exception("The HOMO band should have occupancy of 1")
         # return the HOMO band index
         return iHOMO
