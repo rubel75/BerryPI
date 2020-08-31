@@ -605,6 +605,7 @@ def rawBerryPhase(configFile):
                 print DEFAULT_PREFIX + "ERROR --> " + shell_csf.getCommandString()
                 print str(err)
                 return False
+        
 
         ######################################################
         # Compute Berry phase:                               #

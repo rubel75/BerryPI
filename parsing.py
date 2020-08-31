@@ -267,8 +267,6 @@ class MainStructParser(AbstractParser):
         #split up file into individual atom listings
         atomLineIndex = []
         atomLineNumber = []
-        #fix for ATOM being used with MULT > 1
-        re_atomListing = re.compile(r'ATOM +(?P<atomNumber>-?[0-9]+):')
         # go through case.struct file line-by-line
         for num, line in enumerate(theText):
             if num == 1: # 2nd line case.struct file
@@ -323,12 +321,21 @@ class MainStructParser(AbstractParser):
                 print " "*3, br2_dir[1,:]
                 print " "*3, br2_dir[2,:]
                 print " "*1, "Unit cell volume:", vol, "bohr3"
+            # find ATOM line
+            re_atomListing = re.compile(r'ATOM *(?P<atomNumber>-?[0-9]+):')
             atomListingMatch = re_atomListing.search(line)
             if atomListingMatch:
                 atomLineIndex.append(num)
                 atomLineNumber.append(atomListingMatch.group('atomNumber'))
             if 'NUMBER OF SYMMETRY OPERATIONS' in line:
                 indexSymmetryEnding = num
+        # check the number of ATOM instances matches 
+        # "nat" in the 2nd line of case.struct
+        if len(atomLineIndex) != nat:
+            print "Number of ATOM instances in case.struct:", len(atomLineIndex)
+            print "Number of atoms in 2nd line case.struct:", nat
+            raise Exception("The number of ATOM instances does not matche "+\
+                "the number of atoms in case.struct")
         atomListing = []
         for startSlice, endSlice in zip(atomLineIndex[:-1], atomLineIndex[1:]):
             atomListing.append(theText[startSlice:endSlice])
