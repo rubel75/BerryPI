@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import sys
 import numpy
+import struct
 
 
 def parse_win_mp_grid(f):
@@ -35,8 +36,8 @@ def parse_nnkp_nnkpts(f):
 def parse_pair_info_line(line):
     '''Converts a pair-info line into k1, k2, and a G vector
     '''
-    line = line.strip()
-    parts = [part.strip() for part in line.split(' ') if part.strip()] # Split by whitespace
+    # expected format(5i8)
+    parts = struct.unpack("8s8s8s8s8s", line[0:40])
     if len(parts) != 5:
         raise RuntimeError('Incorrect number of values while parsing pair-info line:\n\t' + line.strip())
 
@@ -50,27 +51,20 @@ def parse_matrix_element_line(line):
     '''Converts a matrix element line into a value
     '''
 
-    line = line.strip()
-    parts = [part.strip() for part in line.split(' ') if part.strip()] # Split by whitespace
-
-    if len(parts) != 2:
-        raise RuntimeError('Incorrect number of values while parsing matrix element line:\n\t' + line.strip())
-
-    real_part = float(parts[0])
-    imaginary_part = float(parts[1])
+    # expected format(32f18.12)
+    (real_part,imaginary_part) = struct.unpack("18s18s", line[0:36])
+    real_part = float(real_part)
+    imaginary_part = float(imaginary_part)
 
     return real_part + imaginary_part * 1j
 
 def parse_mmn_info_line(line):
-    line = line.strip()
-    parts = [part.strip() for part in line.split(' ') if part.strip()] # Split by whitespace
 
-    if len(parts) != 3:
-        raise RuntimeError('Incorrect number of values while parsing file-info line:\n\t' + line.strip())
-
-    n_energy = int(parts[0])
-    n_pairs = int(parts[1])
-    n_neighbours = int(parts[2])
+    # expected format: write(unit_mmn,'(3I12)') Nb, Nk, Nntot
+    (n_energy,n_pairs,n_neighbours) = struct.unpack("12s12s12s", line[0:36])
+    n_energy = int(n_energy)
+    n_pairs = int(n_pairs)
+    n_neighbours = int(n_neighbours)
 
     return n_energy, n_pairs, n_neighbours 
 
