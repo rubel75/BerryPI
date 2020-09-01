@@ -804,6 +804,10 @@ if __name__ == "__main__":
         Spin-polarized calculation
 
         $ berrypi -s -k6:6:4
+        
+        Spin-polarized constrained calculation (up=dn, non-magnetic)
+        
+        $ berrypi --sp_c -k6:6:4
 
         Spin-polarized calculation with spin-orbit coupling
 
