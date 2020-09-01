@@ -296,6 +296,8 @@ def rawBerryPhase(configFile):
         if spCalc or soCalc or orbCalc: # spin polarized mode
             # SOC calculation needs a faked SP (for w2w reasons)
             spOptions = ['-up', '-dn']
+            if sp_cCalc: # constrained (non-magneric SP up=dn)
+                spOptions = ['-up']
         else: # regular (non-spin polarized calc.)
             spOptions = ' ' # need space here!
         for suffix in spOptions:
@@ -350,6 +352,26 @@ def rawBerryPhase(configFile):
         if spCalc or soCalc or orbCalc: # spin polarized mode
             # SOC calculation needs a faked SP (for w2w reasons)
             spOptions = ['-up', '-dn']
+            if sp_cCalc: # constrained (non-magneric SP up=dn)
+                spOptions = ['-up']
+                # cp case.energyup* case.energydn* (needed for LAPW2 -up)
+                # for f in lambda1.energyup*; do cp "$f" "$(sed 's/\(.*\)up/\1dn/' <<< "$f")"; done
+                shell_copy = \
+                    b_PySubProcess.VirtualShellInstance(
+                    "for f in",
+                    str(structureName) + '.energyup*;',
+                    'do cp "' + "$f" + '" "$(sed ' + "'s/\(.*\)up/\\1dn/' " +\
+                         '<<< "$f")"; done',
+                    )
+                try:
+                    shell_copy()
+                except subprocess.CalledProcessError, err:
+                    print DEFAULT_PREFIX + "ERROR: in automation of " + \
+                        str(structureName);
+                    print DEFAULT_PREFIX + "ERROR --> " + \
+                        shell_copy.getCommandString();
+                    print str(err)
+                    return False
         else: # regular (non-spin polarized calc. or SOC)
             spOptions = ' ' # need space here!
         for suffix in spOptions:
@@ -380,7 +402,10 @@ def rawBerryPhase(configFile):
         if spCalc or soCalc or orbCalc: # spin polarized mode
             print DEFAULT_PREFIX + "Determine number of bloch bands " + \
                 "in spin-polarized mode based on *.scf2(up/dn)"
-            spinList = ['up', 'dn'] # TODO: move this somewhere up
+            spinList = ['up', 'dn']
+            if sp_cCalc: # constrained (non-magneric SP up=dn)
+                # it is not a typo (there is no case.scfdn file in this case)
+                spinList = ['up', 'up']
             blochBandSettings = [] # allocate array for the range of bands
             for spin in spinList: # loop over spins
                 print DEFAULT_PREFIX + " "*2 + "spin = " + spin
@@ -427,6 +452,7 @@ def rawBerryPhase(configFile):
             # append the same band range again for the 2nd spin chanel
             blochBandSettings.append(configFile['Bloch Band'])
 
+   
     ###########################################
     # allocate an array for storing the pases #
     ###########################################
@@ -454,6 +480,11 @@ def rawBerryPhase(configFile):
         spinLables = ["up", "dn"]
         spinOptions = ["-up", "-dn"]
         spOption = "-sp"
+        if sp_cCalc: # constrained (non-magneric SP up=dn)
+            spinIndexes = [0] # 0 - up (dn=up)
+            spinLables = ["up"]
+            spinOptions = ["-up"]
+            spOption = "-sp"
     else:# regular (non-spin polarized calc.)
         spinIndexes = [0]
         spinLables = [""] # use empty; brackets [] are for zip()
@@ -466,7 +497,8 @@ def rawBerryPhase(configFile):
         # create input list for write_inwf #
         ####################################
         if bands != [] and wCalc: # range of bands is specified
-            inputListing = '-mode MMN -bands ' + str(bands[0]) + ' ' + str(bands[1])
+            inputListing = '-mode MMN -bands ' + str(bands[0]) + ' ' +\
+                 str(bands[1])
         else: # no range of bands is specified (default)
             nb = blochBandSettings[spinIndex][1] # last occupied band
             inputListing = '-mode MMN -bands 1 ' + str(nb)
@@ -484,8 +516,10 @@ def rawBerryPhase(configFile):
         try:
             shell_write_inwf.run()
         except subprocess.CalledProcessError, err:
-            print DEFAULT_PREFIX + "ERROR: in automation of " + str(structureName) 
-            print DEFAULT_PREFIX + "ERROR --> " + shell_write_inwf.getCommandString()
+            print DEFAULT_PREFIX + "ERROR: in automation of " + \
+                str(structureName) 
+            print DEFAULT_PREFIX + "ERROR --> " + \
+                shell_write_inwf.getCommandString()
             print str(err)
             return False
 
@@ -627,11 +661,16 @@ def rawBerryPhase(configFile):
                 args = [str(structureName), direction, opt]
                 pathPhases = mmn2pathphase.main(args)
                 if   direction == 'x':
-    		    phaseX[spinIndex,:,:] = pathPhases
+    		        phaseX[spinIndex,:,:] = pathPhases
                 elif direction == 'y':
-    		    phaseY[spinIndex,:,:] = pathPhases
+    		        phaseY[spinIndex,:,:] = pathPhases
                 elif direction == 'z':
-    		    phaseZ[spinIndex,:,:] = pathPhases
+    		        phaseZ[spinIndex,:,:] = pathPhases
+		        if sp_cCalc: # constrained non-magnetic SP (up=dn)
+		            # copy results up=dn
+		            phaseX[spinIndex+1,:,:] = phaseX[spinIndex,:,:]
+		            phaseY[spinIndex+1,:,:] = phaseY[spinIndex,:,:]
+		            phaseZ[spinIndex+1,:,:] = phaseZ[spinIndex,:,:]
 
     # END OF THE MAIN LOOP FOR BERRY PHASE CALCULATION+++++++++++++++++++
     results = [phaseX,phaseY,phaseZ]
@@ -641,6 +680,9 @@ def rawBerryPhase(configFile):
     # activated without spin polarization                              #
     # rm $filename.vsp[up/dn]                                          #
     # rm $filename.vns[up/dn]                                          #
+    #                                                                  #
+    # In case of constrained spin-polarized calculation                #
+    # rm case.energydn*                                                #
     ####################################################################
     if soCalc and not spCalc:
         print DEFAULT_PREFIX + "Removing duplicated files..."
@@ -660,6 +702,22 @@ def rawBerryPhase(configFile):
                         shell_pathphase_y_rm.getCommandString();
                     print str(err)
                     return False
+    elif sp_cCalc: # rm case.energydn (created for LAPW2 -up)
+        print DEFAULT_PREFIX + "Removing duplicated files..."
+        shell_copy = \
+            b_PySubProcess.VirtualShellInstance(
+            'rm',
+            str(structureName) + '.energydn*',
+            )
+        try:
+            shell_copy()
+        except subprocess.CalledProcessError, err:
+            print DEFAULT_PREFIX + "ERROR: in automation of " + \
+                str(structureName);
+            print DEFAULT_PREFIX + "ERROR --> " + \
+                shell_copy.getCommandString();
+            print str(err)
+            return False
 
     print DEFAULT_PREFIX + "Finished Berry phase computation for " + \
         structureName;
@@ -774,7 +832,7 @@ if __name__ == "__main__":
         opts, args = getopt.getopt(sys.argv[1:], \
             "S:hvpnk:lb:sojw", \
             ["help", "structure-name=", \
-            "bloch-band=", "spin-polarized", "no-auto", "kdiv=", "no-lapw1", \
+            "bloch-band=", "spin-polarized", "sp_c", "no-auto", "kdiv=", "no-lapw1", \
             "parallel", "verbose", "orb-potential", "spin-orbit"]);
     except getopt.GetoptError, err:
         # print help information and exit:
@@ -832,6 +890,13 @@ if __name__ == "__main__":
         elif argName in ('-s', '--spin-polarized'):
             print(DEFAULT_PREFIX+'Spin polarization is activated')
             spCalc = True
+
+        #enable constrained (non-magnetic) spin polarization
+        elif argName in ('--sp_c'):
+            print(DEFAULT_PREFIX+'Constrained (non-magnetic) ' +\
+                'spin polarization is activated')
+            spCalc = True
+            sp_cCalc = True
 
         #enable orbital potential
         elif argName in ('-o', '--orb-potential'):
