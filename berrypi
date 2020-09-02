@@ -868,6 +868,7 @@ if __name__ == "__main__":
     orbCalc = False # no additional orbital potential by default
     soCalc = False  # no spin-orbit coupling by default
     wCalc = False # no k-path specified by default
+    sp_cCalc = False # no constrained spin-polarized by default
     
     # Set default case name and path based on where berrypi is executed
     structure_path = os.getcwd()
@@ -915,7 +916,7 @@ if __name__ == "__main__":
         elif argName in ('-j', '--spin-orbit'): # [OLEG] here
             print(DEFAULT_PREFIX+'Calculation with spin-orbit '+ \
                 'coupling is activated');
-            soCalc = True
+            soCalc = True # OR add combination of "--sp_c -j"
 
         #automation disabling option
         elif argName in ('-n', '--no-auto'):
