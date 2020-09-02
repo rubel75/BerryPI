@@ -30,6 +30,8 @@ echo "15 - Test BaTiO3: Lambda1 (-j) spin orbit (parallel 2 cores)"
 echo "16 - Test BaTiO3: Lambda1 (-o) orb. potential + U=0.1 Ry (spin polarization implied) (parallel 2 cores)"
 echo "17 - Test BaTiO3: Lambda1 (-s -j) spin polarization & SOC (parallel 2 cores)"
 echo "18 - Test BaTiO3: Lambda1 (-o -j) SOC & orb. potential + U=0.1 Ry (spin polarization implied) (parallel 2 cores) DOES NOT WORK!"
+echo "19 - Test BaTiO3: Lambda1 (--sp_c) spin polar. constrained (non-magnetic, up=dn) (parallel 2 cores)"
+echo "20 - Test BaTiO3: Lambda1 (--sp_c -o) spin polar. constrained (non-magnetic, up=dn) + orb. potential + U=0.1 Ry (parallel 2 cores)"
 echo "######################################################"
 read choice
 
@@ -199,6 +201,16 @@ case "$choice" in
 	  echo "Running test 18"
       CleanTut_1
 	  Tutorial_18
+	  ;;
+    19)
+	  echo "Running test 19"
+      CleanTut_1
+	  Tutorial_19
+	  ;;
+    20)
+	  echo "Running test 20"
+      CleanTut_1
+	  Tutorial_20
 	  ;;
 	*)
 	  echo "Unknown option"
@@ -851,6 +863,68 @@ TOTAL POLARIZATION (C/m2)          both   [ 5.395795e-12,  8.790106e-12,  3.0512
 ======================================================================================="
 cd ../../
 }
+
+######################################################################################
+# Test BaTiO3: Lambda1 (--sp_c) spin polar. constrained (non-magnetic, up=dn) (parallel 2 cores)
+######################################################################################
+Tutorial_19 () {
+cd tutorial1/lambda1
+echo "1:localhost" > .machines
+echo "1:localhost" >> .machines
+export EDITOR=cat
+instgen -nm # generate non-magnetic starting electronic config.
+init_lapw -b -rkmax 4 -vxc 13 -ecut -6 -numk 100 -sp
+runsp_c_lapw -ec 0.0001 -cc 0.001 -p
+berrypi -k4:4:4 --sp_c -p
+echo "EXPECTED LAMBDA1:
+=======================================================================================
+Value                           |  spin   |    dir(1)    |    dir(2)    |    dir(3)
+---------------------------------------------------------------------------------------
+Electronic polarization (C/m2)     sp(1)  [-7.384730e-15,  1.234515e-13,  2.387169e-01]
+Ionic polarization (C/m2)          sp(1)  [ 0.000000e+00,  0.000000e+00, -8.802849e-02]
+Tot. spin polariz.=Pion+Pel (C/m2) sp(1)  [-7.384730e-15,  1.234515e-13,  1.506884e-01]
+---------------------------------------------------------------------------------------
+Electronic polarization (C/m2)     sp(2)  [-7.384730e-15,  1.234515e-13,  2.387169e-01]
+Ionic polarization (C/m2)          sp(2)  [ 0.000000e+00,  0.000000e+00, -8.802849e-02]
+Tot. spin polariz.=Pion+Pel (C/m2) sp(2)  [-7.384730e-15,  1.234515e-13,  1.506884e-01]
+---------------------------------------------------------------------------------------
+TOTAL POLARIZATION (C/m2)          both   [-1.476946e-14,  2.469030e-13,  3.013769e-01]
+======================================================================================="
+cd ../../
+}
+
+######################################################################################
+# Test BaTiO3: Lambda1 (--sp_c -o) spin polar. constrained (non-magnetic, up=dn) + orb. potential + U=0.1 Ry (parallel 2 cores)
+######################################################################################
+Tutorial_20 () {
+cd tutorial1/lambda1
+echo "1:localhost" > .machines
+echo "1:localhost" >> .machines
+export EDITOR=cat
+instgen -nm # generate non-magnetic starting electronic config.
+init_lapw -b -rkmax 4 -vxc 13 -ecut -6 -numk 100 -sp
+echo -e "Ti 2 0.1 0.0\n" | init_orb_lapw -orb # Ti d U=0.1Ry J=0
+runsp_c_lapw -ec 0.0001 -cc 0.001 -orb -p
+berrypi -k4:4:4 --sp_c -o -p
+echo "EXPECTED LAMBDA1:
+=======================================================================================
+Value                           |  spin   |    dir(1)    |    dir(2)    |    dir(3)
+---------------------------------------------------------------------------------------
+Electronic polarization (C/m2)     sp(1)  [ 2.247081e-15,  6.592793e-14,  2.365919e-01]
+Ionic polarization (C/m2)          sp(1)  [ 0.000000e+00,  0.000000e+00, -8.802849e-02]
+Tot. spin polariz.=Pion+Pel (C/m2) sp(1)  [ 2.247081e-15,  6.592793e-14,  1.485634e-01]
+---------------------------------------------------------------------------------------
+Electronic polarization (C/m2)     sp(2)  [ 2.247081e-15,  6.592793e-14,  2.365919e-01]
+Ionic polarization (C/m2)          sp(2)  [ 0.000000e+00,  0.000000e+00, -8.802849e-02]
+Tot. spin polariz.=Pion+Pel (C/m2) sp(2)  [ 2.247081e-15,  6.592793e-14,  1.485634e-01]
+---------------------------------------------------------------------------------------
+TOTAL POLARIZATION (C/m2)          both   [ 4.494161e-15,  1.318559e-13,  2.971269e-01]
+======================================================================================="
+cd ../../
+}
+
+
+
 
 # ceep next last line
 menu
