@@ -34,6 +34,7 @@ import mmn2pathphase
 class Logger(object): # redirect stdout to case.outputberry file and console
     def __init__(self):
         self.terminal = sys.stdout
+        print "sys.stdout=", sys.stdout
         # case mane is taken from structure_name
         outputFileName = structure_name + '.outputberry'
         self.log = open(outputFileName, "w")
@@ -219,7 +220,6 @@ def rawBerryPhase(configFile):
     ####################################
     if wCalc:
         numKDivisions = [0]*3; # creale list [0,0,0]
-        print(type(numKDivisions), numKDivisions)
         print DEFAULT_PREFIX + "k-path will be read from case.klist file"
         f = open( str(structureName)+'.klist' , 'r' )
         word = ("END", "end")
@@ -262,7 +262,7 @@ def rawBerryPhase(configFile):
     #############################################################
     if soCalc and not spCalc:
         print DEFAULT_PREFIX + "Faking spin-polarized calculation..."
-        for ext in ['.vsp', '.vns', '.scf2']:
+        for ext in ['.vsp', '.vns']:
             for spin in ['up', 'dn']:
                 shell_pathphase_y_copy = \
                     b_PySubProcess.VirtualShellInstance(
@@ -660,6 +660,8 @@ def rawBerryPhase(configFile):
                     opt = opt + ' ' + '-w'
                 args = [str(structureName), direction, opt]
                 pathPhases = mmn2pathphase.main(args)
+                if wCalc:
+                    break
                 if   direction == 'x':
     		        phaseX[spinIndex,:,:] = pathPhases
                 elif direction == 'y':
@@ -673,6 +675,7 @@ def rawBerryPhase(configFile):
 		            phaseZ[spinIndex+1,:,:] = phaseZ[spinIndex,:,:]
 
     # END OF THE MAIN LOOP FOR BERRY PHASE CALCULATION+++++++++++++++++++
+    
     results = [phaseX,phaseY,phaseZ]
 
     ####################################################################
@@ -686,7 +689,7 @@ def rawBerryPhase(configFile):
     ####################################################################
     if soCalc and not spCalc:
         print DEFAULT_PREFIX + "Removing duplicated files..."
-        for ext in ['.vsp', '.vns', '.scf2']:
+        for ext in ['.vsp', '.vns']:
             for spin in ['up', 'dn']:
                 shell_pathphase_y_rm = \
                     b_PySubProcess.VirtualShellInstance(
@@ -722,7 +725,8 @@ def rawBerryPhase(configFile):
     print DEFAULT_PREFIX + "Finished Berry phase computation for " + \
         structureName;
 
-    return [True,results] # END rawBerryPhase
+    return [True,results]
+# END rawBerryPhase
 
 
 if __name__ == "__main__":
@@ -1044,7 +1048,7 @@ if __name__ == "__main__":
             #check whether to automate
             if checkAuto:
                 bAutomationErrorChk = rawBerryPhase(berryConfig)
-            if bAutomationErrorChk:
+            if bAutomationErrorChk and not wCalc:
                 try:
                     theCalc = postProcBerryPhase(berryConfig)
                 except b_PyError.ParseError, err:
@@ -1060,7 +1064,7 @@ if __name__ == "__main__":
         #assuming the configFile was passed correctly
         if checkAuto:
             [bAutomationErrorChk,phasesRaw] = rawBerryPhase(configFile)
-        if bAutomationErrorChk:
+        if bAutomationErrorChk and not wCalc:
             try:
                 theCalc = postProcBerryPhase(configFile,phasesRaw,spCalc)
             except b_PyError.ParseError, err:

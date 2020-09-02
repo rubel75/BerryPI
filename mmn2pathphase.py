@@ -276,9 +276,9 @@ def main(args):
     f_mmn.close()
 
     if wCalc:
-        print("Berry phase along the path (rad) =",phases.values())
+        #print("Berry phase along the path (rad) =",phases.values())
         print("Berry phase sum (rad) =",sum(phases.values()))
-        sys.exit()
+        return
 
 
     # Get the sum of phases for each path
