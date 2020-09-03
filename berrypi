@@ -34,7 +34,6 @@ import mmn2pathphase
 class Logger(object): # redirect stdout to case.outputberry file and console
     def __init__(self):
         self.terminal = sys.stdout
-        print "sys.stdout=", sys.stdout
         # case mane is taken from structure_name
         outputFileName = structure_name + '.outputberry'
         self.log = open(outputFileName, "w")

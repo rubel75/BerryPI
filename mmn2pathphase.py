@@ -277,7 +277,7 @@ def main(args):
 
     if wCalc:
         #print("Berry phase along the path (rad) =",phases.values())
-        print("Berry phase sum (rad) =",sum(phases.values()))
+        print "[ BerryPI ]", "Berry phase sum (rad) =", sum(phases.values())
         return
 
 
