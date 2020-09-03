@@ -758,6 +758,10 @@ if __name__ == "__main__":
         --spin-polarization, -s
 
         Activate spin polarized caclulation
+        
+        --sp_c
+        
+        Constrained spin-polarized calculation (non-magnetic, up=dn)
 
         --orb-potential, -o
 
@@ -768,7 +772,7 @@ if __name__ == "__main__":
 
         Activate spin orbit coupling
 
-	--bloch-band=NUM:NUM, -b NUM:NUM
+	    --bloch-band=NUM:NUM, -b NUM:NUM
 
         Used to manually set the bloch band for band by band decomposition.
         By default, it is parsing out the bloch band based on the number
@@ -791,7 +795,9 @@ if __name__ == "__main__":
         -w
 
         Compute Berry phase along a specific k-path given in the case.klist file.
-        It is used to characterize Weyl-points.
+        It is used to characterize Weyl-points. This option must be combined 
+        with (-b XX:YY) to specify the band range and (-j) to enable spin-orbit 
+        coupling.
 
 
         EXAMPLES:
@@ -825,7 +831,7 @@ if __name__ == "__main__":
         Compute Berry phase along a specific k-path (loop) given in 
         the case.klist file. It is used to characterize Weyl-points.
 
-        $ berrypi -w
+        $ berrypi -j -w -b XX:YY
 
         Enable parallel calculation where it run x lapw1 -p, x lapwso -p 
         and x w2w -p in parallel mode. It implies that you have .machines 
@@ -978,34 +984,53 @@ if __name__ == "__main__":
                 print DEFAULT_PREFIX+'Proceed with the k-mesh', \
                     structure_kmesh;
 
-    #Makes sure that the length of the tuple is 3
+    # Check input consistency
     if len(structure_kmesh)!=3:
-	print('You entered: ' +str(structure_kmesh))
-        print('Error: Please check that you have 3 constants in the kmesh')
+        #Makes sure that the k-mesh length of the tuple is 3
+        print 'You entered: ' +str(structure_kmesh)
+        print 'ERROR: Please check that you have 3 integers in the kmesh'
         sys.exit(2)
-
-    #Makes sure that there are no values of 0 in the kmesh
     elif 0 in structure_kmesh:
-	print('You entered: ' + str(structure_kmesh))
-        print('Error: Cannot have a dimension of 0 in the kmesh')
+        #Makes sure that there are no values of 0 in the kmesh
+        print 'You entered: ' + str(structure_kmesh)
+        print 'ERROR: Cannot have a dimension of 0 in the kmesh'
         sys.exit(2)
-		
-    #Sets the lower bound of the dimensions
     elif min(structure_kmesh)<0:
-        print('You cannot have negative integers as kmesh values')
+        #Sets the lower bound of the dimensions
+        print 'ERROR: You cannot have negative integers as kmesh values'
         sys.exit(2)
-		
-     #Determines the upper size limit of the kmesh
-#    elif max(structure_kmesh)>10:
-#        print('Calculations with a dimension of more than 10 will take a long time to calculate. Are you sure you want to continue?')
-#
-#        check_10 = raw_input('Type in "Y" to continue or press any other button to exit\n')
-#
-#        if check_10=='Y':
-#            pass
-#        else:
-#            pass
-#            #sys.exit(2)
+    elif wCalc and not soCalc:
+        #Wilson loop calculation makes sense with SOC only
+        print 'WARNING: Wilson loop calculation makes sense only if',\
+            'combined with spin-orbit coupling (-j)'
+        print 'Suggested execution: berrypi -j -w -b XX:YY'
+        print 'Calculation will continue'
+    elif wCalc and bands == []:
+        #Band range is not specified for Wilson loop calculation
+        print 'ERROR: Wilson loop calculatio requires the band range',\
+            'to be specified'
+        print 'Suggested execution: berrypi -j -w -b XX:YY'
+        sys.exit(2)
+    if bands != [] and len(bands)!=2:
+        #Makes sure that the band range length of the tuple is 2
+        print 'You entered: ' + str(bands)
+        print 'ERROR: Please check that you have 2 integers in the band range'
+        sys.exit(2)
+    elif bands != [] and 0 in bands:
+        #Makes sure that there are no values of 0 in the bands
+        print 'You entered: ' + str(bands)
+        print 'ERROR: Cannot have a dimension of 0 in the bands range'
+        sys.exit(2)
+    elif bands != [] and min(bands)<0:
+        #Sets the lower bound of the dimensions
+        print 'You entered: ' + str(bands)
+        print 'ERROR: You cannot have negative integers as bands range values'
+        sys.exit(2)
+    elif bands != [] and bands[0] > bands[1]:
+        #The range of bands should start with a smaller value
+        print 'You entered: ' + str(bands)
+        print 'ERROR: The range of bands should start with a smaller value'
+        sys.exit(2)
 			
     #Determines whether or not W2WANNIER is installed
     wienroot = os.getenv('WIENROOT') # get path to Wien2k installation
