@@ -193,7 +193,6 @@ for i in range(0, n):
     os.chdir(WorkingDir)
     subprocess.call("mv %s/%s %s/%s" %(pwd, filename, WorkingDir, KlistFileName), shell = True)
     subprocess.call("python $WIENROOT/SRC_BerryPI/BerryPI/berrypi -j -w -b %i:%i %s > Berrypi.out"%(S_Band, E_Band, options), shell=True)
-    #subprocess.call("python /home/sainih5/BerryPI/berrypi -j -w -b %i:%i %s > Berrypi.out"%(S_Band, E_Band, options), shell=True)
     with open("Berrypi.out", 'r') as read_file:
         for line in read_file:
             if "Berry phase sum (rad) =" in line:
