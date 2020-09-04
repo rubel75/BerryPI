@@ -9,7 +9,77 @@ Created on Wed Dec 18 11:13:26 2019
 import subprocess
 import os
 import sys
-import FileFormat, ReadInput
+#import FileFormat, ReadInput
+
+
+def FileFormatMessage():
+    print ("Error: Use proper formated file")
+    print ("""Example for file format:
+/home/enigma/WIEN2k/case                              # Path of your WIEN2k working directory.
+51                                                    # Wilson loop Z-minimum and Z-maximum value.     
+1:84                                                  # Number of division in Z direction for wilson loop.  
+&WloopCoordinate                                      # Wilson loop start (it is case sensitive)
+0.4565 0.2000 0.5000 ; -0.4565 0.2000 0.5000          # Starting point 1 ; End point 1
+0.4565 0.3000 0.5000 ; -0.4565 0.3000 0.5000          # Starting point 2 ; End point 2          
+0.4565 0.2500 1.0000 ; -0.4565 0.2500 1.0000          # Starting point 3 ; End point 3
+END                                                   # End of file (It is case sensitive)""")
+    sys.exit()
+    
+
+def ReadInputValues(content, WloopFileName):
+    try:
+        WorkingDir = str(content[0][:-1])
+        KlistFileName = str("%s.klist" %(WorkingDir.split('/')[-1]))
+        n = int(content[1].split()[0])
+        #multiplier = int(content[2].split()[0]) # User dependent (make sure use proper array indexing)
+        multiplier = 1000 # User independent
+    except ValueError:
+        print ("Error: Value Error")
+        FileFormatMessage()
+        
+    K_Points = []
+    wlcoordinate = 0
+    with open(WloopFileName) as infile:
+        copy = False
+        for line in infile:
+            if line.strip() == "&WloopCoordinate":
+                wlcoordinate = "&WloopCoordinate"
+                copy = True
+                continue
+            elif line.strip() == "END":
+                copy = False
+                continue
+            elif copy:
+                K_Points.append(line)
+                
+    StartBand = int(content[2].split(":")[0])
+    EndBand = int(content[2].split(":")[1])
+    S = [] # Staring Point
+    E = [] # End Point
+    for i in K_Points:
+        temp = i.split(";")
+        S.append(np.array(temp[0].split(), dtype="float"))
+        E.append(np.array(temp[1].split(), dtype="float"))
+        
+    S = np.array(S)
+    E = np.array(E)
+    
+        
+    if(wlcoordinate == 0):
+        print ("Error: ""&WloopCoordinate"" is not properly formatted. Notice it is case sensitive")
+        FileFormatMessage()
+        
+    if (S.size == 0):
+        print ("Error: Wilson loop points")
+        FileFormatMessage()
+        
+    if (E.size == 0):
+        print ("Error: Wilson loop points")
+        FileFormatMessage()
+        
+    return (WorkingDir, KlistFileName, n, multiplier, StartBand, EndBand, S, E)
+
+
 
 try:
     import numpy as np
@@ -55,22 +125,16 @@ f.close()
 if ("END" in content[-1]):
     #content = content[:-3]
     print ("Success")
-    WorkingDir, KlistFileName, n, multiplier, S_Band, E_Band, K_Start, K_End = ReadInput.Values(
+    WorkingDir, KlistFileName, n, multiplier, S_Band, E_Band, K_Start, K_End = ReadInputValues(
             content, WloopFileName)
 else:
-    FileFormat.Message()
+    FileFormatMessage()
     
 if not os.path.exists(WorkingDir):
     print ("Error: Working directory does not exist.")
     print ("Please check your working directory and try again. Good Bye :)")
     sys.exit()
     
-#print (len(K_Start))
-#print (len(K_End))
-#print (np.linalg.norm(K_Start[0] - K_End[0]))
-#print (np.linalg.norm(K_Start[1] - K_End[1]))
-#print (np.linalg.norm(K_Start[2] - K_End[2]))
-#sys.exit()
 K_Points = []
 for i,j in zip(K_Start, K_End):
     xmin = i[0]
@@ -124,19 +188,26 @@ for i in range(0, n):
     #break
     filename = str("Wilson.klist")
     np.savetxt(filename, Klist, fmt="          %5i%5i%5i%5i%5.1f", delimiter='', footer='END', comments='')
-    
+    #print(Klist)
     pwd = os.getcwd()
     os.chdir(WorkingDir)
     subprocess.call("mv %s/%s %s/%s" %(pwd, filename, WorkingDir, KlistFileName), shell = True)
-    #print ("python $WIENROOT/SRC_BerryPI/BerryPI/berrypi -j -w -b %i:%i %s >> Berrypi.out"%(S_Band, E_Band, options))
-    #sys.exit()
-    subprocess.call("python $WIENROOT/SRC_BerryPI/BerryPI/berrypi -j -w -b %i:%i %s >> Berrypi.out"%(S_Band, E_Band, options), shell=True)
-    f = open("Berrypi.out", "r")
-    content = f.readlines()
-    f.close()
+    subprocess.call("python $WIENROOT/SRC_BerryPI/BerryPI/berrypi -j -w -b %i:%i %s > Berrypi.out"%(S_Band, E_Band, options), shell=True)
+    #subprocess.call("python /home/sainih5/BerryPI/berrypi -j -w -b %i:%i %s > Berrypi.out"%(S_Band, E_Band, options), shell=True)
+    with open("Berrypi.out", 'r') as read_file:
+        for line in read_file:
+            if "Berry phase sum (rad) =" in line:
+                #return line
+                content = line
+                #print (content)
+
     os.chdir(pwd)
+    #sys.exit()
     
-    temp = float(content[-1].split()[-1][1:-2])
+    temp = float(content.split()[-1])
+    #print (temp)
+    #sys.exit()
+
     temp1 = ((temp + np.pi) % (2 * np.pi) - np.pi)  # 2 pi wraping
     #temp = np.array([i, temp])    
     temp = np.array([x_axis[loop], temp, temp1])
@@ -146,13 +217,7 @@ for i in range(0, n):
     
 Data = np.array(Data)
 
-#outfile = str("Data.dat")
-#np.savetxt(outfile, Data, fmt='%5.5f', delimiter='          ', 
-#           header='Loop (%s)      BerryPhase(BP)       BP(pi wrap)' %direction)
-
-############################################################################
 ######################### Unwrap ###########################################
-############################################################################
 
 BP = Data[:, 2]
 BP_out = np.unwrap(BP, discont=3.141592653589793, axis=-1)
@@ -169,49 +234,7 @@ BP_out = np.divide(BP_out, np.multiply(2, np.pi))
 shape = BP_out.shape
 BP_out.shape = (shape[0], 1)
 
-"""
-k = 0
-i = 1
-#print (np.size(u))
-temp = []
-threshold = np.pi/2
-#threshold = 0.1
-#BP_out = np.zeros((np.size(u), np.size(u)))
-BP_out = np.zeros(np.size(BP))
-for i in range(1, np.size(BP) - 1):
-    BP_out[i] = BP[i] + (2*np.pi*k)
-    if (np.abs(BP[i+1]-BP[i]) > np.abs(threshold)):
-        if (np.abs(BP_out[i] - BP_out[i-1]) < np.abs(threshold)):
-            if BP[i+1] < BP[i]:
-                k = k+1
-            else:
-                k = k-1
-    temp.append(k)
-            
-BP_out[(i+1)] = BP[i+1] + (2*np.pi*k)
-    
-BP_out[0] = BP[0] 
-BP_out.shape = BP_out.size,1
-"""
 Data = np.append(Data, BP_out, axis=1)
-
-"""
-#################### Chern Number ##########################################
-
-ChernNumber  = ((BP_out[BP_out.size-1] - BP_out[(BP_out.size-1)/2]) / 
-                (2*np.pi) + (BP_out[(BP_out.size-1)/2] - BP_out[0]) / (2*np.pi))
-
-if (ChernNumber != -1.0 and ChernNumber != 1.0):
-    print ("Wilson loop found two weyl points.")
-    ChernNumber_1 = (BP_out[(BP_out.size-1)/2] - BP_out[0]) / (2*np.pi)
-    ChernNumber_2 = (BP_out[BP_out.size-1] - BP_out[(BP_out.size-1)/2]) / (2*np.pi)
-    print ("Chern Number for first weyl point = %2.1f" %ChernNumber_1)
-    print ("Chern Number for second weyl point = %2.1f" %ChernNumber_2)
-    
-else:
-    print ("Wilson loop found one weyl points.")
-    print ("Chern Number = %2.1f" %ChernNumber)
-"""
 
 #################### Save data to file #####################################
 
@@ -252,6 +275,6 @@ try:
     print ("Good Bye!!! :)")
 except ImportError as error:
     print (error.__class__.__name__+": "+error.message)
-    print ("Do not WORRY!!! You can plot your figure yourself by using ""PHI.dat"" file.")
+    print ("You can plot your figure yourself by using ""PHI.dat"" file.")
     print ("Good bye!!! :)")
     sys.exit()
