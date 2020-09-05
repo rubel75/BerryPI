@@ -341,10 +341,15 @@ def rawBerryPhase(configFile):
             print str(err)
             return False
 
-    ###########################################
-    # run lapw2 -fermi (-so) (-up/-dn) (-orb) #
-    ###########################################
+    #############################################
+    # run lapw2 -fermi -in1orig (-so) (-up/-dn) #
+    #############################################
     # the purpose is to generate case.scf2 file that contains band occupancies
+    # (-orb) is not required here as per Laurence Marks suggestion (Sep 2020)
+    # (-in1orig) is added to p[revent LAPW2 from midifying case.in1(c) file.
+    #            Otherwise the electronic polarization results will be slightly
+    #            different for consequitive runs of BerryPI per Laurence Marks
+    #            and Peter Blaha suggestion (Sep 2020)
     if not wCalc and bands == []:
         # do not run LAPW2 with pre-set band range
         # also not in the case of Weyl point analysys/Wilson loop
@@ -375,12 +380,10 @@ def rawBerryPhase(configFile):
             spOptions = ' ' # need space here!
         for suffix in spOptions:
             suffix = suffix + ' ' + pOpt # take care of parallel mode
-            if orbCalc:
-                suffix = suffix + ' ' + '-orb' # activate OP switch
-            elif soCalc: # SOC
+            if soCalc: # SOC
                 suffix = suffix + ' ' + '-so'
             shell_x_lapw1 = b_PySubProcess.VirtualShellInstance(
-                'x', 'lapw2 -fermi', suffix
+                'x', 'lapw2 -fermi -in1orig', suffix
                 );
 
             try:

@@ -1,6 +1,10 @@
 #!/bin/bash 
 #
-# execution: $ source run_tutor
+# execution:
+#   $ source run_tutor
+# or
+#   $ for f in {7..20}; do echo $f | source run_tutor.sh | tee -a tests.out ; done
+#
 #
 # Developed by Anton Bokhanchuk
 # revised and expanded by Oleg Rubel
@@ -22,6 +26,8 @@ echo "9 - Test BaTiO3: Lambda1 (-j) spin orbit"
 echo "10 - Test BaTiO3: Lambda1 (-o) orb. potential + U=0.1 Ry (spin polarization implied)"
 echo "11 - Test BaTiO3: Lambda1 (-s -j) spin polarization & SOC"
 echo "12 - Test BaTiO3: Lambda1 (-o -j) SOC & orb. potential + U=0.1 Ry (spin polarization implied) DOES NOT WORK!"
+echo "101 - Test TaAs: Weyl point charge"
+echo "102 - Test TaAs: Weyl point charge (Wloop)"
 echo ""
 echo "T E S T S (parallel):"
 echo "13 - Test BaTiO3: Lambda1 (-p) spin polarization (parallel 2 cores)"
@@ -40,99 +46,58 @@ menu() {
 case "$choice" in
 	1)
 	  echo "Running Tutorial 1"
-	  flag=0
-	  while [ "$flag" == "0" ]; do
-	  echo "Would you like to clean the tutotial directory (y/n)?"
-	  read opt
-	    if [ "$opt" == "y" ] || [ "$opt" == "Y" ]; then
-		  CleanTut_1
-		  flag=1
-	    elif [ "$opt" == "n" ] || [ "$opt" == "N" ]; then
-	         echo "No files were removed!"
-		  flag=1
-	    else
-		  echo "Unknown option!"
-	    fi
-	  done
+      CleanTut_1
 	  Tutorial_1
 	  ;;
 	2)
 	  echo "Running Tutorial 2"
-	  flag=0
-	  while [ "$flag" == "0" ]; do
-	  echo "Would you like to clean the tutotial directory (y/n)?"
-	  read opt
-	    if [ "$opt" == "y" ] || [ "$opt" == "Y" ]; then
-		  CleanTut_2
-		  flag=1
-	    elif [ "$opt" == "n" ] || [ "$opt" == "N" ]; then
-	         echo "No files were removed!"
-		  flag=1
-	    else
-		  echo "Unknown option!"
-	    fi
-	  done
+      CleanTut_2
 	  Tutorial_2
 	  ;;
 	3)
 	  echo "Running Tutorial 3"
-	  flag=0
-	  while [ "$flag" == "0" ]; do
-	  echo "Would you like to clean the tutotial directory (y/n)?"
-	  read opt
-	    if [ "$opt" == "y" ] || [ "$opt" == "Y" ]; then
-		  CleanTut_3
-		  flag=1
-	    elif [ "$opt" == "n" ] || [ "$opt" == "N" ]; then
-	         echo "No files were removed!"
-		  flag=1
-	    else
-		  echo "Unknown option!"
-	    fi
-	  done
+      CleanTut_3
 	  Tutorial_3
 	  ;;
 	4)
 	  echo "Running Tutorial 4"
-	  flag=0
-	  while [ "$flag" == "0" ]; do
-	  echo "Would you like to clean the tutotial directory (y/n)?"
-	  read opt
-	    if [ "$opt" == "y" ] || [ "$opt" == "Y" ]; then
-		  CleanTut_4
-		  flag=1
-	    elif [ "$opt" == "n" ] || [ "$opt" == "N" ]; then
-	         echo "No files were removed!"
-		  flag=1
-	    else
-		  echo "Unknown option!"
-	    fi
-	  done
+      CleanTut_4
 	  Tutorial_4
 	  ;;
 	5) 
 	  echo "Running ALL test"
-	  flag=0
-	  while [ "$flag" == "0" ]; do
-	  echo "Would you like to clean the tutotial directory (y/n)?"
-	  read opt
-	    if [ "$opt" == "y" ] || [ "$opt" == "Y" ]; then
-		  CleanTut_1
-		  CleanTut_2
-		  CleanTut_3
-		  CleanTut_4
-		  flag=1
-	    elif [ "$opt" == "n" ] || [ "$opt" == "N" ]; then
-	         echo "No files were removed!"
-		  flag=1
-	    else
-		  echo "Unknown option!"
-	    fi
-	  done
-	  Tutorial_1
-	  Tutorial_2
-	  Tutorial_3
-	  Tutorial_4
+      CleanTut_1
+      Tutorial_7
+      CleanTut_1
+      Tutorial_8
+      CleanTut_1
+      Tutorial_9
+      CleanTut_1
+      Tutorial_10
+      CleanTut_1
+      Tutorial_11
+      CleanTut_1
+      Tutorial_12
+      CleanTut_1
+      Tutorial_13
+      CleanTut_1
+      Tutorial_14
+      CleanTut_1
+      Tutorial_15
+      CleanTut_1
+      Tutorial_16
+      CleanTut_1
+      Tutorial_17
+      CleanTut_1
+      Tutorial_18
+      CleanTut_1
+      Tutorial_19
+      CleanTut_1
+      Tutorial_20
+      CleanTut_5
+      Tutorial_101
+      CleanTut_5
+      Tutorial_102
 	  ;;
 	6)
 	  echo "Cleaning up all files"
@@ -140,7 +105,8 @@ case "$choice" in
 	  CleanTut_2
 	  CleanTut_3
 	  CleanTut_4
-	  rm -rf Summary.out
+      CleanTut_5
+	  rm -rf *.out
 	  ;;
 	7)
 	  echo "Running test 7"
@@ -171,6 +137,16 @@ case "$choice" in
 	  echo "Running test 12"
       CleanTut_1
 	  Tutorial_12
+	  ;;
+    101)
+	  echo "Running test 101"
+      CleanTut_5
+	  Tutorial_101
+	  ;;
+    102)
+	  echo "Running test 102"
+      CleanTut_5
+	  Tutorial_102
 	  ;;
     13)
 	  echo "Running test 13"
@@ -259,6 +235,14 @@ CleanTut_4 () {
 	ls -1 | grep -v 'GaN-ZB.struct$' | xargs rm -f
 	cd ../../
 	echo "All files but GaN-W.struct and GaN-ZB.struct were removed!"
+}
+
+CleanTut_5 () {
+	cd tutorial5
+    echo $PWD
+    ls -1a | grep -v -e 'TaAs.struct$' -e 'TaAs.klist_band$' -e 'readme.txt$' -e '^\.$' -e '^\.\.$' | xargs rm -f # remove all files/dir except "TaAs.struct", "TaAs.klist_band", and "readme.txt"
+	cd ../
+	echo "All files but TaAs.struct, TaAs.klist_band, and readme.txt were removed!"
 }
 
 Tutorial_1 () {
@@ -707,6 +691,49 @@ Tot. spin polariz.=Pion+Pel (C/m2) sp(1)  [ 5.395795e-12,  8.790106e-12,  3.0512
 TOTAL POLARIZATION (C/m2)          both   [ 5.395795e-12,  8.790106e-12,  3.051260e-01]
 ======================================================================================="
 cd ../../
+}
+
+######################################################################################
+# TaAs: Weyl point charge
+######################################################################################
+Tutorial_101 () {
+cd tutorial5
+export EDITOR=cat
+cp TaAs.struct tutorial5.struct
+init_lapw -b -rkmax 7 -vxc 13 -ecut -6 -numk 300
+echo -e "0 0 1\n\n\n\nN\n" | init_so_lapw
+run_lapw -so -ec 0.0001 -cc 0.001
+cp TaAs.klist_band tutorial5.klist
+berrypi -j -w -b 1:84
+echo "EXPECTED OUTPUT:
+'Berry phase sum (rad) =', -9.424777984529948
+======================================================================================="
+cd ../
+}
+
+######################################################################################
+# TaAs: Weyl point charge (Wloop)
+######################################################################################
+Tutorial_102 () {
+cd tutorial5
+export EDITOR=cat
+cp TaAs.struct tutorial5.struct
+init_lapw -b -rkmax 7 -vxc 13 -ecut -6 -numk 300
+echo -e "0 0 1\n\n\n\nN\n" | init_so_lapw
+run_lapw -so -ec 0.0001 -cc 0.001
+echo $PWD > Wloop.in
+echo "91" >> Wloop.in
+echo "1:84" >> Wloop.in
+echo "&WloopCoordinate" >> Wloop.in
+echo "0.2500 0.0000 1.0000 ; 0.2500 0.0000 0.0000" >> Wloop.in
+echo "0.3000 0.0000 1.0000 ; 0.3000 0.0000 0.0000" >> Wloop.in
+echo "0.2800 0.1500 1.0000 ; 0.2800 0.1500 0.0000" >> Wloop.in
+echo "END" >> Wloop.in
+python $BERRYPI_PATH/WloopPHI.py Wloop.in
+echo "EXPECTED OUTPUT:
+...
+======================================================================================="
+cd ../
 }
 
 ######################################################################################
