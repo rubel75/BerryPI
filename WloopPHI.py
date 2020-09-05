@@ -246,8 +246,8 @@ if (Check_Diff == True):
     print("WARNING -----> Phase Difference: The jump in phase difference is greter than pi/2 which is not good.")
     print("To avoid this warning please increase the number of Wilson loops.")
 print ("Output data file ""PHI.dat"" has generated.")
-
-    
+sys.exit()
+"""   
 #################### PLOT ##################################################
 try:
     import matplotlib
@@ -279,3 +279,4 @@ except ImportError as error:
     print ("You can plot your figure yourself by using ""PHI.dat"" file.")
     print ("Good bye!!! :)")
     sys.exit()
+"""
