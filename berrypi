@@ -346,9 +346,9 @@ def rawBerryPhase(configFile):
     #############################################
     # the purpose is to generate case.scf2 file that contains band occupancies
     # (-orb) is not required here as per Laurence Marks suggestion (Sep 2020)
-    # (-in1orig) is added to p[revent LAPW2 from midifying case.in1(c) file.
+    # (-in1orig) is added to prevent LAPW2 from midifying case.in1(c) file.
     #            Otherwise the electronic polarization results will be slightly
-    #            different for consequitive runs of BerryPI per Laurence Marks
+    #            different for consequitive runs of BerryPI as per Laurence Marks
     #            and Peter Blaha suggestion (Sep 2020)
     if not wCalc and bands == []:
         # do not run LAPW2 with pre-set band range
