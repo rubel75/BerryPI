@@ -16,7 +16,7 @@ echo "1 - Tutorial 1: Lambda1 and Lambda0"
 echo "2 - Tutorial 2: Lambda1 and Lambda2"
 echo "3 - Tutorial 3: GaAs1 and GaAs2"
 echo "4 - Tutorial 4: GaN-W and GaN-ZB"
-echo "5 - All Tests"
+echo "5 - All Tests (7-20, 101, 102)"
 echo "6 - Clean All"
 echo ""
 echo "T E S T S (serial):"
@@ -25,9 +25,9 @@ echo "8 - Test BaTiO3: Lambda1 (-s) spin polarization"
 echo "9 - Test BaTiO3: Lambda1 (-j) spin orbit"
 echo "10 - Test BaTiO3: Lambda1 (-o) orb. potential + U=0.1 Ry (spin polarization implied)"
 echo "11 - Test BaTiO3: Lambda1 (-s -j) spin polarization & SOC"
-echo "12 - Test BaTiO3: Lambda1 (-o -j) SOC & orb. potential + U=0.1 Ry (spin polarization implied) DOES NOT WORK!"
-echo "101 - Test TaAs: Weyl point charge"
-echo "102 - Test TaAs: Weyl point charge (Wloop)"
+echo "12 - Test BaTiO3: Lambda1 (-o -j) SOC & orb. potential + U=0.1 Ry (spin polarization implied)"
+echo "101 - Test TaAs: Weyl point charge (single Wilson loop)"
+echo "102 - Test TaAs: Weyl point charge (series of Wilson loops via WloopPHI.py)"
 echo ""
 echo "T E S T S (parallel):"
 echo "13 - Test BaTiO3: Lambda1 (-p) spin polarization (parallel 2 cores)"
@@ -35,7 +35,7 @@ echo "14 - Test BaTiO3: Lambda1 (-s -p) spin polarization (parallel 2 cores)"
 echo "15 - Test BaTiO3: Lambda1 (-j) spin orbit (parallel 2 cores)"
 echo "16 - Test BaTiO3: Lambda1 (-o) orb. potential + U=0.1 Ry (spin polarization implied) (parallel 2 cores)"
 echo "17 - Test BaTiO3: Lambda1 (-s -j) spin polarization & SOC (parallel 2 cores)"
-echo "18 - Test BaTiO3: Lambda1 (-o -j) SOC & orb. potential + U=0.1 Ry (spin polarization implied) (parallel 2 cores) DOES NOT WORK!"
+echo "18 - Test BaTiO3: Lambda1 (-o -j) SOC & orb. potential + U=0.1 Ry (spin polarization implied) (parallel 2 cores)"
 echo "19 - Test BaTiO3: Lambda1 (--sp_c) spin polar. constrained (non-magnetic, up=dn) (parallel 2 cores)"
 echo "20 - Test BaTiO3: Lambda1 (--sp_c -o) spin polar. constrained (non-magnetic, up=dn) + orb. potential + U=0.1 Ry (parallel 2 cores)"
 echo "######################################################"
@@ -45,7 +45,6 @@ menu() {
 
 case "$choice" in
 	1)
-	  echo "Running Tutorial 1"
       CleanTut_1
 	  Tutorial_1
 	  ;;
@@ -109,82 +108,66 @@ case "$choice" in
 	  rm -rf *.out
 	  ;;
 	7)
-	  echo "Running test 7"
       CleanTut_1
 	  Tutorial_7
 	  ;;
     8)
-	  echo "Running test 8"
       CleanTut_1
 	  Tutorial_8
 	  ;;
     9)
-	  echo "Running test 9"
       CleanTut_1
 	  Tutorial_9
 	  ;;
     10)
-	  echo "Running test 10"
       CleanTut_1
 	  Tutorial_10
 	  ;;
     11)
-	  echo "Running test 11"
       CleanTut_1
 	  Tutorial_11
 	  ;;
     12)
-	  echo "Running test 12"
       CleanTut_1
 	  Tutorial_12
 	  ;;
     101)
-	  echo "Running test 101"
       CleanTut_5
 	  Tutorial_101
 	  ;;
     102)
-	  echo "Running test 102"
       CleanTut_5
 	  Tutorial_102
 	  ;;
     13)
-	  echo "Running test 13"
       CleanTut_1
 	  Tutorial_13
 	  ;;
     14)
-	  echo "Running test 14"
       CleanTut_1
 	  Tutorial_14
 	  ;;
     15)
-	  echo "Running test 15"
       CleanTut_1
 	  Tutorial_15
 	  ;;
     16)
-	  echo "Running test 16"
       CleanTut_1
 	  Tutorial_16
 	  ;;
     17)
-	  echo "Running test 17"
       CleanTut_1
 	  Tutorial_17
 	  ;;
     18)
-	  echo "Running test 18"
       CleanTut_1
 	  Tutorial_18
 	  ;;
     19)
-	  echo "Running test 19"
       CleanTut_1
 	  Tutorial_19
 	  ;;
     20)
-	  echo "Running test 20"
       CleanTut_1
 	  Tutorial_20
 	  ;;
@@ -195,13 +178,13 @@ esac
 
 CleanTut_1 () {
 	cd tutorial1
-	rm -rf Tutorial1_1.out Tutorial1_2.out
+	rm -rf *.out
 	cd lambda1
 	ls -1 | grep -v 'lambda1.struct$' | xargs rm -f
        cd ../lambda0
 	ls -1 | grep -v 'lambda0.struct$' | xargs rm -f
 	cd ../../
-	echo "All files but lambda1.struct and lambda0.struct were removed!"
+	echo "dir tutorial1: All files but lambda1.struct and lambda0.struct were removed!"
 }
 
 CleanTut_2 () {
@@ -212,7 +195,7 @@ CleanTut_2 () {
        cd ../lambda2
 	ls -1 | grep -v 'lambda2.struct$' | xargs rm -f
 	cd ../../
-	echo "All files but lambda1.struct and lambda2.struct were removed!"
+	echo "dir tutorial2: All files but lambda1.struct and lambda2.struct were removed!"
 }
 
 CleanTut_3 () {
@@ -223,7 +206,7 @@ CleanTut_3 () {
        cd ../GaAs2
 	ls -1 | grep -v 'GaAs2.struct$' | xargs rm -f
 	cd ../../
-	echo "All files but GaAs1.struct and GaAs2.struct were removed!"
+	echo "dir tutorial3: All files but GaAs1.struct and GaAs2.struct were removed!"
 }
 
 CleanTut_4 () {
@@ -234,7 +217,7 @@ CleanTut_4 () {
        cd ../GaN-ZB
 	ls -1 | grep -v 'GaN-ZB.struct$' | xargs rm -f
 	cd ../../
-	echo "All files but GaN-W.struct and GaN-ZB.struct were removed!"
+	echo "dir tutorial4: All files but GaN-W.struct and GaN-ZB.struct were removed!"
 }
 
 CleanTut_5 () {
@@ -242,16 +225,15 @@ CleanTut_5 () {
     echo $PWD
     ls -1a | grep -v -e 'TaAs.struct$' -e 'TaAs.klist_band$' -e 'readme.txt$' -e '^\.$' -e '^\.\.$' | xargs rm -f # remove all files/dir except "TaAs.struct", "TaAs.klist_band", and "readme.txt"
 	cd ../
-	echo "All files but TaAs.struct, TaAs.klist_band, and readme.txt were removed!"
+	echo "dir tutorial5: All files but TaAs.struct, TaAs.klist_band, and readme.txt were removed!"
 }
 
 Tutorial_1 () {
-starttime=$(date +%s)
+echo "Running Tutorial 1"
 cd tutorial1/lambda1
-init_lapw -b -rkmax 4 -vxc 13 -ecut -6 -numk 230 2>&1 | tee ../Tutorial1_1.out
-run_lapw 2>&1 | tee -a ../Tutorial1_1.out
-echo "TUTORIAL 1 SUMMARY: " >> ../../Summary.out
-echo "" >> ../../Summary.out
+init_lapw -b -rkmax 4 -vxc 13 -ecut -6 -numk 230
+run_lapw
+berrypi -k6:6:6
 echo "EXPECTED LAMBDA1:
 =======================================================================================
 Value                           |  spin   |    dir(1)    |    dir(2)    |    dir(3)
@@ -261,35 +243,15 @@ Ionic polarization (C/m2)          sp(1)  [ 1.365657e-11,  1.365657e-11, -1.7605
 Tot. spin polariz.=Pion+Pel (C/m2) sp(1)  [ 4.944823e-12,  1.281972e-11,  3.042756e-01]
 ---------------------------------------------------------------------------------------
 TOTAL POLARIZATION (C/m2)          both   [ 4.944823e-12,  1.281972e-11,  3.042756e-01]
-=======================================================================================" >> ../../Summary.out
-berrypi -k6:6:6 2>&1 | tee -a ../Tutorial1_1.out
-endtime=$(date +%s)
-echo "Time elapsed: $((endtime-starttime))sec" >> ../Tutorial1_1.out 
-echo ""  >> ../../Summary.out
-echo "OBTAINED LAMBDA1:" >> ../../Summary.out
-while read line 
-do
-    if [ "$line" == "SUMMARY OF POLARIZATION CALCULATION" ]; then
-        for i in {1..9}
-        do
-            read line
-            echo "$line" >> ../../Summary.out
-        done
-        break
-    fi
-done < ../Tutorial1_1.out
-echo ""  >> ../../Summary.out
-starttime=$(date +%s)
+======================================================================================="
 cp * ../lambda0
 cd ../lambda0
 rm lambda1.struct
 rename_files lambda1 lambda0
-x kgen <<EOF 2>&1 | tee ../Tutorial1_2.out
-  230
-  1
-EOF
-x dstart 2>&1 | tee -a ../Tutorial1_2.out
-run_lapw 2>&1 | tee -a ../Tutorial1_2.out
+echo -e "230\n1\n" | x kgen
+x dstart
+run_lapw
+berrypi -k6:6:6
 echo "EXPECTED LAMBDA0:
 =======================================================================================
 Value                           |  spin   |    dir(1)    |    dir(2)    |    dir(3)
@@ -299,34 +261,16 @@ Ionic polarization (C/m2)          sp(1)  [ 1.365657e-11,  1.365657e-11,  1.3800
 Tot. spin polariz.=Pion+Pel (C/m2) sp(1)  [ 1.377302e-11,  1.379038e-11,  1.354278e-11]
 ---------------------------------------------------------------------------------------
 TOTAL POLARIZATION (C/m2)          both   [ 1.377302e-11,  1.379038e-11,  1.354278e-11]
-=======================================================================================" >> ../../Summary.out
-berrypi -k6:6:6 2>&1 | tee -a ../Tutorial1_2.out
-echo ""  >> ../../Summary.out
-echo "OBTAINED LAMBDA0:"  >> ../../Summary.out
-while read line 
-do
-    if [ "$line" == "SUMMARY OF POLARIZATION CALCULATION" ]; then
-        for i in {1..9}
-        do
-            read line
-            echo "$line" >> ../../Summary.out
-        done
-        break
-    fi
-done < ../Tutorial1_2.out
-echo ""  >> ../../Summary.out
-endtime=$(date +%s)
-echo "Time elapsed: $((endtime-starttime))sec" >> ../Tutorial1_2.out
+======================================================================================="
 cd ../../
 }
 
 Tutorial_2 () {
-starttime=$(date +%s)
+echo "Running Tutorial 2"
 cd tutorial2/lambda1
-init_lapw -b -rkmax 4 -vxc 13 -ecut -6 -numk 230 2>&1 | tee ../Tutorial2_1.out
-run_lapw 2>&1 | tee -a ../Tutorial2_1.out
-echo "TUTORIAL 2 SUMMARY: " >> ../../Summary.out
-echo "" >> ../../Summary.out
+init_lapw -b -rkmax 4 -vxc 13 -ecut -6 -numk 230
+run_lapw
+berrypi -k6:6:6
 echo "EXPECTED LAMBDA1:
 =======================================================================================
 Value                           |  spin   |    dir(1)    |    dir(2)    |    dir(3)
@@ -336,36 +280,15 @@ Ionic polarization (C/m2)          sp(1)  [ 2.855857e-10,  2.855857e-10,  7.3014
 Tot. spin polariz.=Pion+Pel (C/m2) sp(1)  [ 2.369493e-10,  5.905018e-10, -1.056116e-02]
 ---------------------------------------------------------------------------------------
 TOTAL POLARIZATION (C/m2)          both   [ 2.369493e-10,  5.905018e-10, -1.056116e-02]
-=======================================================================================" >> ../../Summary.out
-echo "" >> ../../Summary.out
-berrypi -k6:6:6 2>&1 | tee -a ../Tutorial2_1.out
-echo ""  >> ../../Summary.out
-echo "OBTAINED LAMBDA1:"  >> ../../Summary.out
-while read line 
-do
-    if [ "$line" == "SUMMARY OF POLARIZATION CALCULATION" ]; then
-        for i in {1..9}
-        do
-            read line
-            echo "$line" >> ../../Summary.out
-        done
-        break
-    fi
-done < ../Tutorial2_1.out
-echo ""  >> ../../Summary.out
-endtime=$(date +%s)
-echo "Time elapsed: $((endtime-starttime))sec" >> ../Tutorial2_1.out
-starttime=$(date +%s)
+======================================================================================="
 cp * ../lambda2
 cd ../lambda2
 rm lambda1.struct
 rename_files lambda1 lambda2
-x kgen <<EOF 2>&1 | tee ../Tutorial2_2.out
-  230
-  1
-EOF
-x dstart 2>&1 | tee -a ../Tutorial2_2.out
-run_lapw 2>&1 | tee -a ../Tutorial2_2.out
+echo -e "230\n1\n" | x kgen
+x dstart
+run_lapw
+berrypi -k6:6:6
 echo "EXPECTED LAMBDA2:
 =======================================================================================
 Value                           |  spin   |    dir(1)    |    dir(2)    |    dir(3)
@@ -375,42 +298,23 @@ Ionic polarization (C/m2)          sp(1)  [ 2.855857e-10,  2.855857e-10, -7.3014
 Tot. spin polariz.=Pion+Pel (C/m2) sp(1)  [ 4.726703e-10,  5.481761e-10,  1.056231e-02]
 ---------------------------------------------------------------------------------------
 TOTAL POLARIZATION (C/m2)          both   [ 4.726703e-10,  5.481761e-10,  1.056231e-02]
-=======================================================================================" >> ../../Summary.out
-echo "" >> ../../Summary.out
-berrypi -k6:6:6 2>&1 | tee -a ../Tutorial2_2.out
-echo ""  >> ../../Summary.out
-echo "OBTAINED LAMBDA2:"  >> ../../Summary.out
-while read line 
-do
-    if [ "$line" == "SUMMARY OF POLARIZATION CALCULATION" ]; then
-        for i in {1..9}
-        do
-            read line
-            echo "$line" >> ../../Summary.out
-        done
-        break
-    fi
-done < ../Tutorial2_2.out
-echo ""  >> ../../Summary.out
-endtime=$(date +%s)
-echo "Time elapsed: $((endtime-starttime))sec" >> ../Tutorial2_2.out
+======================================================================================="
 cd ../../
 }
 
 Tutorial_3 () {
-starttime=$(date +%s)
+echo "Running Tutorial 3"
 cd tutorial3/GaAs1
 linenr=$(grep -n -m 1 "ATOM  -2: X=0.25000000 Y=0.25000000 Z=0.25100000" GaAs1.struct | cut -d':' -f1)
 sed -i "${linenr}d" GaAs1.struct
 sed -i "${linenr}i\ATOM  -2: X=0.25100000 Y=0.25200000 Z=0.25300000" GaAs1.struct
-init_lapw -b -vxc 5 -rkmax 4 -numk 800 2>&1 | tee ../Tutorial3_1.out
+init_lapw -b -vxc 5 -rkmax 4 -numk 800
 linenr=$(grep -n -m 1 "ATOM  -2: X=0.25100000 Y=0.25200000 Z=0.25300000" GaAs1.struct | cut -d':' -f1)
 sed -i "${linenr}d" GaAs1.struct
 sed -i "${linenr}i\ATOM  -2: X=0.25000000 Y=0.25000000 Z=0.25100000" GaAs1.struct
-x dstart 2>&1 | tee -a ../Tutorial3_1.out
-run_lapw 2>&1 | tee -a ../Tutorial3_1.out
-echo "TUTORIAL 3 SUMMARY: " >> ../../Summary.out
-echo "" >> ../../Summary.out
+x dstart
+run_lapw
+berrypi -k 6:6:6
 echo "EXPECTED GaAs1:
 =======================================================================================
 Value                           |  spin   |    dir(1)    |    dir(2)    |    dir(3)
@@ -420,38 +324,18 @@ Ionic polarization (C/m2)          sp(1)  [-5.013188e-01, -5.013188e-01, -4.7123
 Tot. spin polariz.=Pion+Pel (C/m2) sp(1)  [ 4.756567e-01,  4.756567e-01, -1.430623e+00]
 ---------------------------------------------------------------------------------------
 TOTAL POLARIZATION (C/m2)          both   [ 4.756567e-01,  4.756567e-01, -1.430623e+00]
-=======================================================================================" >> ../../Summary.out
-berrypi -k 6:6:6 2>&1 | tee -a ../Tutorial3_1.out
-endtime=$(date +%s)
-echo "Time elapsed: $((endtime-starttime))sec" >> ../Tutorial3_1.out 
-echo ""  >> ../../Summary.out
-echo "OBTAINED GaAs1:" >> ../../Summary.out
-while read line 
-do
-    if [ "$line" == "SUMMARY OF POLARIZATION CALCULATION" ]; then
-        for i in {1..9}
-        do
-            read line
-            echo "$line" >> ../../Summary.out
-        done
-        break
-    fi
-done < ../Tutorial3_1.out
-echo ""  >> ../../Summary.out
-starttime=$(date +%s)
+======================================================================================="
 cp * ../GaAs2
 cd ../GaAs2
 rename_files GaAs1 GaAs2
 linenr=$(grep -n -m 1 "ATOM  -2: X=0.25000000 Y=0.25000000 Z=0.25100000" GaAs2.struct | cut -d':' -f1)
 sed -i "${linenr}d" GaAs2.struct
 sed -i "${linenr}i\ATOM  -2: X=0.25000000 Y=0.25000000 Z=0.24900000" GaAs2.struct
-x kgen <<EOF 2>&1 | tee ../Tutorial3_2.out
-  800
-  1
-EOF
-x dstart 2>&1 | tee -a ../Tutorial3_2.out
+echo -e "800\n1\n" | x kgen
+x dstart
 rm *scf
-run_lapw 2>&1 | tee -a ../Tutorial3_2.out
+run_lapw
+berrypi -k 6:6:6
 echo "EXPECTED GaAs2:
 =======================================================================================
 Value                           |  spin   |    dir(1)    |    dir(2)    |    dir(3)
@@ -461,34 +345,16 @@ Ionic polarization (C/m2)          sp(1)  [-5.013188e-01, -5.013188e-01, -5.3139
 Tot. spin polariz.=Pion+Pel (C/m2) sp(1)  [-1.460690e+00, -1.460690e+00,  4.455726e-01]
 ---------------------------------------------------------------------------------------
 TOTAL POLARIZATION (C/m2)          both   [-1.460690e+00, -1.460690e+00,  4.455726e-01]
-=======================================================================================" >> ../../Summary.out
-berrypi -k 6:6:6 2>&1 | tee -a ../Tutorial3_2.out
-echo ""  >> ../../Summary.out
-echo "OBTAINED GaAs2:"  >> ../../Summary.out
-while read line 
-do
-    if [ "$line" == "SUMMARY OF POLARIZATION CALCULATION" ]; then
-        for i in {1..9}
-        do
-            read line
-            echo "$line" >> ../../Summary.out
-        done
-        break
-    fi
-done < ../Tutorial3_2.out
-echo ""  >> ../../Summary.out
-endtime=$(date +%s)
-echo "Time elapsed: $((endtime-starttime))sec" >> ../Tutorial3_2.out
+======================================================================================="
 cd ../../
 }
 
 Tutorial_4 () {
-starttime=$(date +%s)
+echo "Running Tutorial 4"
 cd tutorial4/GaN-W
-init_lapw -b -vxc 5 -rkmax 7 -numk 300 2>&1 | tee ../Tutorial4_1.out
-run_lapw 2>&1 | tee -a ../Tutorial4_1.out
-echo "TUTORIAL 4 SUMMARY: " >> ../../Summary.out
-echo "" >> ../../Summary.out
+init_lapw -b -vxc 5 -rkmax 7 -numk 300
+run_lapw
+berrypi -k 8:8:8
 echo "EXPECTED GaN-W:
 =======================================================================================
 Value                           |  spin   |    dir(1)    |    dir(2)    |    dir(3)
@@ -498,28 +364,11 @@ Ionic polarization (C/m2)          sp(1)  [ 1.750356e-10, -2.049427e-07, -4.3860
 Tot. spin polariz.=Pion+Pel (C/m2) sp(1)  [ 3.973752e-10, -8.442784e-08, -4.947239e-01]
 ---------------------------------------------------------------------------------------
 TOTAL POLARIZATION (C/m2)          both   [ 3.973752e-10, -8.442784e-08, -4.947239e-01]
-=======================================================================================" >> ../../Summary.out
-berrypi -k 8:8:8 2>&1 | tee -a ../Tutorial4_1.out
-endtime=$(date +%s)
-echo "Time elapsed: $((endtime-starttime))sec" >> ../Tutorial4_1.out 
-echo ""  >> ../../Summary.out
-echo "OBTAINED GaN-W:" >> ../../Summary.out
-while read line 
-do
-    if [ "$line" == "SUMMARY OF POLARIZATION CALCULATION" ]; then
-        for i in {1..9}
-        do
-            read line
-            echo "$line" >> ../../Summary.out
-        done
-        break
-    fi
-done < ../Tutorial4_1.out
-echo ""  >> ../../Summary.out
-starttime=$(date +%s)
+======================================================================================="
 cd ../GaN-ZB
-init_lapw -b -vxc 5 -rkmax 7 -numk 200 2>&1 | tee -a ../Tutorial4_2.out
-run_lapw 2>&1 | tee -a ../Tutorial4_2.out
+init_lapw -b -vxc 5 -rkmax 7 -numk 200
+run_lapw
+berrypi -k 8:8:8
 echo "EXPECTED GaN-ZB:
 =======================================================================================
 Value                           |  spin   |    dir(1)    |    dir(2)    |    dir(3)
@@ -529,31 +378,21 @@ Ionic polarization (C/m2)          sp(1)  [ 1.165061e-10,  1.165088e-10, -4.6448
 Tot. spin polariz.=Pion+Pel (C/m2) sp(1)  [-1.219101e-03,  1.219101e-03, -4.646545e-01]
 ---------------------------------------------------------------------------------------
 TOTAL POLARIZATION (C/m2)          both   [-1.219101e-03,  1.219101e-03, -4.646545e-01]
-=======================================================================================" >> ../../Summary.out
-berrypi -k 8:8:8 2>&1 | tee -a ../Tutorial4_2.out
-echo ""  >> ../../Summary.out
-echo "OBTAINED GaN_ZB:"  >> ../../Summary.out
-while read line 
-do
-    if [ "$line" == "SUMMARY OF POLARIZATION CALCULATION" ]; then
-        for i in {1..9}
-        do
-            read line
-            echo "$line" >> ../../Summary.out
-        done
-        break
-    fi
-done < ../Tutorial4_2.out
-echo ""  >> ../../Summary.out
-endtime=$(date +%s)
-echo "Time elapsed: $((endtime-starttime))sec" >> ../Tutorial4_2.out
+======================================================================================="
 cd ../../
 }
+
+######################################################################################
+#                                                                                    #
+#                                 T E S T S                                          #
+#                                                                                    #
+######################################################################################
 
 ######################################################################################
 # simplest test
 ######################################################################################
 Tutorial_7 () {
+echo "Running test 7"
 cd tutorial1/lambda1
 init_lapw -b -rkmax 4 -vxc 13 -ecut -6 -numk 100
 run_lapw -ec 0.0001 -cc 0.001
@@ -575,6 +414,7 @@ cd ../../
 # spin polarized test
 ######################################################################################
 Tutorial_8 () {
+echo "Running test 8"
 cd tutorial1/lambda1
 init_lapw -b -rkmax 4 -vxc 13 -ecut -6 -numk 100 -sp
 runsp_lapw -ec 0.0001 -cc 0.001
@@ -600,6 +440,7 @@ cd ../../
 # SOC test
 ######################################################################################
 Tutorial_9 () {
+echo "Running test 9"
 cd tutorial1/lambda1
 export EDITOR=cat
 init_lapw -b -rkmax 4 -vxc 13 -ecut -6 -numk 100
@@ -623,6 +464,7 @@ cd ../../
 # ORB test
 ######################################################################################
 Tutorial_10 () {
+echo "Running test 10"
 cd tutorial1/lambda1
 export EDITOR=cat
 init_lapw -b -rkmax 4 -vxc 13 -ecut -6 -numk 100 -sp
@@ -650,6 +492,7 @@ cd ../../
 # spin polarization + SOC test
 ######################################################################################
 Tutorial_11 () {
+echo "Running test 11"
 cd tutorial1/lambda1
 export EDITOR=cat
 init_lapw -b -rkmax 4 -vxc 13 -ecut -6 -numk 100 -sp
@@ -670,9 +513,10 @@ cd ../../
 }
 
 ######################################################################################
-# SOC + ORB test DOES NOT WORK!
+# SOC + ORB test
 ######################################################################################
 Tutorial_12 () {
+echo "Running test 12"
 cd tutorial1/lambda1
 export EDITOR=cat
 init_lapw -b -rkmax 4 -vxc 13 -ecut -6 -numk 100 -sp
@@ -684,11 +528,11 @@ echo "EXPECTED LAMBDA1:
 =======================================================================================
 Value                           |  spin   |    dir(1)    |    dir(2)    |    dir(3)
 ---------------------------------------------------------------------------------------
-Electronic polarization (C/m2)     sp(1)  [ 5.395795e-12,  8.790106e-12,  4.811830e-01]
+Electronic polarization (C/m2)     sp(1)  [-3.539321e-10, -1.062987e-09,  4.637736e-01]
 Ionic polarization (C/m2)          sp(1)  [ 0.000000e+00,  0.000000e+00, -1.760570e-01]
-Tot. spin polariz.=Pion+Pel (C/m2) sp(1)  [ 5.395795e-12,  8.790106e-12,  3.051260e-01]
+Tot. spin polariz.=Pion+Pel (C/m2) sp(1)  [-3.539321e-10, -1.062987e-09,  2.877166e-01]
 ---------------------------------------------------------------------------------------
-TOTAL POLARIZATION (C/m2)          both   [ 5.395795e-12,  8.790106e-12,  3.051260e-01]
+TOTAL POLARIZATION (C/m2)          both   [-3.539321e-10, -1.062987e-09,  2.877166e-01]
 ======================================================================================="
 cd ../../
 }
@@ -697,6 +541,7 @@ cd ../../
 # TaAs: Weyl point charge
 ######################################################################################
 Tutorial_101 () {
+echo "Running test 101"
 cd tutorial5
 export EDITOR=cat
 cp TaAs.struct tutorial5.struct
@@ -715,6 +560,7 @@ cd ../
 # TaAs: Weyl point charge (Wloop)
 ######################################################################################
 Tutorial_102 () {
+echo "Running test 102"
 cd tutorial5
 export EDITOR=cat
 cp TaAs.struct tutorial5.struct
@@ -740,6 +586,7 @@ cd ../
 # BaTiO3 tutorial 1 (parallel)
 ######################################################################################
 Tutorial_13 () {
+echo "Running test 13"
 cd tutorial1/lambda1
 echo "1:localhost" > .machines
 echo "1:localhost" >> .machines
@@ -763,6 +610,7 @@ cd ../../
 # spin polarized test (parallel)
 ######################################################################################
 Tutorial_14 () {
+echo "Running test 14"
 cd tutorial1/lambda1
 echo "1:localhost" > .machines
 echo "1:localhost" >> .machines
@@ -790,6 +638,7 @@ cd ../../
 # SOC test (parallel)
 ######################################################################################
 Tutorial_15 () {
+echo "Running test 15"
 cd tutorial1/lambda1
 echo "1:localhost" > .machines
 echo "1:localhost" >> .machines
@@ -815,6 +664,7 @@ cd ../../
 # ORB test (parallel)
 ######################################################################################
 Tutorial_16 () {
+echo "Running test 16"
 cd tutorial1/lambda1
 echo "1:localhost" > .machines
 echo "1:localhost" >> .machines
@@ -844,6 +694,7 @@ cd ../../
 # spin polarization + SOC test (parallel)
 ######################################################################################
 Tutorial_17 () {
+echo "Running test 17"
 cd tutorial1/lambda1
 echo "1:localhost" > .machines
 echo "1:localhost" >> .machines
@@ -869,6 +720,7 @@ cd ../../
 # SOC + ORB test DOES NOT WORK!
 ######################################################################################
 Tutorial_18 () {
+echo "Running test 18"
 cd tutorial1/lambda1
 echo "1:localhost" > .machines
 echo "1:localhost" >> .machines
@@ -882,11 +734,11 @@ echo "EXPECTED LAMBDA1:
 =======================================================================================
 Value                           |  spin   |    dir(1)    |    dir(2)    |    dir(3)
 ---------------------------------------------------------------------------------------
-Electronic polarization (C/m2)     sp(1)  [ 5.395795e-12,  8.790106e-12,  4.811830e-01]
+Electronic polarization (C/m2)     sp(1)  [-4.142505e-10, -1.010819e-09,  4.637736e-01]
 Ionic polarization (C/m2)          sp(1)  [ 0.000000e+00,  0.000000e+00, -1.760570e-01]
-Tot. spin polariz.=Pion+Pel (C/m2) sp(1)  [ 5.395795e-12,  8.790106e-12,  3.051260e-01]
+Tot. spin polariz.=Pion+Pel (C/m2) sp(1)  [-4.142505e-10, -1.010819e-09,  2.877166e-01]
 ---------------------------------------------------------------------------------------
-TOTAL POLARIZATION (C/m2)          both   [ 5.395795e-12,  8.790106e-12,  3.051260e-01]
+TOTAL POLARIZATION (C/m2)          both   [-4.142505e-10, -1.010819e-09,  2.877166e-01]
 ======================================================================================="
 cd ../../
 }
@@ -895,6 +747,7 @@ cd ../../
 # Test BaTiO3: Lambda1 (--sp_c) spin polar. constrained (non-magnetic, up=dn) (parallel 2 cores)
 ######################################################################################
 Tutorial_19 () {
+echo "Running test 19"
 cd tutorial1/lambda1
 echo "1:localhost" > .machines
 echo "1:localhost" >> .machines
@@ -924,6 +777,7 @@ cd ../../
 # Test BaTiO3: Lambda1 (--sp_c -o) spin polar. constrained (non-magnetic, up=dn) + orb. potential + U=0.1 Ry (parallel 2 cores)
 ######################################################################################
 Tutorial_20 () {
+echo "Running test 20"
 cd tutorial1/lambda1
 echo "1:localhost" > .machines
 echo "1:localhost" >> .machines
