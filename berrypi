@@ -27,7 +27,6 @@ import calculations as b_PyCalc
 
 import config
 from config import BERRY_DEFAULT_CONSOLE_PREFIX as DEFAULT_PREFIX
-from config import BERRY_FILE_EXTENSION, DEFAULT_BIN_PATH, DEFAULT_PYTHON_PATH
 
 import mmn2pathphase
 
@@ -110,26 +109,32 @@ def rawBerryPhase(configFile):
 
     # setup wien2k, berrypi path and python path
     w2kpath = os.getenv('WIENROOT')
-    if w2kpath == "":
+    if w2kpath == None:
         print DEFAULT_PREFIX, 'ERROR: Unable to find the WIENROOT enviroment variable'
         print '             check the existance by executing "echo $WIENROOT"'
         print '             or set it up by "export WIENROOT=/path/to/wien2k"'
         sys.exit(2)
     else:
         print DEFAULT_PREFIX, 'w2kpath =', w2kpath
-    pypath = os.getenv('BERRYPI_PYTHON', DEFAULT_PYTHON_PATH)
-    if pypath == "":
-        print DEFAULT_PREFIX, 'ERROR: Unable to find BERRYPI_PYTHON enviroment variable'
-        print '             check the existance by executing "echo $BERRYPI_PYTHON"'
-        print '             or set it up by "export BERRYPI_PYTHON=/path/to/python"'
+    pypath = sys.executable # get that to python
+    print DEFAULT_PREFIX, 'pypath =', pypath
+    # check python version
+    if sys.version_info[0] > 2: # major python version 3 is not supported
+        print DEFAULT_PREFIX, 'ERROR: python 3.X is not supported'
         sys.exit(2)
+    elif sys.version_info[0] == 2 and sys.version_info[1] < 7:
+        print DEFAULT_PREFIX, 'WARNING: python 2.7.X is recommended',\
+            'prior versions are not tested'
     else:
-        print DEFAULT_PREFIX, 'pypath =', pypath
-    bppath = os.getenv('BERRYPI_PATH', DEFAULT_BIN_PATH)
-    if bppath == "":
-        print DEFAULT_PREFIX, 'ERROR: Unable to find BERRYPI_PATH enviroment variable'
-        print '             check the existance by executing "echo $BERRYPI_PATH"'
-        print '             or set it up by "export BERRYPI_PYTHON=/path/to/berrypi"'
+        print DEFAULT_PREFIX, 'python major version =', sys.version_info[0]
+        print DEFAULT_PREFIX, 'python minor version =', sys.version_info[1]
+        print DEFAULT_PREFIX, 'python micro version =', sys.version_info[2]
+        print DEFAULT_PREFIX, 'This python version was tested', \
+            'and should be supported'
+    bppath = w2kpath + "/SRC_BerryPI/BerryPI"
+    if not os.path.isdir(bppath): # check if BerryPI directory exists
+        print DEFAULT_PREFIX, 'bppath =', bppath
+        print DEFAULT_PREFIX, 'ERROR: BerryPI directory does not exist'
         sys.exit(2)
     else:
         print DEFAULT_PREFIX, 'bppath =', bppath
@@ -864,8 +869,6 @@ if __name__ == "__main__":
     #boolean for whether to automate the entire process
     checkAuto = True
 
-
-
     #defaults
     structure_name = ''
     structure_path = ''
@@ -1102,9 +1105,10 @@ if __name__ == "__main__":
                     str(err.errorTags);
     
     
-	  # Final remarks
-    bppath = os.getenv('BERRYPI_PATH') # get path to BerryPI 
-    with open(bppath+'/version.info', 'r') as versionFile: # open version file
+    # Final remarks
+    w2kpath = os.getenv('WIENROOT') # get path to WIEN2k
+    # open version file
+    with open(w2kpath+'/SRC_BerryPI/BerryPI/version.info', 'r') as versionFile:
         print "\nCompleted using BerryPI version:", versionFile.read()
     print '''
 Suggested reference:

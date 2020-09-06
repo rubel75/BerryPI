@@ -20,7 +20,6 @@ import copy # needed for deepcopy of arrays
 import collections
 
 from collections import OrderedDict as orderedDict
-from config import BERRY_DEFAULT_CONSOLE_PREFIX as DEFAULT_PREFIX
 from convunits import bohrToMeters # conversion [Bohr] => [m]
 
 DEBUG = True
