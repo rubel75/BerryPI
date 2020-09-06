@@ -25,7 +25,6 @@ Version Sep 5, 2020
 
 *** Limitation
 - Python 3.* is not supported
-- The combination of spin-orbit coupling and the orbital potential (DFT+U) "berrypi -o -j" produces wrong results. Individually both options work fine, though.
 - The present version is restricted to cases when the lattice vectors correspond to cartesian directions. For example, the zinc-blend or NaCl structures should be regarded as an 8 atom cell instead of the conventional 2 atom basis. This restriction is partly lifted (see - [[https://github.com/spichardo/BerryPI/wiki/Tutorial:-Non-orthogonal-lattice-vectors][Tutorial 3]])
 
 *** To Do
