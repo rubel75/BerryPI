@@ -11,6 +11,7 @@ See
 for details.
 '''
 
+from __future__ import print_function # Python 2 & 3 compatible print function
 import os, os.path
 import sys, shutil, getopt
 import time
@@ -19,6 +20,7 @@ import subprocess
 from decimal import Decimal
 import numpy # math library
 import re
+import functools # needed for functools.reduce()
 
 import errorCheck as b_PyError
 import parsing as b_PyParse
@@ -60,7 +62,7 @@ def postProcBerryPhase(configFile, phasesRaw, spCalc):
     structurePath = configFile['Structure Path']
     changeToWorkingDirectory(configFile['Structure Path'])
     structName = configFile['Structure Name']
-    print DEFAULT_PREFIX + "Performing main calculation on " + structName
+    print(DEFAULT_PREFIX + "Performing main calculation on " + structName)
     structFileExtensions = {
         'struct' : '.struct',
         'scf2' : '.scf2',
@@ -89,8 +91,7 @@ def rawBerryPhase(configFile):
     processes to be batched.
     '''
     print(DEFAULT_PREFIX + \
-      "Starting BerryPI for {}").format( \
-      configFile['Structure Name'] );
+      "Starting BerryPI for", configFile['Structure Name'] )
 
     # get calculation parameters and options
     runLAPW = configFile['Perform LAPW']
@@ -105,50 +106,51 @@ def rawBerryPhase(configFile):
 
     #ensure background env is also in the right directory
     os.system('cd ' + newWorkingDirectory)
-    print DEFAULT_PREFIX + 'New working directory: ' + newWorkingDirectory
+    print(DEFAULT_PREFIX + 'New working directory: ' + newWorkingDirectory)
 
     # setup wien2k, berrypi path and python path
     w2kpath = os.getenv('WIENROOT')
     if w2kpath == None:
-        print DEFAULT_PREFIX, 'ERROR: Unable to find the WIENROOT enviroment variable'
-        print '             check the existance by executing "echo $WIENROOT"'
-        print '             or set it up by "export WIENROOT=/path/to/wien2k"'
+        print(DEFAULT_PREFIX + 'ERROR: Unable to find the WIENROOT enviroment variable')
+        print('             check the existance by executing "echo $WIENROOT"')
+        print('             or set it up by "export WIENROOT=/path/to/wien2k"')
         sys.exit(2)
     else:
-        print DEFAULT_PREFIX, 'w2kpath =', w2kpath
+        print(DEFAULT_PREFIX + 'w2kpath = ' + w2kpath)
     pypath = sys.executable # get that to python
-    print DEFAULT_PREFIX, 'pypath =', pypath
+    print(DEFAULT_PREFIX + 'pypath = ' + pypath)
     # check python version
     if sys.version_info[0] > 2: # major python version 3 is not supported
-        print DEFAULT_PREFIX, 'ERROR: python 3.X is not supported'
-        sys.exit(2)
+        print(DEFAULT_PREFIX + 'WARNING: compatibility with python 3.X was only recently',
+            'implemented. Proceed with caution. WloopPHI.py does not support python3.X')
     elif sys.version_info[0] == 2 and sys.version_info[1] < 7:
-        print DEFAULT_PREFIX, 'WARNING: python 2.7.X is recommended',\
-            'prior versions are not tested'
+        print(DEFAULT_PREFIX + 'WARNING: python 2.7.X is recommended' + \
+            'prior versions are not tested')
     else:
-        print DEFAULT_PREFIX, 'python major version =', sys.version_info[0]
-        print DEFAULT_PREFIX, 'python minor version =', sys.version_info[1]
-        print DEFAULT_PREFIX, 'python micro version =', sys.version_info[2]
-        print DEFAULT_PREFIX, 'This python version was tested', \
-            'and should be supported'
+        print(DEFAULT_PREFIX, 'This python version was tested', \
+            'and should be supported')
+    print(DEFAULT_PREFIX, 'python major version =', sys.version_info[0])
+    print(DEFAULT_PREFIX, 'python minor version =', sys.version_info[1])
+    print(DEFAULT_PREFIX, 'python micro version =', sys.version_info[2])
+        
     bppath = w2kpath + "/SRC_BerryPI/BerryPI"
     if not os.path.isdir(bppath): # check if BerryPI directory exists
-        print DEFAULT_PREFIX, 'bppath =', bppath
-        print DEFAULT_PREFIX, 'ERROR: BerryPI directory does not exist'
+        print(DEFAULT_PREFIX, 'bppath =', bppath)
+        print(DEFAULT_PREFIX, 'ERROR: BerryPI directory does not exist')
         sys.exit(2)
     else:
-        print DEFAULT_PREFIX, 'bppath =', bppath
+        print(DEFAULT_PREFIX, 'bppath =', bppath)
 
 
     # print version
     with open(bppath+'/version.info', 'r') as versionFile: # open version file
-        print DEFAULT_PREFIX + versionFile.read()
-    print DEFAULT_PREFIX + "Python version: " + sys.version
-    print DEFAULT_PREFIX + "Numpy version: " + numpy.version.version
+        print(DEFAULT_PREFIX + versionFile.read())
+    print(DEFAULT_PREFIX + "Python version: " + sys.version)
+    print(DEFAULT_PREFIX + "Numpy version: " + numpy.version.version)
     
     #check to make sure certain files exist
     structureName = configFile['Structure Name']
-    print DEFAULT_PREFIX + "Checking prerequisite files for " + structureName
+    print(DEFAULT_PREFIX + "Checking prerequisite files for " + structureName)
     if not wCalc: # any calculation except for Weyl points/Wilson loop
         structFileExtensions = {
             'struct' : '.struct',
@@ -161,11 +163,11 @@ def rawBerryPhase(configFile):
     for extension in structFileExtensions.values():
         tempFilename = structureName + extension
         #TODO change to a logging system
-        print(DEFAULT_PREFIX + "Checking existance of {}").format(tempFilename)
+        print(DEFAULT_PREFIX + "Checking existance of",tempFilename)
         if not b_PyError.fileExists(tempFilename):
             print( DEFAULT_PREFIX + "{} does not exist, cannot finish calculation").format(tempFilename)
             exit(2)
-        else: print DEFAULT_PREFIX + '-- OK'
+        else: print(DEFAULT_PREFIX + '-- OK')
 
 
     ######################################
@@ -188,7 +190,7 @@ def rawBerryPhase(configFile):
         kShift = configFile['K-Mesh Shift']
         #input is a string per line representation of each input for that particular file
         inputListing = [str(numKpoints),
-                        reduce(lambda i,j: str(i) + ' ' + str(j), numKDivisions),
+                        functools.reduce(lambda i,j: str(i) + ' ' + str(j), numKDivisions),
                         kShift,
                         ]
         shell_x_kgen = b_PySubProcess.VirtualShellInstance(
@@ -197,24 +199,24 @@ def rawBerryPhase(configFile):
             ) # -fbz forces full BZ mesh
         try:
             shell_x_kgen.run()
-        except subprocess.CalledProcessError, err:
-            print DEFAULT_PREFIX + "ERROR: in automation of " + str(structureName) 
-            print DEFAULT_PREFIX + "ERROR --> " + shell_x_kgen.getCommandString()
-            print str(err)
+        except subprocess.CalledProcessError as err:
+            print(DEFAULT_PREFIX + "ERROR: in automation of " + str(structureName))
+            print(DEFAULT_PREFIX + "ERROR --> " + shell_x_kgen.getCommandString())
+            print(str(err))
             return False
     elif not runLAPW:
-        print DEFAULT_PREFIX + "Skip k-mesh generation, since you "+ \
+        print(DEFAULT_PREFIX + "Skip k-mesh generation, since you "+ \
             "opted for not performing LAPW.\n Proceed assuming that " + \
             "the proper k-mesh generated in the FULL BZ and vector "+ \
-            "files were created in the previous run"
-        print DEFAULT_PREFIX + "k-mesh will be read from case.klist file"
+            "files were created in the previous run")
+        print(DEFAULT_PREFIX + "k-mesh will be read from case.klist file")
         f = open( str(structureName)+'.klist' , 'r' )
         for line in f:
             kmesh = re.findall( r'\(.*?\)' , line )
             kmesh2 = re.findall( r'\d+' , kmesh[0] )
             numKDivisions = map(int, kmesh2)
-            print DEFAULT_PREFIX + "The following k-mesh will be used:", \
-                numKDivisions;
+            print(DEFAULT_PREFIX + "The following k-mesh will be used:", \
+                numKDivisions)
             break
         f.close()
 
@@ -224,7 +226,7 @@ def rawBerryPhase(configFile):
     ####################################
     if wCalc:
         numKDivisions = [0]*3; # creale list [0,0,0]
-        print DEFAULT_PREFIX + "k-path will be read from case.klist file"
+        print(DEFAULT_PREFIX + "k-path will be read from case.klist file")
         f = open( str(structureName)+'.klist' , 'r' )
         word = ("END", "end")
         numKDivisions[0] = 0
@@ -235,8 +237,8 @@ def rawBerryPhase(configFile):
                 break
             numKDivisions[0] += 1
         f.close()
-        print DEFAULT_PREFIX + "The following k-path length will be used:", \
-            numKDivisions;
+        print(DEFAULT_PREFIX + "The following k-path length will be used:", \
+            numKDivisions)
 
 
     ##########################################
@@ -249,12 +251,12 @@ def rawBerryPhase(configFile):
         )
     try:
         shell_pathphase_y_copy()
-    except subprocess.CalledProcessError, err:
-        print DEFAULT_PREFIX + "ERROR: in automation of " + \
-            str(structureName);
-        print DEFAULT_PREFIX + "ERROR --> " + \
-            shell_pathphase_y_copy.getCommandString();
-        print str(err)
+    except subprocess.CalledProcessError as err:
+        print(DEFAULT_PREFIX + "ERROR: in automation of " + \
+            str(structureName))
+        print(DEFAULT_PREFIX + "ERROR --> " + \
+            shell_pathphase_y_copy.getCommandString())
+        print(str(err))
         return False
 
 
@@ -265,7 +267,7 @@ def rawBerryPhase(configFile):
     # cp $filename.vns $filename.vns[up/dn]                     #
     #############################################################
     if soCalc and not spCalc:
-        print DEFAULT_PREFIX + "Faking spin-polarized calculation..."
+        print(DEFAULT_PREFIX + "Faking spin-polarized calculation...")
         for ext in ['.vsp', '.vns']:
             for spin in ['up', 'dn']:
                 shell_pathphase_y_copy = \
@@ -276,12 +278,12 @@ def rawBerryPhase(configFile):
                     );
                 try:
                     shell_pathphase_y_copy()
-                except subprocess.CalledProcessError, err:
-                    print DEFAULT_PREFIX + "ERROR: in automation of " + \
-                        str(structureName);
-                    print DEFAULT_PREFIX + "ERROR --> " + \
-                        shell_pathphase_y_copy.getCommandString();
-                    print str(err)
+                except subprocess.CalledProcessError as err:
+                    print(DEFAULT_PREFIX + "ERROR: in automation of " + \
+                        str(structureName))
+                    print(DEFAULT_PREFIX + "ERROR --> " + \
+                        shell_pathphase_y_copy.getCommandString())
+                    print(str(err))
                     return False
 
 
@@ -314,13 +316,13 @@ def rawBerryPhase(configFile):
 
             try:
                 shell_x_lapw1()
-            except subprocess.CalledProcessError, err:
-                print DEFAULT_PREFIX + "ERROR: in automation of " + str(structureName)
-                print DEFAULT_PREFIX + "ERROR --> " + shell_x_lapw1.getCommandString()
-                print str(err)
+            except subprocess.CalledProcessError as err:
+                print(DEFAULT_PREFIX + "ERROR: in automation of " + str(structureName))
+                print(DEFAULT_PREFIX + "ERROR --> " + shell_x_lapw1.getCommandString())
+                print(str(err))
                 return False
     else:
-        print DEFAULT_PREFIX + "Skipping 'x lapw1'"
+        print(DEFAULT_PREFIX + "Skipping 'x lapw1'")
 
 
     ###########################
@@ -338,12 +340,12 @@ def rawBerryPhase(configFile):
 
         try:
             shell_x_lapwso()
-        except subprocess.CalledProcessError, err:
-            print DEFAULT_PREFIX + "ERROR: in automation of " + \
-                str(structureName);
-            print DEFAULT_PREFIX + "ERROR --> " + \
-                shell_x_lapwso.getCommandString();
-            print str(err)
+        except subprocess.CalledProcessError as err:
+            print(DEFAULT_PREFIX + "ERROR: in automation of " + \
+                str(structureName))
+            print(DEFAULT_PREFIX + "ERROR --> " + \
+                shell_x_lapwso.getCommandString())
+            print(str(err))
             return False
 
     #############################################
@@ -374,12 +376,12 @@ def rawBerryPhase(configFile):
                     )
                 try:
                     shell_copy()
-                except subprocess.CalledProcessError, err:
-                    print DEFAULT_PREFIX + "ERROR: in automation of " + \
-                        str(structureName);
-                    print DEFAULT_PREFIX + "ERROR --> " + \
-                        shell_copy.getCommandString();
-                    print str(err)
+                except subprocess.CalledProcessError as err:
+                    print(DEFAULT_PREFIX + "ERROR: in automation of " + \
+                        str(structureName))
+                    print(DEFAULT_PREFIX + "ERROR --> " + \
+                        shell_copy.getCommandString())
+                    print(str(err))
                     return False
         else: # regular (non-spin polarized calc. or SOC)
             spOptions = ' ' # need space here!
@@ -393,12 +395,12 @@ def rawBerryPhase(configFile):
 
             try:
                 shell_x_lapw1()
-            except subprocess.CalledProcessError, err:
-                print DEFAULT_PREFIX + "ERROR: in automation of " + \
-                    str(structureName)
-                print DEFAULT_PREFIX + "ERROR --> " + \
-                    shell_x_lapw1.getCommandString()
-                print str(err)
+            except subprocess.CalledProcessError as err:
+                print(DEFAULT_PREFIX + "ERROR: in automation of " + \
+                    str(structureName))
+                print(DEFAULT_PREFIX + "ERROR --> " + \
+                    shell_x_lapw1.getCommandString())
+                print(str(err))
                 return False
 
 
@@ -407,51 +409,51 @@ def rawBerryPhase(configFile):
     #############################################
     if bands == []: # band range is not specified
         if spCalc or soCalc or orbCalc: # spin polarized mode
-            print DEFAULT_PREFIX + "Determine number of bloch bands " + \
-                "in spin-polarized mode based on *.scf2(up/dn)"
+            print(DEFAULT_PREFIX + "Determine number of bloch bands " + \
+                "in spin-polarized mode based on *.scf2(up/dn)")
             spinList = ['up', 'dn']
             if sp_cCalc: # constrained (non-magneric SP up=dn)
                 # it is not a typo (there is no case.scfdn file in this case)
                 spinList = ['up', 'up']
             blochBandSettings = [] # allocate array for the range of bands
             for spin in spinList: # loop over spins
-                print DEFAULT_PREFIX + " "*2 + "spin = " + spin
+                print(DEFAULT_PREFIX + " "*2 + "spin = " + spin)
                 try:
                     blochBandCalculation = \
                         b_PyCalc.CalculateNumberOfBands(structureName + \
                         '.scf2' + spin);
-                except b_PyError.ParseError, err:
-                    print DEFAULT_PREFIX + "ERROR: in automation of " + \
-                        str(structureName);
-                    print DEFAULT_PREFIX + str(err)
-                    print DEFAULT_PREFIX + "ERROR: missing tags: " + \
-                        str(err.errorTags);
+                except b_PyError.ParseError as err:
+                    print(DEFAULT_PREFIX + "ERROR: in automation of " + \
+                        str(structureName))
+                    print(DEFAULT_PREFIX + str(err))
+                    print(DEFAULT_PREFIX + "ERROR: missing tags: " + \
+                        str(err.errorTags))
                     return False
                 blochBandRange = [ 1 , \
                     int(blochBandCalculation.getNumberOfBands(spCalc,soCalc, \
                     orbCalc,wCalc)) ];
-                print DEFAULT_PREFIX + " "*4 + \
-                    "Number of bloch bands is {}".format(blochBandRange);
+                print(DEFAULT_PREFIX + " "*4 + \
+                    "Number of bloch bands is {}".format(blochBandRange))
                 blochBandSettings.append(blochBandRange)
         else: # regular (non-spin polarized calc.)
-            print DEFAULT_PREFIX + \
-                "Determine number of bloch bands in non-sp mode"
+            print(DEFAULT_PREFIX + \
+                "Determine number of bloch bands in non-sp mode")
             try:
                 blochBandCalculation = \
                     b_PyCalc.CalculateNumberOfBands(structureName + '.scf2');
                 # it is better to take *.scf2 file instead of
-            except b_PyError.ParseError, err:
-                print DEFAULT_PREFIX + "ERROR: in automation of " + \
-                    str(structureName) 
-                print DEFAULT_PREFIX + str(err)
-                print DEFAULT_PREFIX + "ERROR: missing tags: " + \
-                    str(err.errorTags)
+            except b_PyError.ParseError as err:
+                print(DEFAULT_PREFIX + "ERROR: in automation of " + \
+                    str(structureName))
+                print(DEFAULT_PREFIX + str(err))
+                print(DEFAULT_PREFIX + "ERROR: missing tags: " + \
+                    str(err.errorTags))
                 return False
             blochBandSettings = [[ 1, \
                 int(blochBandCalculation.getNumberOfBands(spCalc,soCalc, \
                 orbCalc,wCalc)) ]];
-            print DEFAULT_PREFIX + " "*4 + \
-                "Number of bloch bands is {}".format(blochBandSettings);
+            print(DEFAULT_PREFIX + " "*4 + \
+                "Number of bloch bands is {}".format(blochBandSettings))
     else: # the band range is specified
         blochBandSettings = []
         blochBandSettings.append(configFile['Bloch Band'])
@@ -522,12 +524,12 @@ def rawBerryPhase(configFile):
             )
         try:
             shell_write_inwf.run()
-        except subprocess.CalledProcessError, err:
-            print DEFAULT_PREFIX + "ERROR: in automation of " + \
-                str(structureName) 
-            print DEFAULT_PREFIX + "ERROR --> " + \
-                shell_write_inwf.getCommandString()
-            print str(err)
+        except subprocess.CalledProcessError as err:
+            print(DEFAULT_PREFIX + "ERROR: in automation of " + \
+                str(structureName))
+            print(DEFAULT_PREFIX + "ERROR --> " + \
+                shell_write_inwf.getCommandString())
+            print(str(err))
             return False
 
         ##################################
@@ -540,19 +542,19 @@ def rawBerryPhase(configFile):
         case = str(structureName)
         fnameold = case + '.win'
         if os.path.isfile(fnameold): # remove old case.win if present
-            print DEFAULT_PREFIX, fnameold, 'is present and will be removed'
+            print(DEFAULT_PREFIX, fnameold, 'is present and will be removed')
             os.remove(fnameold)
             if not os.path.isfile(fnameold):
-                print '             ... done'
+                print('             ... done')
             else:
-                print DEFAULT_PREFIX, 'unable to remove', fnameold
-                print '             will continue at your own risk, w2w may crash'
+                print(DEFAULT_PREFIX, 'unable to remove', fnameold)
+                print('             will continue at your own risk, w2w may crash')
         try:
             shell_write_win()
-        except subprocess.CalledProcessError, err:
-            print DEFAULT_PREFIX + "ERROR: in automation of " + str(structureName) 
-            print DEFAULT_PREFIX + "ERROR --> " + shell_write_win.getCommandString()
-            print str(err)
+        except subprocess.CalledProcessError as err:
+            print(DEFAULT_PREFIX + "ERROR: in automation of " + str(structureName))
+            print(DEFAULT_PREFIX + "ERROR --> " + shell_write_win.getCommandString())
+            print(str(err))
             return False
         if not spinLable == "": # for spin-polarized calc.
             fnamenew = fnameold + spinLable
@@ -565,7 +567,7 @@ def rawBerryPhase(configFile):
             case = str(structureName)
             fnameold = case + '.inwf'
             fnamenew = fnameold + spinLable
-            print DEFAULT_PREFIX + "Move " + fnameold + " into " + fnamenew
+            print(DEFAULT_PREFIX + "Move " + fnameold + " into " + fnamenew)
             shutil.move(fnameold, fnamenew) # move case.inwf to case.inwf[up/dn] 
 
 
@@ -583,12 +585,12 @@ def rawBerryPhase(configFile):
                 )
         try:
             shell_win2nnkp()
-        except subprocess.CalledProcessError, err:
-            print DEFAULT_PREFIX + "ERROR: in automation of " + \
-                  str(structureName) + suffix
-            print DEFAULT_PREFIX + "ERROR --> " + \
-                  shell_win2nnkp.getCommandString()
-            print str(err)
+        except subprocess.CalledProcessError as err:
+            print(DEFAULT_PREFIX + "ERROR: in automation of " + \
+                  str(structureName) + suffix)
+            print(DEFAULT_PREFIX + "ERROR --> " + \
+                  shell_win2nnkp.getCommandString())
+            print(str(err))
             return False
 
 
@@ -598,20 +600,20 @@ def rawBerryPhase(configFile):
         case = str(structureName)
         fname = case + '.fermi' + spinLable # write Fermi energy to case.fermi file
         if os.path.isfile(fname): # remove old case.fermi if present
-            print DEFAULT_PREFIX, fname, 'is present and will be removed'
+            print(DEFAULT_PREFIX, fname, 'is present and will be removed')
             os.remove(fname)
             if not os.path.isfile(fname):
-                print '             ... done'
+                print('             ... done')
             else:
-                print DEFAULT_PREFIX, 'unable to remove', fname
-                print '             will continue at your own risk'
+                print(DEFAULT_PREFIX, 'unable to remove', fname)
+                print('             will continue at your own risk')
         file = open(fname, "w")
         # write Ef = 0. The value makes no difference for w2w (only file with 
         # a value should be present). The value is important only for a Wannier
         # interpolated band structure plot.
         file.write("0.0" + '\n') # add end of line
         file.close()
-        print DEFAULT_PREFIX + 'Fermi energy file', fname, 'created'
+        print(DEFAULT_PREFIX + 'Fermi energy file', fname, 'created')
 
 
         ###############
@@ -626,10 +628,10 @@ def rawBerryPhase(configFile):
                 'x w2w', spinOption, suffix );
         try:
             shell_w2w()
-        except subprocess.CalledProcessError, err:
-            print DEFAULT_PREFIX + "ERROR: in automation of " + str(structureName) 
-            print DEFAULT_PREFIX + "ERROR --> " + shell_w2w.getCommandString()
-            print str(err)
+        except subprocess.CalledProcessError as err:
+            print(DEFAULT_PREFIX + "ERROR: in automation of " + str(structureName))
+            print(DEFAULT_PREFIX + "ERROR --> " + shell_w2w.getCommandString())
+            print(str(err))
             return False
 
 
@@ -641,10 +643,10 @@ def rawBerryPhase(configFile):
                 'x w2waddsp' );
             try:
                 shell_csf()
-            except subprocess.CalledProcessError, err:
-                print DEFAULT_PREFIX + "ERROR: in automation of " + str(structureName) 
-                print DEFAULT_PREFIX + "ERROR --> " + shell_csf.getCommandString()
-                print str(err)
+            except subprocess.CalledProcessError as err:
+                print(DEFAULT_PREFIX + "ERROR: in automation of " + str(structureName))
+                print(DEFAULT_PREFIX + "ERROR --> " + shell_csf.getCommandString())
+                print(str(err))
                 return False
         
 
@@ -670,16 +672,16 @@ def rawBerryPhase(configFile):
                 if wCalc:
                     break
                 if   direction == 'x':
-    		        phaseX[spinIndex,:,:] = pathPhases
+                    phaseX[spinIndex,:,:] = pathPhases
                 elif direction == 'y':
-    		        phaseY[spinIndex,:,:] = pathPhases
+                    phaseY[spinIndex,:,:] = pathPhases
                 elif direction == 'z':
-    		        phaseZ[spinIndex,:,:] = pathPhases
-		        if sp_cCalc: # constrained non-magnetic SP (up=dn)
-		            # copy results up=dn
-		            phaseX[spinIndex+1,:,:] = phaseX[spinIndex,:,:]
-		            phaseY[spinIndex+1,:,:] = phaseY[spinIndex,:,:]
-		            phaseZ[spinIndex+1,:,:] = phaseZ[spinIndex,:,:]
+                    phaseZ[spinIndex,:,:] = pathPhases
+                if sp_cCalc: # constrained non-magnetic SP (up=dn)
+                    # copy results up=dn
+                    phaseX[spinIndex+1,:,:] = phaseX[spinIndex,:,:]
+                    phaseY[spinIndex+1,:,:] = phaseY[spinIndex,:,:]
+                    phaseZ[spinIndex+1,:,:] = phaseZ[spinIndex,:,:]
 
     # END OF THE MAIN LOOP FOR BERRY PHASE CALCULATION+++++++++++++++++++
     
@@ -695,7 +697,7 @@ def rawBerryPhase(configFile):
     # rm case.energydn*                                                #
     ####################################################################
     if soCalc and not spCalc:
-        print DEFAULT_PREFIX + "Removing duplicated files..."
+        print(DEFAULT_PREFIX + "Removing duplicated files...")
         for ext in ['.vsp', '.vns']:
             for spin in ['up', 'dn']:
                 shell_pathphase_y_rm = \
@@ -705,15 +707,15 @@ def rawBerryPhase(configFile):
                     );
                 try:
                     shell_pathphase_y_rm()
-                except subprocess.CalledProcessError, err:
-                    print DEFAULT_PREFIX + "ERROR: in automation of " + \
-                        str(structureName);
-                    print DEFAULT_PREFIX + "ERROR --> " + \
-                        shell_pathphase_y_rm.getCommandString();
-                    print str(err)
+                except subprocess.CalledProcessError as err:
+                    print(DEFAULT_PREFIX + "ERROR: in automation of " + \
+                        str(structureName))
+                    print(DEFAULT_PREFIX + "ERROR --> " + \
+                        shell_pathphase_y_rm.getCommandString())
+                    print(str(err))
                     return False
     elif sp_cCalc: # rm case.energydn (created for LAPW2 -up)
-        print DEFAULT_PREFIX + "Removing duplicated files..."
+        print(DEFAULT_PREFIX + "Removing duplicated files...")
         shell_copy = \
             b_PySubProcess.VirtualShellInstance(
             'rm',
@@ -721,16 +723,16 @@ def rawBerryPhase(configFile):
             )
         try:
             shell_copy()
-        except subprocess.CalledProcessError, err:
-            print DEFAULT_PREFIX + "ERROR: in automation of " + \
-                str(structureName);
-            print DEFAULT_PREFIX + "ERROR --> " + \
-                shell_copy.getCommandString();
-            print str(err)
+        except subprocess.CalledProcessError as err:
+            print(DEFAULT_PREFIX + "ERROR: in automation of " + \
+                str(structureName))
+            print(DEFAULT_PREFIX + "ERROR --> " + \
+                shell_copy.getCommandString())
+            print(str(err))
             return False
 
-    print DEFAULT_PREFIX + "Finished Berry phase computation for " + \
-        structureName;
+    print(DEFAULT_PREFIX + "Finished Berry phase computation for " + \
+        structureName)
 
     return [True,results]
 # END rawBerryPhase
@@ -738,7 +740,7 @@ def rawBerryPhase(configFile):
 
 if __name__ == "__main__":
     def helpInfo():
-        print '''
+        print('''
 
         DEPENDENCIES:
         - WIEN2k + WIEN2WANNIER (tested against v17.1)
@@ -779,7 +781,7 @@ if __name__ == "__main__":
 
         Activate spin orbit coupling
 
-	    --bloch-band=NUM:NUM, -b NUM:NUM
+        --bloch-band=NUM:NUM, -b NUM:NUM
 
         Used to manually set the bloch band for band by band decomposition.
         By default, it is parsing out the bloch band based on the number
@@ -845,7 +847,7 @@ if __name__ == "__main__":
         file prepared according to Wien2k documentation
 
         $ berrypi -p -k6:6:4
-        '''
+        ''')
         pass
 
         
@@ -855,11 +857,11 @@ if __name__ == "__main__":
             ["help", "structure-name=", \
             "bloch-band=", "spin-polarized", "sp_c", "no-auto", "kdiv=", "no-lapw1", \
             "parallel", "verbose", "orb-potential", "spin-orbit"]);
-    except getopt.GetoptError, err:
+    except getopt.GetoptError as err:
         # print help information and exit:
-        print helpInfo()
-        print "ERRORR"
-        print str(err) # will print something like "option -a not recognized"
+        print(helpInfo())
+        print("ERROR")
+        print(str(err)) # will print something like "option -a not recognized"
         sys.exit(2)
 
     #boolean for whether to check config for
@@ -898,8 +900,8 @@ if __name__ == "__main__":
 
         #help option
         if argName in ("-h", "--help"):
-            print helpInfo()
-	    helpOpt = True
+            print(helpInfo())
+            helpOpt = True
             sys.exit(0)
 
         #structure name option
@@ -951,20 +953,20 @@ if __name__ == "__main__":
 
         #Determines whether to run lapw1 in parallel on the clustrer
         elif argName in ('-p', '--parallel'):
-            print DEFAULT_PREFIX+"Parallel calculation is activated";
-            print "            it is assumed that you have .machines file ready"
+            print(DEFAULT_PREFIX+"Parallel calculation is activated")
+            print("            it is assumed that you have .machines file ready")
             pCalc = True # turn to True when implementation finished
 
         elif argName in ('-b', '--bloch-band'):
-            print DEFAULT_PREFIX+"Only selected range of bands will be used ";
-	    bands = [ int(i) for i in argValue.split(':') ]
-            print DEFAULT_PREFIX, "bands=", bands
+            print(DEFAULT_PREFIX+"Only selected range of bands will be used ")
+            bands = [ int(i) for i in argValue.split(':') ]
+            print(DEFAULT_PREFIX, "bands=", bands)
 
         elif argName in ('-w'):
-            print DEFAULT_PREFIX+"Enable Berry phase calculation along a "+\
-                "specific k-path given in the case.klist file. "
-            print DEFAULT_PREFIX+"Any input of the k-mesh (-k ... option) "+\
-                "will be ignored";
+            print(DEFAULT_PREFIX+"Enable Berry phase calculation along a "+\
+                "specific k-path given in the case.klist file. ")
+            print(DEFAULT_PREFIX+"Any input of the k-mesh (-k ... option) "+\
+                "will be ignored")
             wCalc = True
 
         elif argName in ('-v', '--verbose'):
@@ -986,64 +988,64 @@ if __name__ == "__main__":
                 sys.exit(2)
         else:
             if not wCalc:
-                print DEFAULT_PREFIX+'Proceed with the k-mesh', \
-                    structure_kmesh;
+                print(DEFAULT_PREFIX+'Proceed with the k-mesh', \
+                    structure_kmesh)
 
     # Check input consistency
     if len(structure_kmesh)!=3:
         #Makes sure that the k-mesh length of the tuple is 3
-        print 'You entered: ' +str(structure_kmesh)
-        print 'ERROR: Please check that you have 3 integers in the kmesh'
+        print('You entered: ' +str(structure_kmesh))
+        print('ERROR: Please check that you have 3 integers in the kmesh')
         sys.exit(2)
     elif 0 in structure_kmesh:
         #Makes sure that there are no values of 0 in the kmesh
-        print 'You entered: ' + str(structure_kmesh)
-        print 'ERROR: Cannot have a dimension of 0 in the kmesh'
+        print('You entered: ' + str(structure_kmesh))
+        print('ERROR: Cannot have a dimension of 0 in the kmesh')
         sys.exit(2)
     elif min(structure_kmesh)<0:
         #Sets the lower bound of the dimensions
-        print 'ERROR: You cannot have negative integers as kmesh values'
+        print('ERROR: You cannot have negative integers as kmesh values')
         sys.exit(2)
     elif wCalc and not soCalc:
         #Wilson loop calculation makes sense with SOC only
-        print 'WARNING: Wilson loop calculation makes sense only if',\
-            'combined with spin-orbit coupling (-j)'
-        print 'Suggested execution: berrypi -j -w -b XX:YY'
-        print 'Calculation will continue'
+        print('WARNING: Wilson loop calculation makes sense only if',\
+            'combined with spin-orbit coupling (-j)')
+        print('Suggested execution: berrypi -j -w -b XX:YY')
+        print('Calculation will continue')
     elif wCalc and bands == []:
         #Band range is not specified for Wilson loop calculation
-        print 'ERROR: Wilson loop calculatio requires the band range',\
-            'to be specified'
-        print 'Suggested execution: berrypi -j -w -b XX:YY'
+        print('ERROR: Wilson loop calculatio requires the band range',\
+            'to be specified')
+        print('Suggested execution: berrypi -j -w -b XX:YY')
         sys.exit(2)
     if bands != [] and len(bands)!=2:
         #Makes sure that the band range length of the tuple is 2
-        print 'You entered: ' + str(bands)
-        print 'ERROR: Please check that you have 2 integers in the band range'
+        print('You entered: ' + str(bands))
+        print('ERROR: Please check that you have 2 integers in the band range')
         sys.exit(2)
     elif bands != [] and 0 in bands:
         #Makes sure that there are no values of 0 in the bands
-        print 'You entered: ' + str(bands)
-        print 'ERROR: Cannot have a dimension of 0 in the bands range'
+        print('You entered: ' + str(bands))
+        print('ERROR: Cannot have a dimension of 0 in the bands range')
         sys.exit(2)
     elif bands != [] and min(bands)<0:
         #Sets the lower bound of the dimensions
-        print 'You entered: ' + str(bands)
-        print 'ERROR: You cannot have negative integers as bands range values'
+        print('You entered: ' + str(bands))
+        print('ERROR: You cannot have negative integers as bands range values')
         sys.exit(2)
     elif bands != [] and bands[0] > bands[1]:
         #The range of bands should start with a smaller value
-        print 'You entered: ' + str(bands)
-        print 'ERROR: The range of bands should start with a smaller value'
+        print('You entered: ' + str(bands))
+        print('ERROR: The range of bands should start with a smaller value')
         sys.exit(2)
-			
+            
     #Determines whether or not W2WANNIER is installed
     wienroot = os.getenv('WIENROOT') # get path to Wien2k installation
     try:
         with open(wienroot + '/w2w'): pass
     except IOError:
         print('Please make sure that W2W is installed before trying to run BerryPI')
-		
+        
     #if configuration values are provided, create config file to pass
     #to the automation and calculations
     if structure_name or structure_path:
@@ -1066,7 +1068,7 @@ if __name__ == "__main__":
                 }
             checkConfig = False
         else:
-            print "structure name and structure path must be provided"
+            print("structure name and structure path must be provided")
             raise getopt.GetoptError
 
     #check config (based on if structure name or
@@ -1081,12 +1083,12 @@ if __name__ == "__main__":
             if bAutomationErrorChk and not wCalc:
                 try:
                     theCalc = postProcBerryPhase(berryConfig)
-                except b_PyError.ParseError, err:
-                    print DEFAULT_PREFIX + "ERROR: in automation of " + \
-                        berryConfig['Structure Name'];
-                    print DEFAULT_PREFIX + str(err)
-                    print DEFAULT_PREFIX + "ERROR: missing tags: " + \
-                        str(err.errorTags);
+                except b_PyError.ParseError as err:
+                    print(DEFAULT_PREFIX + "ERROR: in automation of " + \
+                        berryConfig['Structure Name'])
+                    print(DEFAULT_PREFIX + str(err))
+                    print(DEFAULT_PREFIX + "ERROR: missing tags: " + \
+                        str(err.errorTags))
                     continue
                 #write to file
                 writeResult(berryConfig, theCalc)
@@ -1097,20 +1099,20 @@ if __name__ == "__main__":
         if bAutomationErrorChk and not wCalc:
             try:
                 theCalc = postProcBerryPhase(configFile,phasesRaw,spCalc)
-            except b_PyError.ParseError, err:
-                print DEFAULT_PREFIX + "ERROR: in automation of " + \
-                    configFile['Structure Name'];
-                print DEFAULT_PREFIX + str(err)
-                print DEFAULT_PREFIX + "ERROR: missing tags: " + \
-                    str(err.errorTags);
+            except b_PyError.ParseError as err:
+                print(DEFAULT_PREFIX + "ERROR: in automation of " + \
+                    configFile['Structure Name'])
+                print(DEFAULT_PREFIX + str(err))
+                print(DEFAULT_PREFIX + "ERROR: missing tags: " + \
+                    str(err.errorTags))
     
     
     # Final remarks
     w2kpath = os.getenv('WIENROOT') # get path to WIEN2k
     # open version file
     with open(w2kpath+'/SRC_BerryPI/BerryPI/version.info', 'r') as versionFile:
-        print "\nCompleted using BerryPI version:", versionFile.read()
-    print '''
+        print("\nCompleted using BerryPI version:", versionFile.read())
+    print('''
 Suggested reference:
     S.J.Ahmed, J.Kivinen, B.Zaporzan, L.Curiel, S.Pichardo and O.Rubel
     Comp. Phys. Commun. 184, 647 (2013)
@@ -1131,4 +1133,4 @@ or
     2075 Bayview Avenue, Toronto, ON Canada M4N 3M5 
     Tel: +1 (416) 480-6156
     E-mail: spichard@lakeheadu.ca
-    URL: http://www.proteus-mrighifu.net'''
+    URL: http://www.proteus-mrighifu.net''')

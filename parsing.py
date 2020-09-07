@@ -6,9 +6,9 @@ going to try and write the code such that it can be easy to understand
 and easily changed for later use
 '''
 
+from __future__ import print_function # Python 2 & 3 compatible print function
 import os.path, os, pprint
 import re
-import struct
 import numpy as np
 
 from errorCheck import ParseError
@@ -57,7 +57,7 @@ class AbstractParser(dict):
         '''
         main parser function to implement in each parser
         '''
-        print 'parsing stuff'
+        print('parsing stuff')
 
     def getFilename(self):
         return self.filename
@@ -200,7 +200,7 @@ class MainStructParser(AbstractParser):
                     rvfac=2
                     ortho=True
                 else:
-                    print "  gamma not equal 90" # CXZ monoclinic case
+                    print("  gamma not equal 90") # CXZ monoclinic case
                     br1_rec[0,0]= pia[0]/sinab
                     br1_rec[0,1]= -pia[1]*cosab/sinab
                     br1_rec[1,1]= pia[1]
@@ -262,7 +262,7 @@ class MainStructParser(AbstractParser):
             # return function output lattice vectors and cell volume
             return (br1_dir,br2_dir,br1_rec,br2_rec,vol)
             # END lattVec
-        print "Reading case.struct file"
+        print("Reading case.struct file")
         theText = self.getFileContent()
         #split up file into individual atom listings
         atomLineIndex = []
@@ -271,31 +271,26 @@ class MainStructParser(AbstractParser):
         for num, line in enumerate(theText):
             if num == 1: # 2nd line case.struct file
                 # read lattice type and number of atoms using FORMAT(A4,23X,I3)
-                (lattic,dum,nat) = \
-                    struct.unpack("4s23s3s", \
-                    line[0:30])
+                lattic = line[0:4]
                 lattic = lattic.strip() # rm white spaces
-                nat = int(nat)
-                print "  Lattice type:", lattic
-                print "  Number of inequivalent atoms:", nat
+                nat = int(line[28:30])
+                print("  Lattice type:", lattic)
+                print("  Number of inequivalent atoms:", nat)
             if num == 3: # 4th line case.struct file
                 # read lattice parameters using FORMAT(6F10.7)
-                (aa,bb,cc,alpha0,alpha1,alpha2) = \
-                    struct.unpack("10s10s10s10s10s10s", \
-                    line[0:60])
-                aa = float(aa)
-                bb = float(bb)
-                cc = float(cc)
+                aa = float(line[0:10])
+                bb = float(line[11:20])
+                cc = float(line[21:30])
                 alpha = np.zeros(3)
-                alpha[0] = float(alpha0)
-                alpha[1] = float(alpha1)
-                alpha[2] = float(alpha2)
-                print " "*1, "a =", aa, "bohr"
-                print " "*1, "b =", bb, "bohr"
-                print " "*1, "c =", cc, "bohr"
-                print " "*1, "alpha =", alpha[0], "deg"
-                print " "*1, "beta  =", alpha[1], "deg"
-                print " "*1, "gamma =", alpha[2], "deg"
+                alpha[0] = float(line[31:40])
+                alpha[1] = float(line[41:50])
+                alpha[2] = float(line[51:60])
+                print(" "*1, "a =", aa, "bohr")
+                print(" "*1, "b =", bb, "bohr")
+                print(" "*1, "c =", cc, "bohr")
+                print(" "*1, "alpha =", alpha[0], "deg")
+                print(" "*1, "beta  =", alpha[1], "deg")
+                print(" "*1, "gamma =", alpha[2], "deg")
                 # determine real and reciprocal lattice vectors based on 
                 # the lattice type and lattice parameters
                 (br1_dir,br2_dir,br1_rec,br2_rec,vol) = \
@@ -304,23 +299,23 @@ class MainStructParser(AbstractParser):
                 self['lattice constants'] = [aa,bb,cc]
                 self['real space lattice vectors'] = br2_dir
                 self['reciprocal lattice vectors'] = br2_rec
-                print " "*1, "Reciprocal lattice vectors br1_rec (rad/bohr):"
-                print " "*3, br1_rec[0,:]
-                print " "*3, br1_rec[1,:]
-                print " "*3, br1_rec[2,:]
-                print " "*1, "Reciprocal lattice vectors br2_rec (rad/bohr):"
-                print " "*3, br2_rec[0,:]
-                print " "*3, br2_rec[1,:]
-                print " "*3, br2_rec[2,:]
-                print " "*1, "Real space lattice vectors br1_dir (bohr):"
-                print " "*3, br1_dir[0,:]
-                print " "*3, br1_dir[1,:]
-                print " "*3, br1_dir[2,:]
-                print " "*1, "Real space lattice vectors br2_dir (bohr):"
-                print " "*3, br2_dir[0,:]
-                print " "*3, br2_dir[1,:]
-                print " "*3, br2_dir[2,:]
-                print " "*1, "Unit cell volume:", vol, "bohr3"
+                print(" "*1, "Reciprocal lattice vectors br1_rec (rad/bohr):")
+                print(" "*3, br1_rec[0,:])
+                print(" "*3, br1_rec[1,:])
+                print(" "*3, br1_rec[2,:])
+                print(" "*1, "Reciprocal lattice vectors br2_rec (rad/bohr):")
+                print(" "*3, br2_rec[0,:])
+                print(" "*3, br2_rec[1,:])
+                print(" "*3, br2_rec[2,:])
+                print(" "*1, "Real space lattice vectors br1_dir (bohr):")
+                print(" "*3, br1_dir[0,:])
+                print(" "*3, br1_dir[1,:])
+                print(" "*3, br1_dir[2,:])
+                print(" "*1, "Real space lattice vectors br2_dir (bohr):")
+                print(" "*3, br2_dir[0,:])
+                print(" "*3, br2_dir[1,:])
+                print(" "*3, br2_dir[2,:])
+                print(" "*1, "Unit cell volume:", vol, "bohr3")
             # find ATOM line
             re_atomListing = re.compile(r'ATOM *(?P<atomNumber>-?[0-9]+):')
             atomListingMatch = re_atomListing.search(line)
@@ -332,8 +327,8 @@ class MainStructParser(AbstractParser):
         # check the number of ATOM instances matches 
         # "nat" in the 2nd line of case.struct
         if len(atomLineIndex) != nat:
-            print "Number of ATOM instances in case.struct:", len(atomLineIndex)
-            print "Number of atoms in 2nd line case.struct:", nat
+            print("Number of ATOM instances in case.struct:", len(atomLineIndex))
+            print("Number of atoms in 2nd line case.struct:", nat)
             raise Exception("The number of ATOM instances does not matche "+\
                 "the number of atoms in case.struct")
         atomListing = []
@@ -369,11 +364,11 @@ class MainStructParser(AbstractParser):
                 if coordinateMatches:
                     #check to see if the coordinate keys and exist
                     #and create them if necessary
-                    if not theAtom.has_key('X-Coord'):
+                    if 'X-Coord' not in theAtom:
                         theAtom['X-Coord'] = []
-                    if not theAtom.has_key('Y-Coord'):
+                    if 'Y-Coord' not in theAtom:
                         theAtom['Y-Coord'] = []
-                    if not theAtom.has_key('Z-Coord'):
+                    if 'Z-Coord' not in theAtom:
                         theAtom['Z-Coord'] = []
                     
                     theCoordinates = coordinateMatches.groups()
@@ -389,11 +384,10 @@ class MainStructParser(AbstractParser):
                 elementMatches = re_element.search(line)
                 if elementMatches:
                     theAtom['Element Name'] = elementMatches.group('elementName')
-		    if elementMatches.group('elementNumber'):
-	                    theAtom['Element Number'] = int(elementMatches.group('elementNumber'))
+                    if elementMatches.group('elementNumber'):
+                        theAtom['Element Number'] = int(elementMatches.group('elementNumber'))
                     else:
-			    theAtom['Element Number'] = 1
-			    
+                        theAtom['Element Number'] = 1
 
                 zatomMatches = re_zatom.search(line)
                 if zatomMatches:
@@ -410,7 +404,7 @@ class MainStructParser(AbstractParser):
                                                 ])
                 
                 if MissingTags:
-                    print "Error in: " + str(theAtom)
+                    print("Error in: " + str(theAtom))
                     raise ParseError('ERROR: Missing data in atom', MissingTags)
 
                 #append to the atom listing
@@ -421,7 +415,7 @@ class MainIncParser(AbstractParser):
 # Parse case.inc file and extract the following info:
 # - number of core electrons per non-equivalent atom type
     def parse(self):
-        print "Reading case.inc file"
+        print("Reading case.inc file")
         theText = self.getFileContent()
         nlines = len(theText) # number of lines in the file
         fileEnd = False
@@ -447,7 +441,7 @@ class MainIncParser(AbstractParser):
             if line.strip() == "0" or iline >= nlines-1: # end of file?
                 fileEnd = True
                 break # exit while loop
-        print " "*1, "Core charge for individual non-equivalent atoms:", coreCharges
+        print(" "*1, "Core charge for individual non-equivalent atoms:", coreCharges)
         if len(coreCharges) == 0: # for some reason unable to find any atoms
             raise Exception("Error reading case.inc file. "+ \
                 "For some reason unable to find any atoms.")
@@ -515,28 +509,28 @@ def checkForTags(theDict, theTags):
     return tuple(theTags)
 
 if __name__ == "__main__":
-    print ".struct file"
+    print(".struct file")
     textString = open('./tests/testStruct.struct', 'r').readlines()
     testStruct2 = MainStructParser(textString)
     testStruct2.parse()
-    print testStruct2.getDictionaryKeysString()
+    print(testStruct2.getDictionaryKeysString())
 
-    print ".inc file"
+    print(".inc file")
     textString = open('./tests/testStruct.inc', 'r').readlines()
     testStruct = MainIncParser(textString)
     testStruct.parse()
-    print testStruct.getDictionaryKeysString()
+    print(testStruct.getDictionaryKeysString())
 
-    print ".scf2 file"
+    print(".scf2 file")
     textString = open('./tests/testStruct.scf2', 'r').readlines()
     testStruct = MainSCFParser(textString)
     testStruct.parse()
-    print testStruct.getDictionaryKeysString()
+    print(testStruct.getDictionaryKeysString())
 
-    print ".pathphase file"
+    print(".pathphase file")
     textString = open('/home/stud2/BaTiO3-berry/BaTiO3-tetra/experimentalBaTiO3/BaTiO3newwien2k/BaTiO3min/BaTiO3min-x.pathphase', 'r').readlines()
     testStruct = MainPathphaseParser(textString)
     testStruct.parse()
-    print testStruct.getDictionaryKeysString()
+    print(testStruct.getDictionaryKeysString())
 
     

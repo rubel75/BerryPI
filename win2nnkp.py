@@ -2,6 +2,7 @@
 import sys
 from datetime import datetime
 import numpy
+import functools # needed for functools.reduce()
 
 def write_date(f):
     t = datetime.now()
@@ -66,7 +67,7 @@ def calculate_nnkpts(D,wCalc,nkpt):
     '''
 
     # Helper functions
-    product = lambda l : reduce(lambda x,y : x*y, l, 1)
+    product = lambda l : functools.reduce(lambda x,y : x*y, l, 1)
     vector_add = lambda v1,v2 : [x + y for x, y in zip(v1,v2)]
     permute = lambda v,P: [v[i] for i in P]
     linear_index = lambda v,D: sum(c*i for i,c in zip(v,[product(D[:i]) for i in range(len(D))]))
@@ -119,7 +120,7 @@ def parse_win_kpoints(f):
         pass
     
     kpoints = []
-    for line in f.xreadlines():
+    for line in f.readlines(): # OR python 3
         if 'end kpoints' in line:
             break
         kpoint = tuple(parse_line_list(line, ' ', float))
@@ -128,7 +129,7 @@ def parse_win_kpoints(f):
     return kpoints
 
 def parse_win_mp_grid(f):
-    for line in f.xreadlines():
+    for line in f.readlines(): # OR python 3
         if 'mp_grid' in line:
             # mp_grid :         A     B     C
             # Split in two by :, take second half

@@ -1,12 +1,14 @@
 #!/usr/bin/env python
+
+from __future__ import print_function # Python 2 & 3 compatible print function
 import sys
 import numpy
-import struct
+import functools # needed for functools.reduce()
 
 
 def parse_win_mp_grid(f):
     parse_line_list = lambda line, delimiter, T : [T(y) for y in [x.strip() for x in line.strip().split(delimiter)] if y]
-    for line in f.xreadlines():
+    for line in f.readlines():
         if 'mp_grid' in line:
             # mp_grid :         A     B     C
             # Split in two by :, take second half
@@ -37,13 +39,9 @@ def parse_pair_info_line(line):
     '''Converts a pair-info line into k1, k2, and a G vector
     '''
     # expected format(5i8)
-    parts = struct.unpack("8s8s8s8s8s", line[0:40])
-    if len(parts) != 5:
-        raise RuntimeError('Incorrect number of values while parsing pair-info line:\n\t' + line.strip())
-
-    k1 = float(parts[0])
-    k2 = float(parts[1])
-    G = (float(parts[2]), float(parts[3]), float(parts[4]))
+    k1 = float(line[0:8])
+    k2 = float(line[9:16])
+    G = (float(line[17:24]), float(line[25:32]), float(line[33:40]))
 
     return k1, k2, G
 
@@ -52,19 +50,17 @@ def parse_matrix_element_line(line):
     '''
 
     # expected format(32f18.12)
-    (real_part,imaginary_part) = struct.unpack("18s18s", line[0:36])
-    real_part = float(real_part)
-    imaginary_part = float(imaginary_part)
+    real_part = float(line[0:18])
+    imaginary_part = float(line[19:36])
 
     return real_part + imaginary_part * 1j
 
 def parse_mmn_info_line(line):
 
     # expected format: write(unit_mmn,'(3I12)') Nb, Nk, Nntot
-    (n_energy,n_pairs,n_neighbours) = struct.unpack("12s12s12s", line[0:36])
-    n_energy = int(n_energy)
-    n_pairs = int(n_pairs)
-    n_neighbours = int(n_neighbours)
+    n_energy = int(line[0:12])
+    n_pairs = int(line[13:24])
+    n_neighbours = int(line[25:36])
 
     return n_energy, n_pairs, n_neighbours 
 
@@ -93,7 +89,7 @@ def determine_neighbours(D, d, P = [0,1,2]):
     '''
 
     # Helper functions
-    product = lambda l : reduce(lambda x,y : x*y, l, 1)
+    product = lambda l : functools.reduce(lambda x,y : x*y, l, 1)
     vector_add = lambda v1,v2 : [x + y for x, y in zip(v1,v2)]
     permute = lambda v,P: [v[i] for i in P]
     linear_index = lambda v,D: sum(c*i for i,c in zip(v,[product(D[:i]) for i in range(len(D))]))
@@ -135,10 +131,10 @@ def determine_neighbours(D, d, P = [0,1,2]):
                 i_neighbour = linear_index(permute(v_neighbour, P), permute(D, P)) + 1
 
                 # Add pair to graph of neighbours
-                if not neighbour_graph.has_key(i):
+                if i not in neighbour_graph:
                     neighbour_graph[i] = [None, None] # Create the node
         
-                if not neighbour_graph.has_key(i_neighbour):
+                if i_neighbour not in neighbour_graph:
                     neighbour_graph[i_neighbour] = [None, None] # Create the neighbour node 
         
                 # Save the pair in the graph (... if the pair doesn't extend
@@ -153,9 +149,9 @@ def determine_neighbours(D, d, P = [0,1,2]):
     return nnkpts, neighbour_graph
 
 def print_usage():
-    print >> sys.stderr, "Usage: mmn2pathphase case [direction] [-w]"
-    print >> sys.stderr, " direction    x, y, or z; for <x, y, z> (default x)"
-    print >> sys.stderr, " -w option is for Weyl k-path calculation"
+    print("Usage: mmn2pathphase case [direction] [-w]")
+    print(" direction    x, y, or z; for <x, y, z> (default x)")
+    print(" -w option is for Weyl k-path calculation")
 
 
 ###############################################################################
@@ -171,7 +167,7 @@ def main(args):
     parse_line_list = lambda line, delimiter, T : [T(y) for y in [x.strip() for x in line.strip().split(delimiter)] if y]
 
     if len(args) < 2:
-        print >> sys.stderr, "Error: no case or direction provided"
+        print("Error: no case or direction provided")
         exit(1)
 
     spOption = '' # no spin polarization by default
@@ -193,8 +189,8 @@ def main(args):
                       'z': [0, 0, 1]}
 
     if len(args) > 2:
-        if not direction_args.has_key(args[1]):
-            print >> sys.stderr, "Error: unknown direction '{0}'".format(args[1])
+        if args[1] not in direction_args:
+            print("Error: unknown direction", args[1])
             exit(1)
 
         direction = direction_args[args[1]]
@@ -223,7 +219,7 @@ def main(args):
         #    of the phase differences along each path in the given direction
 
     if VERBOSE:
-        print nnkpts
+        print(nnkpts)
 
     # Open file containing Mmn data (case.mmn[up/dn])
     f_mmn = open(case_name + '.mmn' + spOption, 'r')
@@ -257,16 +253,17 @@ def main(args):
             phases[k1] = numpy.angle(det_Mmn)
 
             if VERBOSE:
-                print "(k1, k2, G)=", (k1, k2, G)
-                print "pair_matrix Mmn=", pair_matrix
-                print "eig(pair_matrix)=", numpy.linalg.eig(pair_matrix)[0]
-                print "det_Mmn=", det_Mmn
-                print "numpy.angle(det_Mmn)=", numpy.angle(det_Mmn)
-                print '---'
+                print("(k1, k2, G)=", k1, k2, G)
+                print("pair_matrix Mmn=", pair_matrix)
+                print("eig(pair_matrix)=", numpy.linalg.eig(pair_matrix)[0])
+                print("det_Mmn=", det_Mmn)
+                print("numpy.angle(det_Mmn)=", numpy.angle(det_Mmn))
+                print('---')
         else:
             if VERBOSE:
-                print 'Discarding <{0},{1}> <{2},{3},{4}>'.format(k1, k2, G[0], G[1], G[2])
-                print '---'
+                print('Discarding','<',k1,',', k2,'> <', G[0], \
+                    ',', G[1], ',', G[2], '>')
+                print('---')
 
             # Read over and discard the data if it's not a pair of interest
             for a in range(n_energy):
@@ -277,12 +274,12 @@ def main(args):
 
     if wCalc:
         #print("Berry phase along the path (rad) =",phases.values())
-        print "[ BerryPI ]", "Berry phase sum (rad) =", sum(phases.values())
+        print("[ BerryPI ]", "Berry phase sum (rad) =", sum(phases.values()))
         return
 
 
     # Get the sum of phases for each path
-    for k, neighbours in neighbour_graph.iteritems():
+    for k, neighbours in neighbour_graph.items():
         k_prev = neighbours[0]
         k_next = neighbours[1]
 
