@@ -1,0 +1,966 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+### wien2wannier/SRC/write_inwf_lapw
+###
+###     Generate input file for ‘w2w’
+###
+### Copyright 2013-2015 Elias Assmann <elias.assmann@gmail.com>
+###
+### Sep 7, 2020: Minor changes to make it compatible with python 3.X
+###              (Oleg Rubel)
+
+'''
+Generate input file for `w2w' interactively or from command line
+arguments.
+The main  input is  a set  of strings `PROJ'  which consist  of colon-
+separated parts  naming an atomic  site, an orbital,  and, optionally,
+rotated z-  and x-axes.  These strings define  the initial projections
+Amn for Wannier90.  See `-H X' for detailed help on [s]ite, [o]rbital,
+or [a]xis specifications.
+'''
+
+from __future__ import print_function # Python 2 & 3 compatible print function
+import argparse
+import os
+import readline
+import sys
+import numpy as np
+import re
+import traceback
+import functools # needed for functools.reduce()
+
+__version__ = "$version: v2.0.0-7-g4c51be8$"
+
+try:
+    __version__ = re.search(":\s*(.*?)\s*\$", __version__).group(1)
+except:
+    __version__ = "unknown"
+
+
+class Struct(object):
+    '''Class representing a crystal structure'''
+    def __init__(self, f):
+        '''Read `struct' file for atoms.'''
+
+        self.pos    = []
+        self.mult   = []
+        self.aname  = []
+        self.Z      = []
+        self.locrot = []
+        self.at2neq = []
+        self.neq2at = []
+        self.sites  = {}
+
+        f.readline()                # header
+        self.nneq = int(f.readline()[27:30])
+        f.readline()                # “rela”
+        f.readline()                # lattice
+
+        def readpos():
+            l = f.readline()
+            #return np.array([float(s) for s in l[12:22], l[25:35], l[38:48]])
+            return np.array([float(l[12:22]), float(l[25:35]), float(l[38:48])]) # OR Sep 6, 2020
+        def readloro():
+            l = f.readline()
+            #return np.array([float(s) for s in l[20:30], l[30:40], l[40:50]])
+            return np.array([float(l[20:30]), float(l[30:40]), float(l[40:50])]) # OR Sep 6, 2020
+
+        ineq = 1
+        iat  = 1
+        for i in range(self.nneq):
+            pos = np.vstack((np.zeros((0,3)), readpos()))
+
+            mult = int(f.readline()[15:18])
+
+            for i in range(mult - 1):
+                pos = np.vstack((pos, readpos()))
+
+            l = f.readline()
+            aname = l[0:10].strip()
+            Z = float(l[55:60])
+
+            self.pos.append(pos)
+            self.mult.append(mult)
+            self.aname.append(aname)
+            self.Z.append(Z)
+            self.locrot.append(np.vstack((readloro(), readloro(), readloro())))
+
+            r = range(ineq, ineq+mult)
+
+            self.neq2at.append(r)
+            self.at2neq += [iat]*mult
+
+            self.sites.update(zip(r, [ set([i]) for i in r ]))
+            self.add_site('all',            r)
+            self.add_site(aname.lower(),    r)
+            self.add_site(AtomicNumber(Z),  r)
+            self.add_site(NoneqNumber(iat), r)
+
+            m = re.match('([a-z]+)', aname.lower(), re.I)
+            if m is not None:
+                self.add_site(m.group(1), r)
+
+            ineq += mult
+            iat  += 1
+
+    def add_site(self, key, ineq):
+            try:             self.sites[key].update(ineq)
+            except KeyError: self.sites[key] = set(ineq)
+
+
+class AtomicNumber(tuple):
+    def __new__(cls, Z):
+        return tuple.__new__(cls, ('Z', float(Z)))
+
+    def __str__(self):
+        return 'Z%g'%self[1]
+
+class NoneqNumber(tuple):
+    def __new__(cls, iat):
+        return tuple.__new__(cls, ('A', int(iat)))
+
+    def __str__(self):
+        return "A%i"%self[1]
+
+
+def Site(struct, string):
+    def str2key(s):
+        m = re.match('A[\s=-_]*(\d+)', s, re.I)
+        if m:
+            try:
+                return NoneqNumber(int(m.group(1)))
+            except ValueError: pass
+        m = re.match('Z[\s=-_]*([\deE+.-]+)', s, re.I)
+        if m:
+            try:
+                return AtomicNumber(float(m.group(1)))
+            except ValueError: pass
+
+        try:
+            return int(s)
+        except ValueError:
+            return s.lower()
+
+    ineq = set()
+
+    for s in re.split('[,;]', string):
+        s = s.strip()
+
+        key = str2key(s)
+
+        try:
+            ineq |= struct.sites[key]
+        except KeyError as e:
+            raise ValueError("`" + s + "' is not a valid site")
+
+    return ineq
+
+def say_what(thing=None):
+    '''Ask user to repeat incorrect input'''
+    if args.verbose:
+        traceback.print_exc()
+    elif thing is not None:
+        print("didn't catch that:", thing)
+
+def ask_bands():
+    while True:
+        try:
+            l = raw_input("> minimal and maximal band indices [Nmin Nmax]? ")
+
+            bmin,bmax = [int(x) for x in l.split()]
+
+            if bmax < bmin: raise ValueError('bmax < bmin')
+            if bmin < 1: raise ValueError('bmin < 1')
+
+            return bmin,bmax
+        except ValueError as e:
+            say_what(e)
+
+def ask_proj(struct, need):
+    while True:
+        try:
+            l = raw_input("> next proj. (" + str(need) +
+                          " to go; Ctrl-D if done)? ").rstrip('\n')
+            if l.strip() == '':
+                return None
+            else:
+                return Projection(struct, l)
+        except ValueError as e:
+            say_what(e)
+
+class Axis(np.ndarray):
+    ## adapted from
+    ## <http://docs.scipy.org/doc/numpy/user/basics.subclassing.html#slightly-more-realistic-example-attribute-added-to-existing-array>
+
+    def __new__(cls, string, name=None):
+        pat = '^\s*(\w+)\s*=\s*(.*)'
+        mat = re.match(pat, string)
+        if mat:
+            string = mat.group(2)
+            name = mat.group(1)
+
+        self = np.array([float(x) for x in string.split(',')]).view(cls)
+        if len(self) != 3:
+            raise ValueError("`axis' should be `X,Y,Z'")
+
+        self.name = name.lower()
+
+        return self
+
+    def __array_finalize__(self, obj):
+        # ``self`` is a new object resulting from
+        # ndarray.__new__(InfoArray, ...), therefore it only has
+        # attributes that the ndarray.__new__ constructor gave it -
+        # i.e. those of a standard ndarray.
+        #
+        # We could have got to the ndarray.__new__ call in 3 ways:
+        # From an explicit constructor - e.g. InfoArray():
+        #    obj is None
+        #    (we're in the middle of the InfoArray.__new__
+        #    constructor, and self.info will be set when we return to
+        #    InfoArray.__new__)
+        if obj is None: return
+
+        # From view casting - e.g arr.view(InfoArray):
+        #    obj is arr
+        #    (type(obj) can be InfoArray)
+        # From new-from-template - e.g infoarr[:3]
+        #    type(obj) is InfoArray
+        #
+        # Note that it is here, rather than in the __new__ method,
+        # that we set the default value for 'info', because this
+        # method sees all creation of default objects - with the
+        # InfoArray.__new__ constructor, but also with
+        # arr.view(InfoArray).
+        self.name = getattr(obj, 'name', None)
+        # We do not need to return anything
+
+    def __repr__(self):
+        r = np.ndarray.__repr__(self)
+        if self.name is not None:
+            r = r[:-1]+", '"+self.name+"'"+r[-1]
+        return r
+
+    def __str__(self):
+        s = np.ndarray.__str__(self)
+        if self.name is not None:
+            s = self.name+'='+s
+        return s
+
+## Definition of Orbitals ##
+##
+## if you change this, do not forget to change the orbital help
+## accordingly
+
+# some abbreviations for ease of orbital notation
+s2 = np.sqrt(2); s3 = np.sqrt(2); s6 = np.sqrt(2); s12 = np.sqrt(2)
+i = 1j
+a = lambda x: np.matrix(x, dtype=complex).T
+O = a([])
+
+_angfunc = {
+    's' : [ a([1]), O, O, O ],
+
+    'px' : [ O, a([1, 0,-1])  /s2, O, O ],
+    'py' : [ O, a([1, 0, 1])*i/s2, O, O ],
+    'pz' : [ O, a([0, 1, 0])     , O, O ],
+
+    'dxy'      : [ O, O, a([1, 0, 0, 0,-1])*i/s2, O ],
+    'dxz'      : [ O, O, a([0, 1, 0,-1, 0])  /s2, O ],
+    'dyz'      : [ O, O, a([0, 1, 0, 1, 0])*i/s2, O ],
+    'dx^2-y^2' : [ O, O, a([1, 0, 0, 0, 1])  /s2, O ],
+    'dz^2'     : [ O, O, a([0, 0, 1, 0, 0])     , O ],
+
+    'fxz^2'        : [ O, O, O, a([0, 0, 1, 0,-1, 0, 0])  /s2 ],
+    'fyz^2'        : [ O, O, O, a([0, 0, 1, 0, 1, 0, 0])*i/s2 ],
+    'fz^3'         : [ O, O, O, a([0, 0, 0, 1, 0, 0, 0])      ],
+    'fx(x^2-3y^2)' : [ O, O, O, a([1, 0, 0, 0, 0, 0,-1])  /s2 ],
+    'fy(3x^2-y^2)' : [ O, O, O, a([1, 0, 0, 0, 0, 0, 1])*i/s2 ],
+    'fz(x^2-y^2)'  : [ O, O, O, a([0, 1, 0, 0, 0, 1, 0])  /s2 ],
+    'fxyz'         : [ O, O, O, a([0, 1, 0, 0, 0,-1, 0])*i/s2 ],
+    }
+
+Y = _angfunc
+
+px = Y['px'][1]; s     = Y['s' ][0]
+py = Y['py'][1]; dz2   = Y['dz^2'][2]
+pz = Y['pz'][1]; dx2y2 = Y['dx^2-y^2'][2]
+
+Y['sp-1'] = [ s/s2, +px/s2, O, O, ]
+Y['sp-2'] = [ s/s2, -px/s2, O, O, ]
+Y['sp2-1'] = [ s/s3, -px/s6+py/s2, O, O ]
+Y['sp2-2'] = [ s/s3, -px/s6-py/s2, O, O ]
+Y['sp2-3'] = [ s/s3, -px*2/s6,     O, O ]
+Y['sp3-1'] = [ s/2, (+px+py+pz)/2, O, O ]
+Y['sp3-2'] = [ s/2, (+px-py-pz)/2, O, O ]
+Y['sp3-3'] = [ s/2, (-px+py-pz)/2, O, O ]
+Y['sp3-4'] = [ s/2, (-px-py+pz)/2, O, O ]
+Y['sp3d-1'] = [ s/s3, -px/s6+py/s2, O, O ]
+Y['sp3d-2'] = [ s/s3, -px/s6-py/s2, O, O ]
+Y['sp3d-3'] = [ s/s3, -px*2/s6,     O, O ]
+Y['sp3d-4'] = [    O, +pz/s2,  dz2/s2, O ]
+Y['sp3d-5'] = [    O, -pz/s2,  dz2/s2, O ]
+Y['sp3d2-1'] = [ s/s6, -px/s2, -dz2/s12+dx2y2/2, O ]
+Y['sp3d2-2'] = [ s/s6, +px/s2, -dz2/s12+dx2y2/2, O ]
+Y['sp3d2-3'] = [ s/s6, -py/s2, -dz2/s12-dx2y2/2, O ]
+Y['sp3d2-4'] = [ s/s6, +py/s2, -dz2/s12-dx2y2/2, O ]
+Y['sp3d2-5'] = [ s/s6, -pz/s2,  dz2/s3,          O ]
+Y['sp3d2-6'] = [ s/s6, +pz/s2,  dz2/s3,          O ]
+
+del s2, s3, s6, s12, i, a, O
+del Y, px, py, pz, s, dz2, dx2y2
+
+_angfunc_aliases = {
+    'p' : ['px', 'py', 'pz'],
+    'p-x' : ['px'],
+    'p-y' : ['py'],
+    'p-z' : ['pz'],
+
+    'd' : ['dxy', 'dxz', 'dyz', 'dx^2-y^2', 'dz^2'],
+    'dt2g'      : ['dxy', 'dxz', 'dyz'],
+    'd-t2g'     : ['dxy', 'dxz', 'dyz'],
+    'd_t2g'     : ['dxy', 'dxz', 'dyz'],
+    'deg'       : ['dx^2-y^2', 'dz^2'],
+    'd-eg'      : ['dx^2-y^2', 'dz^2'],
+    'd_eg'      : ['dx^2-y^2', 'dz^2'],
+    'd-xy'      : ['dxy'   ],
+    'd-xz'      : ['dxz'   ],
+    'd-yz'      : ['dyz'   ],
+    'd_xy'      : ['dxy'   ],
+    'd_xz'      : ['dxz'   ],
+    'd_yz'      : ['dyz'   ],
+    'd-x^2-y^2' : ['dx^2-y^2'],
+    'd-x2-y2'   : ['dx^2-y^2'],
+    'd-x2y2'    : ['dx^2-y^2'],
+    'd_x^2-y^2' : ['dx^2-y^2'],
+    'd_x2-y2'   : ['dx^2-y^2'],
+    'd_x2y2'    : ['dx^2-y^2'],
+    'dx2-y2'    : ['dx^2-y^2'],
+    'dx2y2'     : ['dx^2-y^2'],
+    'd-z^2'     : ['dz^2'   ],
+    'd-z2'      : ['dz^2'   ],
+    'd_z^2'     : ['dz^2'   ],
+    'd_z2'      : ['dz^2'   ],
+    'dz2'       : ['dz^2'   ],
+
+    'f' : ['fxz^2', 'fyz^2', 'fz^3', 'fx(x^2-3y^2)', 'fy(3x^2-y^2)', 'fz(x^2-y^2)', 'fxyz'],
+    'ft1g'          : ['fxz^2', 'fyz^2', 'fz^3'],
+    'f-t1g'         : ['fxz^2', 'fyz^2', 'fz^3'],
+    'f_t1g'         : ['fxz^2', 'fyz^2', 'fz^3'],
+    'ft2g'          : ['fx(x^2-3y^2)', 'fy(3x^2-y^2)', 'fz(x^2-y^2)'],
+    'f-t2g'         : ['fx(x^2-3y^2)', 'fy(3x^2-y^2)', 'fz(x^2-y^2)'],
+    'f_t2g'         : ['fx(x^2-3y^2)', 'fy(3x^2-y^2)', 'fz(x^2-y^2)'],
+    'fa2g'          : ['fxyz'],
+    'f-a2g'         : ['fxyz'],
+    'f_a2g'         : ['fxyz'],
+    'fxz2'          : ['fxz^2'],
+    'f-xz2'         : ['fxz^2'],
+    'f-xz^2'        : ['fxz^2'],
+    'f_xz2'         : ['fxz^2'],
+    'f_xz^2'        : ['fxz^2'],
+    'fyz2'          : ['fyz^2'],
+    'f-yz2'         : ['fyz^2'],
+    'f-yz^2'        : ['fyz^2'],
+    'f_yz2'         : ['fyz^2'],
+    'f_yz^2'        : ['fyz^2'],
+    'fz3'           : ['fz^3'],
+    'f-z3'          : ['fz^3'],
+    'f-z^3'         : ['fz^3'],
+    'f_z3'          : ['fz^3'],
+    'f_z^3'         : ['fz^3'],
+    'fx(x2-3y2)'    : ['fx(x^2-3y^2)'],
+    'f-x(x2-3y2)'   : ['fx(x^2-3y^2)'],
+    'f-x(x^2-3y^2)' : ['fx(x^2-3y^2)'],
+    'f_x(x2-3y2)'   : ['fx(x^2-3y^2)'],
+    'f_x(x^2-3y^2)' : ['fx(x^2-3y^2)'],
+    'fy(3x2-y2)'    : ['fy(3x^2-y^2)'],
+    'f-y(3x2-y2)'   : ['fy(3x^2-y^2)'],
+    'f-y(3x^2-y^2)' : ['fy(3x^2-y^2)'],
+    'f_y(3x2-y2)'   : ['fy(3x^2-y^2)'],
+    'f_y(3x^2-y^2)' : ['fy(3x^2-y^2)'],
+    'fz(x2-y2)'     : ['fz(x^2-y^2)'],
+    'f-z(x2-y2)'    : ['fz(x^2-y^2)'],
+    'f-z(x^2-y^2)'  : ['fz(x^2-y^2)'],
+    'f_z(x2-y2)'    : ['fz(x^2-y^2)'],
+    'f_z(x^2-y^2)'  : ['fz(x^2-y^2)'],
+
+    'sp'    : ['sp-1',    'sp-2'],
+    'sp2'   : ['sp2-1',   'sp2-2',   'sp2-3'],
+    'sp3'   : ['sp3-1',   'sp3-2',   'sp3-3',   'sp3-4'],
+    'sp3d'  : ['sp3d-1',  'sp3d-2',  'sp3d-3',  'sp3d-4',  'sp3d-5'],
+    'sp3d2' : ['sp3d2-1', 'sp3d2-2', 'sp3d2-3', 'sp3d2-4', 'sp3d2-5', 'sp3d2-6'],
+    }
+
+# we repeat everything from ‘angfunc’ here so only this dictionary
+# will have to be checked
+for f in _angfunc.keys(): #OR python 3
+    _angfunc_aliases[f] = [f]
+del f
+
+class YlmRotator(object):
+    '''Implements rotation of p/d/f spherical harmonics in R^3 using
+    the method of Romanowski and Krukowski (J. Phys. A 40 (2007)) as
+    corrected in Faux et al., PRE 87 (2013)'''
+
+    normtol = 1e-5
+    orthtol = 1e-2
+
+    def __init__(self, zaxe, xaxe):
+        if zaxe is None:
+            self.R = np.eye(3)
+
+            self.D = [ np.eye(1), np.eye(3), np.eye(5), np.eye(7) ]
+
+            return
+
+        zaxe /= np.linalg.norm(zaxe)
+
+        if xaxe is None:
+            oldx = np.array([1.,0,0])
+            xaxe = oldx - np.dot(oldx, zaxe) * zaxe
+
+            # if z' || x, choose x' || z
+            if np.linalg.norm(xaxe) < self.normtol:
+                # FIXME: If z' “approaches x from y”, x' jumps from
+                # ~(-y) to ~(-z) upon crossing the threshold.
+                # (Consequently, y' jumps from -z to y)
+                xaxe = np.cross([0,1,0], zaxe)
+        elif abs(np.dot(xaxe, zaxe)) > self.orthtol:
+            raise ValueError("supplied z- and x-axes are not orthogonal " +
+                             str(zaxe)+', '+str(xaxe))
+
+        xaxe /= np.linalg.norm(xaxe)
+
+        # re-orthogonalize
+        xaxe = xaxe - np.dot(xaxe, zaxe) * zaxe
+
+        if abs(np.dot(zaxe, xaxe)) > self.normtol:
+            raise ValueError("orthogonalized z- and x-axes are not orthogonal (?)",
+                             zaxe, xaxe)
+
+        yaxe = np.cross(zaxe, xaxe)
+
+        self.R = np.matrix((xaxe, yaxe, zaxe)).T
+
+        self.D = [ 1,
+                   self.A1.I * self.C1(self.R) * self.A1,
+                   self.A2.I * self.C2(self.R) * self.A2,
+                   self.A3.I * self.C3(self.R) * self.A3 ]
+
+    def __call__(self, orb):
+        for l,M in enumerate(self.D):
+            if orb[l].size != 0:
+                orb[l] = M * orb[l]
+
+        return orb
+
+    s = np.sqrt
+    A1 = np.matrix([[ 1,    0, -1 ],
+                    [1j,    0, 1j ],
+                    [ 0, s(2),  0 ]])
+    A2 = np.matrix([[ 0, 1j,    0,    1j,  0 ],
+                    [ 0,  1,    0,    -1,  0 ],
+                    [1j,  0,    0,     0,-1j ],
+                    [ 2,  0,    0,     0,  2 ],
+                    [ 0,  0,4*s(1.5),  0,  0]])
+    A3 = np.matrix([[  0,      0,  2*s(10),   0,     -2*s(10), 0,    0   ],
+                    [  0,      0, 2j*s(10),   0,     2j*s(10), 0,    0   ],
+                    [  0,      0,   0,      2*s(30),    0,     0,    0   ],
+                    [  0,     1j,   0,        0,        0,   -1j,    0   ],
+                    [2j*s(6),  0,   0,        0,        0,     0, 2j*s(6)],
+                    [ 2*s(6),  0,   0,        0,        0,     0, -2*s(6)],
+                    [  0,      2,   0,        0,        0,     2,    0   ]])
+    del s
+
+    @staticmethod
+    def C1(R):
+        return R.copy()
+
+    @staticmethod
+    def C2(R):
+        r1=R[0,0]; r2=R[0,1]; r3=R[0,2]
+        r4=R[1,0]; r5=R[1,1]; r6=R[1,2]
+        r7=R[2,0]; r8=R[2,1]; r9=R[2,2]
+
+        v = [2*(r2*r3 - r5*r6),
+             2*(r1*r3 - r4*r6),
+             2*(r1*r2 - r4*r5),
+             r1**2 - r4**2 + (r3**2 - r6**2)/2,
+             (r3**2 - r6**2)/2]
+
+        w = [4*r8*r9 - 2*(r2*r3 + r5*r6),
+             4*r7*r9 - 2*(r1*r3 + r4*r6),
+             4*r7*r8 - 2*(r1*r2 + r4*r5),
+             r9**2 - r1**2 - r4**2 + 2*r7**2 - (r3**2 + r6**2)/2,
+             r9**2 - (r3**2 + r6**2)/2]
+
+        return np.matrix(
+            [[ r6*r8+r5*r9, r6*r7+r4*r9, r5*r7+r4*r8, r4*r7+r6*r9/2, r6*r9/2],
+             [ r3*r8+r2*r9, r3*r7+r1*r9, r2*r7+r1*r8, r1*r7+r3*r9/2, r3*r9/2],
+             [ r3*r5+r2*r6, r3*r4+r1*r6, r2*r4+r1*r5, r1*r4+r3*r6/2, r3*r6/2],
+             v,
+             w])
+
+    @staticmethod
+    def C3(R):
+        r1=R[0,0]; r2=R[0,1]; r3=R[0,2]; r12=r1**2; r22=r2**2; r32=r3**2
+        r4=R[1,0]; r5=R[1,1]; r6=R[1,2]; r42=r4**2; r52=r5**2; r62=r6**2
+        r7=R[2,0]; r8=R[2,1]; r9=R[2,2]; r72=r7**2; r82=r8**2; r92=r9**2
+
+        u1 = [(2*r3*r7+r1*r9)*r9 - (3*r1*r32 + 2*r3*r4*r6 + r1*r62)/4,
+              (2*r3*r8+r2*r9)*r9 - (3*r2*r32 + 2*r3*r5*r6 + r2*r62)/4,
+              -r3*(r32 + r62 - 4*r92)/2,
+              -2*((3*r1*r2 + r4*r5)*r3 + (r2*r4 + r1*r5)*r6 -
+                      4*(r3*r7*r8 + r2*r7*r9 + r1*r8*r9)),
+              r2*( 4*r22+3*r32+4*r52+  r62-16*r82- 4*r92)/4 + r3*(r5*r6-4*r8*r9)/2,
+              r1*(-4*r12-3*r32-4*r42-  r62+16*r72+ 4*r92)/4 - -r3*(r4*r6-4*r7*r9)/2,
+              r3*(-6*r12-3*r32-2*r42-3*r62+ 8*r72+12*r92)/2 - 2*r1*(r4*r6-4*r7*r9)]
+
+        u2 = [(2*r6*r7+r4*r9)*r9 - (3*r4*r62 + 2*r1*r3*r6 + r4*r32)/4,
+              (2*r6*r8+r5*r9)*r9 - (3*r5*r62 + 2*r2*r3*r6 + r5*r32)/4,
+              -r6*(r32 + r62 - 4*r92)/2,
+              -2*((3*r4*r5 + r1*r2)*r6 + (r2*r4 + r1*r5)*r3 -
+                      4*(r6*r7*r8 + r5*r7*r9 + r4*r8*r9)),
+              r5*( 4*r22+  r32+4*r52+3*r62-16*r82- 4*r92)/4 + r6*(r2*r3-4*r8*r9)/2,
+              r4*(-4*r12-  r32-4*r42-3*r62+16*r72+ 4*r92)/4 - r6*(r1*r3-4*r7*r9)/2,
+              r6*(-2*r12-3*r32-6*r42-3*r62+ 8*r72+12*r92)/2 - 2*r4*(r1*r3-4*r7*r9)]
+
+        u3 = [-.75*((r32+r62)*r7 + 2*(r1*r3*r9 + r4*r6*r9 - r7*r92)),
+              -.75*((r32+r62)*r8 + 2*(r2*r3*r9 + r5*r6*r9 - r8*r92)),
+              -r9*(3*r32 + 3*r62 - 2*r92)/2,
+              -6*((r2*r3+r5*r6)*r7 + (r1*r3+r4*r6)*r8 + (r1*r2+r4*r5-2*r7*r8)*r9)/4,
+              (r8*( 12*r22+3*r32+12*r52+3*r62-8*r82)       +6*r9*(r2*r3+r5*r6-r8*r9))/4,
+              (r7*(-12*r12-3*r32-12*r42-3*r62+8*r72+6*r92) -6*r9*(r1*r3+r4*r6))/4,
+            -3*r9*(  2*r12+3*r32+ 2*r42+3*r62-4*r72-2*r92) -6*r7*(r1*r3+r4*r6)]
+
+        u4 = [(r3*r6*r7 + r3*r4*r9 + r1*r6*r9)/4,
+              (r3*r6*r8 + r3*r5*r9 + r2*r6*r9)/4,
+              r3*r6*r9/2,
+              (r3*r5+r2*r6)*r7 + (r3*r4+r1*r6)*r8 + (r2*r4+r1*r5)*r9,
+             -(r8*(4*r2*r5 + r3*r6)   + r9*(r3*r5 + r2*r6))/4,
+              (r7*(4*r1*r4 + r3*r6)   + r9*(r3*r4 + r1*r6))/4,
+               r9*(2*r1*r4 + r3*r6)/2 + r7*(r3*r4 + r1*r6)]
+
+        u5 = [.75*(r32*r4 + 2*r1*r3*r6 - r4*r62),
+              .75*(r32*r5 + 2*r2*r3*r6 - r5*r62),
+              r6*(3*r32 - r62)/2,
+              6*(r4*(r2*r3 - r5*r6) + r1*(r3*r5 + r2*r6)),
+             -.25*r5*( 12*r22 + 3*r32 - 4*r52 - 3*r62) - 1.5*r2*r3*r6,
+              .25*r4*(-12*r12 + 3*r32 - 4*r42 - 3*r62) - 1.5*r1*r3*r6,
+              .75*r6*(  2*r12 + 3*r32 - 2*r42 -   r62) +   6*r1*r3*r4]
+
+        u6 = [.75*(r1*r32 - 2*r3*r4*r6 - r1*r62),
+              .75*(r2*r32 - 2*r3*r5*r6 - r2*r62),
+              r3*(r32 - 3*r62)/2,
+              6*(r3*(r1*r2-r4*r5) - r6*(r2*r4+r1*r5)),
+             -.25*r2*(4*r22 + 3*r32 -12*r52 - 3*r62) + 1.5*r3*r5*r6,
+              .25*r1*(4*r12 + 3*r32 -12*r42 - 3*r62) - 1.5*r3*r4*r6,
+              .75*r3*(2*r12 +   r32 - 2*r42 - 3*r62) -     6*r1*r4*r6]
+
+        u7 = [(r7*(r32-r62) + 2*r9*(r1*r3-r4*r6))/4,
+              (r8*(r32-r62) + 2*r9*(r2*r3-r5*r6))/4,
+              r9*(r32 - r62)/2,
+              6*(r7*(r2*r3-r5*r6) + r8*(r1*r3-r4*r6) + r9*(r1*r2-r4*r5)),
+             -r8*(4*r22 +  r32 -4*r52 -  r62)/4 +   r9*(r2*r3-r5*r6)/2,
+              r7*(4*r12 +  r32 -4*r42 -  r62)/4 -   r9*(r1*r3-r4*r6)/2,
+              r9*(2*r12 +3*r32 -2*r42 -3*r62)/2 - 2*r7*(r1*r3-r4*r6)]
+
+        return np.matrix([u1, u2, u3, u4, u5, u6, u7])
+
+class Orbital(list):
+    tol = 1e-8
+
+    def __init__(self, string, zaxe=None, xaxe=None):
+        orb = re.split('[,;]', string)
+
+        try:
+            orb = [o for oo in orb for o in _angfunc_aliases[oo.lower()]]
+        except KeyError as e:
+            raise ValueError("`" + e.args[0] + "'" +
+                             " is not a valid angular function (try `-HO')")
+
+        self._str = orb
+
+        orb = [ [m.copy() for m in _angfunc[o]] for o in orb]
+
+        self.rot = YlmRotator(zaxe, xaxe)
+
+        self.extend(self.rot(o) for o in orb)
+
+    def getlines(self, site, desc):
+        first = True
+        for o,s in zip(self, self._str):
+            nl = functools.reduce(lambda n,C: n + (abs(C) > self.tol).sum(),
+                        o, 0)
+
+            yield str(nl) + "         # "+desc+" -> "+str(site)+':'+s
+
+            for l,C in enumerate(o):
+                for m in range(C.size):
+                    if abs(C[m]) < self.tol: continue
+
+                    line = " %d %d % d  % 1.8f  % 1.8f" % \
+                        (site, l, m-l, C[m].real, C[m].imag)
+
+                    if first:
+                        yield line + "   # iat, l, m, Re(coeff), Im(coeff)"
+                        first = False
+                    else:
+                        yield line
+
+
+class Projection(object):
+    def __str__(self):
+        s = ','.join(str(x) for x in self.ineq) + ':' + \
+            ','.join(self.orbs._str)
+        if self.zaxe is not None:
+            s += ':z=' + ','.join('%.3f'%x for x in self.orbs.rot.R[:,2])
+            s += ':x=' + ','.join('%.3f'%x for x in self.orbs.rot.R[:,0])
+        return s
+
+    def __init__(self, struct, string):
+        self._str = string.strip()
+
+        a = [s.strip() for s in string.split(':')]
+        if len(a) < 2:
+            raise ValueError("SITE and ORB must be given")
+        if len(a) > 4:
+            raise ValueError("trailing garbage (NB: `radial' and `zona' are not supported)")
+
+        self.zaxe = None
+        self.xaxe = None
+
+        if len(a) > 2:
+            self.zaxe = Axis(a[2], 'z')
+            if self.zaxe.name != 'z':
+                raise ValueError("z-axis has to be specified first")
+
+        if len(a) > 3:
+            self.xaxe = Axis(a[3], 'x')
+            if self.xaxe.name != 'x':
+                raise ValueError("only `z' and `x' axes can be specified")
+
+        self.ineq = Site(struct, a[0])
+        self.orbs = Orbital(a[1], self.zaxe, self.xaxe)
+
+        if args.verbose and self.zaxe is not None:
+            print("x'="+str(self.orbs.rot.R[:,0].T), " ")
+            print("y'="+str(self.orbs.rot.R[:,1].T), " ")
+            print("z'="+str(self.orbs.rot.R[:,2].T))
+
+        self.N = len(self.ineq) * len(self.orbs)
+
+    def getlines(self):
+        for i in self.ineq:
+            for l in self.orbs.getlines(i, self._str):
+                yield l
+
+def write_proj(proj, f):
+    pass
+
+def print_inwf_header(struct, filename):
+    print(" ++ write_inwf using", filename, "++")
+    print("")
+    print(" Atoms found:")
+
+    f1 = "%3i%5s  Z=%4.1f  pos=% .3f % .3f % .3f  locrot=% .3f % .3f % .3f"
+    f2 = "%3i%5s          pos=% .3f % .3f % .3f         % .3f % .3f % .3f"
+    f3 = "   %5s                " + " "*18 + "         % .3f % .3f % .3f"
+    f4 = "%3i%5s          pos=% .3f % .3f % .3f"
+    for i in range(struct.nneq):
+        print(f1 % (
+            struct.neq2at[i][0], struct.aname[i], struct.Z[i],
+            struct.pos[i][0,0], struct.pos[i][0,1], struct.pos[i][0,2],
+            struct.locrot[i][0,0], struct.locrot[i][0,1], struct.locrot[i][0,2]
+            ))
+
+        dum = ' '*len(struct.aname[i])
+
+        for j in [1, 2]:
+            if struct.mult[i] > j:
+                print(f2 % (
+                    struct.neq2at[i][j], dum,
+                    struct.pos[i][j,0], struct.pos[i][j,1], struct.pos[i][j,2],
+                    struct.locrot[i][j,0], struct.locrot[i][j,1], struct.locrot[i][j,2]
+                    ))
+            else:
+                print(f3 % (
+                    dum,
+                    struct.locrot[i][j,0], struct.locrot[i][j,1], struct.locrot[i][j,2]
+                    ))
+
+        for j in range(3, struct.mult[i]):
+            print(f4 % (
+                struct.neq2at[i][j], dum,
+                struct.pos[i][j,0], struct.pos[i][j,1], struct.pos[i][j,2],
+                ))
+
+class HAction(argparse.Action):
+    choices = { 'orbitals': 'O',
+                'sites': 'S',
+                'axis': 'A', 'axes': 'A',
+                'xaxis': 'A', 'zaxis': 'A', 'rotation': 'A'}
+
+    def __call__(self, parser, myargs, choice, optname):
+        if choice == 'O':
+            print(" ++ "+parser.prog+": help on orbital specifications ++")
+            print('''
+`ORB' should be one or more items, separated by commas, selected from:
+ s p d f  deg dt2g  ft1g ft2g fa2g  sp sp2 sp3 sp2d sp3d2
+ px py pz  dx2-y2 dz2 dxy dxz dyz
+ fxz2 fyz2 fz3 fx(x2-3y2) fy(3x2-y2) fz(x2-y2) fxyz
+where, e.g., ``dt2g'' is equivalent to ``dxy, dxz, dyz''.  A list of
+of N orbitals corresponds to N Wannier functions on the give site(s).''')
+
+        elif choice == 'S':
+            global args
+            args = myargs
+
+            struct = None
+            try:
+                struct = argmunge(parser, args)
+            except IOError as e:
+                pass
+
+            print(" ++ "+parser.prog+": help on site specifications ++")
+            print('''
+Valid values for `SITE' are  integers, enumerating all atomic sites in
+the order of the `struct' file; or one of the following ``groups'':
+ * `all'
+ * a nonequivalent atom's name as in the `struct'
+ * the first word in the name (usually the chemical symbol)
+ * `AN', nonequivalent atom N
+ * `ZX', all atoms with atomic number X
+Several  items  may  be  combined,  separated  by  commas.   Identical
+projections will be placed on each of the resulting sites''')
+            if struct is not None:
+                print
+                print("In `"+args.struct_file+"', I find the following groups:")
+                print
+
+                for k,v in sorted(struct.sites.items()):
+                    if isinstance(k, int): continue
+
+                    ks = k
+                    if isinstance(k, tuple):
+                        ks = str(k[0]) + str(k[1])
+
+                    print(' %-10s-> %s' % (ks, ', '.join(str(x) for x in v)))
+
+        elif choice == 'A':
+            print(" ++ "+parser.prog+": help on axis specifications ++")
+            print('''
+Each  axis (z'  / x')  should be  of the  form `X,  Y, Z',  giving the
+coordinates of  the ``new''  axis (normalized or  not) in  the ``old''
+system.  If only z'  is given, x' will be chosen  orthogonal to it (by
+projecting out z' from x).''')
+
+        sys.exit()
+
+class Abbrev(object):
+    def __init__(self, things):
+        if isinstance(things, dict):
+            self.things = things
+        else:
+            self.things = dict(zip(things, things))
+
+    def __call__(self, string):
+        for alias,value in self.things.items(): # OR python 3
+            if alias.lower().startswith(string.lower()):
+                return value
+
+        return string
+
+def argmunge(parser, args):
+    args.batch = args.bands is not None
+
+    if args.batch:
+        if args.bands[1] < args.bands[0]:
+            croak("bmax < bmin")
+
+        if args.bands[0] < 1:
+            croak("bmin must be positive")
+
+        args.nband = args.bands[1]-args.bands[0]+1
+
+    if args.struct_file is None:
+        args.struct_file = args.case + '.struct'
+
+    if args.inwf_file is None:
+        args.inwf_file = args.case + '.inwf' + args.updn
+
+    sf = open(args.struct_file, 'r')
+    struct = Struct(sf)
+    sf.close()
+
+    return struct
+
+def carp(thing):
+    if args.verbose and isinstance(thing, Exception):
+        traceback.print_exc()
+    else:
+        if isinstance(thing, tuple):
+            thing = ' '.join(str(x) for x in thing)
+        print(parser.prog + ":", thing,file=sys.stderr)
+
+
+def croak(thing, status=1):
+    carp(thing)
+    sys.exit(status)
+
+
+class ProjectionCompleter(object):
+    def __init__(self, struct):
+        self.struct = struct
+
+    def __call__(self, text, state):
+        if state == 0:
+            # build match list
+            nc = readline.get_line_buffer()[:readline.get_begidx()].count(':')
+            t = text.lower()
+            if   nc==0:
+                self.matches = [str(s) for s in self.struct.sites.keys()
+                                if str(s).lower().startswith(t)]
+            elif nc==1:
+                self.matches = [str(s) for s in _angfunc.keys()
+                                if str(s).startswith(t)]
+                if text and not self.matches:
+                    self.matches = [str(s) for s in _angfunc_aliases.keys()
+                                    if str(s).startswith(t)]
+            else:
+                self.matches = []
+
+        try:
+            return self.matches[state]
+        except IndexError:
+            return None
+
+
+try:
+    parser = argparse.ArgumentParser(description=__doc__, add_help=False,
+                                     formatter_class=argparse.RawDescriptionHelpFormatter)
+
+    parser.add_argument('proj', nargs='*', metavar='PROJ', help="projection " +
+                        "specification, PROJ = SITE:ORB[:ZAX[:XAX]]")
+
+    arg_general = parser.add_argument_group('general options')
+    arg_w2w     = parser.add_argument_group('w2w options')
+    arg_wannier = parser.add_argument_group('wannierization options')
+
+    arg_general.add_argument('-h', '-help', action='help',
+                             help="show this help message and exit")
+    arg_general.add_argument('-H', action=HAction,
+                             type=Abbrev(HAction.choices),
+                             choices=set(HAction.choices.values()),
+                             help="show detailed help on SITE, ORB, or Axes")
+    arg_general.add_argument('-V', '-version', action='version',
+                             version="write_inwf_lapw "+__version__)
+    arg_general.add_argument('-verbose', '-v', action='store_true')
+    arg_general.add_argument('-quiet', '-q', action='store_true')
+
+    arg_w2w.add_argument('-case', '-f', metavar='CASE',
+                         default=os.getcwd().split(os.sep)[-1],
+                         help="override CASE (default: `basename $PWD`)")
+    arg_w2w.add_argument('-struct-file', metavar='STRUCT',
+                         help="`struct' file to read instead of `CASE.struct'")
+    arg_w2w.add_argument('-inwf-file', metavar='INWF',
+                         help="write w2w input here (default: `CASE.inwf[up|dn]')")
+    modes = ['AMN', 'MMN', 'BOTH']
+    arg_w2w.add_argument('-mode', choices=modes,
+                         type=Abbrev(modes), default='both',
+                         help='default: %(default)s')
+    arg_w2w.add_argument('-bands', type=int, nargs=2, metavar="B",
+                         help="lowest, highest band to include")
+    arg_w2w.add_argument('-ljmax', type=int, default=3,
+                         help="max. LJ in exp(i b.r) expansion")
+    updn = arg_w2w.add_mutually_exclusive_group()
+    updn.add_argument('-up', dest='updn', action='store_const', const='up', default='')
+    updn.add_argument('-dn', dest='updn', action='store_const', const='dn')
+
+    args = parser.parse_args()
+
+    struct = argmunge(parser, args)
+
+    if not args.batch:
+        histfile = os.path.join(os.path.expanduser("~"), ".write_inwf_history")
+        try:
+            readline.read_history_file(histfile)
+        except IOError:
+            pass
+        import atexit
+        atexit.register(readline.write_history_file, histfile)
+
+        if not args.quiet:
+            print_inwf_header(struct, args.struct_file)
+            print
+        extant_inwf = args.inwf_file != '-' and \
+            os.path.isfile(args.inwf_file) and \
+            os.stat(args.inwf_file).st_size > 0
+        if extant_inwf:
+            print("  + `"+args.inwf_file+ \
+                "' already exists, press Ctrl-D now to keep it +")
+            print("")
+
+        try:
+            args.bands = ask_bands()
+        except EOFError:
+            sys.exit()
+
+        args.nband = args.bands[1] - args.bands[0] + 1
+        nproj = 0
+        proj  = []
+        readline.parse_and_bind('tab: complete')
+        readline.set_completer(ProjectionCompleter(struct))
+        readline.set_completer_delims(' \t\n:,')
+        if args.mode != 'MMN':
+            while nproj < args.nband:
+                try:
+                    p = ask_proj(struct, args.nband-nproj)
+                except EOFError:
+                    break
+
+                if p is None: continue
+
+                proj.append(p)
+                nproj += p.N
+
+                print("added "+str(p.N)+" projection"+ \
+                    (": " if p.N==1 else "s: ")+str(p))
+
+            print()
+            print("--> %i band%s, %i initial projection%s"%(
+                args.nband, '' if args.nband==1 else 's',
+                nproj, '' if nproj==1 else 's'
+                ))
+    else:
+        try:
+            proj = [Projection(struct, s) for s in args.proj]
+        except ValueError as e:
+            croak(e)
+
+        nproj = functools.reduce(lambda s,p: s+p.N, proj, 0)
+
+except KeyboardInterrupt: exit()
+
+if nproj > args.nband:
+    croak(("too many projections,",nproj,">",args.nband))
+
+if args.inwf_file == '-':
+    wf = sys.stdout
+else:
+    wf = open(args.inwf_file, 'w')
+
+print("%-4s             # AMN, MMN, or BOTH"%args.mode,file=wf)
+print("%3d %3d          # min band, max band" % \
+    (args.bands[0], args.bands[1]),file=wf)
+print("%3d %3d          # LJMAX in exp(ibr) expansion, #proj" % \
+    (args.ljmax, nproj),file=wf)
+
+for p in proj:
+    for l in p.getlines():
+        print(l,file=wf)
+
+if not args.batch and extant_inwf and not args.quiet:
+    print("  + updated `"+args.inwf_file+\
+"' -- do not forget to change `win' file, if necessary +")
