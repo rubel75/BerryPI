@@ -2,7 +2,7 @@ BerryPI is a software for the calculation of Berry phase and related properties 
 
 *** Current Version
 
-Version Sep 6, 2020
+Version Sep 7, 2020
 
 [[https://github.com/spichardo/BerryPI/wiki][Documentation]]
 
