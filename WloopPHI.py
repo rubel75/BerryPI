@@ -15,9 +15,8 @@ import sys
 def FileFormatMessage():
     print ("Error: Use proper formated file")
     print ("""Example for file format:
-/home/enigma/WIEN2k/case                              # Path of your WIEN2k working directory.
-51                                                    # Wilson loop Z-minimum and Z-maximum value.     
-1:84                                                  # Number of division in Z direction for wilson loop.  
+51                                                    # Number of Wilson loops along the trajectory
+1:84                                                  # Band range  
 &WloopCoordinate                                      # Wilson loop start (it is case sensitive)
 0.4565 0.2000 0.5000 ; -0.4565 0.2000 0.5000          # Starting point 1 ; End point 1
 0.4565 0.3000 0.5000 ; -0.4565 0.3000 0.5000          # Starting point 2 ; End point 2          
@@ -28,9 +27,10 @@ END                                                   # End of file (It is case 
 
 def ReadInputValues(content, WloopFileName):
     try:
-        WorkingDir = str(content[0][:-1])
+        WorkingDir = os.getcwd()
+        print ("Working directory = %s" %(WorkingDir))
         KlistFileName = str("%s.klist" %(WorkingDir.split('/')[-1]))
-        n = int(content[1].split()[0])
+        n = int(content[0].split()[0])
         #multiplier = int(content[2].split()[0]) # User dependent (make sure use proper array indexing)
         multiplier = 1000 # User independent
     except ValueError:
@@ -52,8 +52,8 @@ def ReadInputValues(content, WloopFileName):
             elif copy:
                 K_Points.append(line)
                 
-    StartBand = int(content[2].split(":")[0])
-    EndBand = int(content[2].split(":")[1])
+    StartBand = int(content[1].split(":")[0])
+    EndBand = int(content[1].split(":")[1])
     S = [] # Staring Point
     E = [] # End Point
     for i in K_Points:
@@ -170,7 +170,7 @@ Data = []
 loop = 0
 
 for i in range(0, n):
-    print ("Wilson Loop ---------------------  %i" %(i+1))
+    print ("Wilson Loop ---------------------  %i of %i" %(i+1, n))
     temp = i
     Klist = []
     for k in range(0, len(K_Start)):
