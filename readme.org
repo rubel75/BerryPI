@@ -20,7 +20,6 @@ Version Sep 6, 2020
 - [[https://github.com/spichardo/BerryPI/wiki/Tutorial-5:-Weyl-points-characterization-in-TaAs][Tutorial 5 - Weyl points characterization in TaAs]]
 
 *** Limitation
-- Python 3.* is supported with the exception of WloopPHI
 - The present version is restricted to cases when the lattice vectors correspond to cartesian directions. For example, the zinc-blend or NaCl structures should be regarded as an 8 atom cell instead of the conventional 2 atom basis. This restriction is partly lifted (see - [[https://github.com/spichardo/BerryPI/wiki/Tutorial:-Non-orthogonal-lattice-vectors][Tutorial 3]])
 
 *** To Do
