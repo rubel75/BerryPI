@@ -27,10 +27,11 @@ import parsing as b_PyParse
 import submoduleProcess as b_PySubProcess
 import calculations as b_PyCalc
 
-import config
-from config import BERRY_DEFAULT_CONSOLE_PREFIX as DEFAULT_PREFIX
-
+import config; from config import BERRY_DEFAULT_CONSOLE_PREFIX as DEFAULT_PREFIX
 import mmn2pathphase
+import testerror; from testerror import testerror
+import rmerror; from rmerror import rmerror
+
 
 class Logger(object): # redirect stdout to case.outputberry file and console
     def __init__(self):
@@ -299,6 +300,7 @@ def rawBerryPhase(configFile):
     # run lapw1 (-up/-dn) (-orb) #
     ##############################
     if runLAPW:
+        rmerror('lapw1') # rm error files
         if spCalc or soCalc or orbCalc: # spin polarized mode
             # SOC calculation needs a faked SP (for w2w reasons)
             spOptions = ['-up', '-dn']
@@ -321,6 +323,7 @@ def rawBerryPhase(configFile):
                 print(DEFAULT_PREFIX + "ERROR --> " + shell_x_lapw1.getCommandString())
                 print(str(err))
                 return False
+        testerror('lapw1') # test for non-empty error files
     else:
         print(DEFAULT_PREFIX + "Skipping 'x lapw1'")
 
@@ -329,6 +332,7 @@ def rawBerryPhase(configFile):
     # run lapwso (-up) (-orb) #
     ###########################
     if soCalc and runLAPW: # spin-orbit coupling ONLY
+        rmerror('lapwso') # rm error files
         suffix = '-up' # SOC calculation needs a faked SP (for w2w reasons)
         suffix = suffix + ' ' + pOpt # take care of parallel mode
         if orbCalc: # OP option
@@ -347,6 +351,7 @@ def rawBerryPhase(configFile):
                 shell_x_lapwso.getCommandString())
             print(str(err))
             return False
+        testerror('lapwso') # test for non-empty error files
 
     #############################################
     # run lapw2 -fermi -in1orig (-so) (-up/-dn) #
@@ -360,6 +365,7 @@ def rawBerryPhase(configFile):
     if not wCalc and bands == []:
         # do not run LAPW2 with pre-set band range
         # also not in the case of Weyl point analysys/Wilson loop
+        rmerror('lapw2') # rm error files
         if spCalc or soCalc or orbCalc: # spin polarized mode
             # SOC calculation needs a faked SP (for w2w reasons)
             spOptions = ['-up', '-dn']
@@ -402,6 +408,7 @@ def rawBerryPhase(configFile):
                     shell_x_lapw1.getCommandString())
                 print(str(err))
                 return False
+        testerror('lapw2') # test for non-empty error files
 
 
     #############################################
@@ -620,6 +627,7 @@ def rawBerryPhase(configFile):
         # execute w2w #
         ###############
         suffix = pOpt # take care of parallel mode
+        rmerror('w2w') # rm error files
         if soCalc: # for spin-orbit call executables directly
             shell_w2w = b_PySubProcess.VirtualShellInstance( \
                 'x w2w -so', spinOption, suffix );
@@ -633,6 +641,7 @@ def rawBerryPhase(configFile):
             print(DEFAULT_PREFIX + "ERROR --> " + shell_w2w.getCommandString())
             print(str(err))
             return False
+        testerror('w2w') # test for non-empty error files
 
 
         ####################
