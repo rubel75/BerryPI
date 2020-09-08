@@ -4,7 +4,6 @@ Remove error files "*corename*.error" in the current directory.
 
 from __future__ import print_function # Python 2 & 3 compatible print function
 import os
-import sys
 import glob # pathnames matching a specified pattern
 
 import config
