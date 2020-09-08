@@ -316,6 +316,7 @@ def rawBerryPhase(configFile):
 
             try:
                 shell_x_lapw1()
+                print("subprocess.CalledProcessError=",subprocess.CalledProcessError)
             except subprocess.CalledProcessError as err:
                 print(DEFAULT_PREFIX + "ERROR: in automation of " + str(structureName))
                 print(DEFAULT_PREFIX + "ERROR --> " + shell_x_lapw1.getCommandString())
