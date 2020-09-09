@@ -123,7 +123,7 @@ def rawBerryPhase(configFile):
     # check python version
     if sys.version_info[0] > 2: # major python version 3 is not supported
         print(DEFAULT_PREFIX + 'WARNING: compatibility with python 3.X was only recently',
-            'implemented. Proceed with caution. WloopPHI.py does not support python3.X')
+            'implemented. Proceed with caution.')
     elif sys.version_info[0] == 2 and sys.version_info[1] < 7:
         print(DEFAULT_PREFIX + 'WARNING: python 2.7.X is recommended' + \
             'prior versions are not tested')
