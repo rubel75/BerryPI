@@ -988,8 +988,12 @@ if __name__ == "__main__":
         try:
             structure_kmesh # check if k-mesh defined in input param.
         except NameError: # k-mesh is not defined, ask for input
-            k_mesh_values=raw_input('What kmesh values would you like? '+ \
-                '(e.g. 2:2:2)\n');
+            if sys.version_info[0] == 2: # python 2
+                k_mesh_values=raw_input('What kmesh values would you like? '+ \
+                    '(e.g. 2:2:2)\n')
+            else: # python 3
+                k_mesh_values=input('What kmesh values would you like? '+ \
+                    '(e.g. 2:2:2)\n')
             try: structure_kmesh = [ int(i) for i in k_mesh_values.split(':') ] 
             except ValueError:
                 print('Value Error: Please enter the integers into '+ \
