@@ -6,9 +6,6 @@
 ###     Generate input file for ‘w2w’
 ###
 ### Copyright 2013-2015 Elias Assmann <elias.assmann@gmail.com>
-###
-### Sep 7, 2020: Minor changes to make it compatible with python 3.X
-###              (Oleg Rubel)
 
 '''
 Generate input file for `w2w' interactively or from command line
@@ -166,7 +163,10 @@ def say_what(thing=None):
 def ask_bands():
     while True:
         try:
-            l = raw_input("> minimal and maximal band indices [Nmin Nmax]? ")
+            if sys.version_info[0] == 2: # python 2
+                l = raw_input("> minimal and maximal band indices [Nmin Nmax]? ")
+            else: # python 3
+                l = input("> minimal and maximal band indices [Nmin Nmax]? ")
 
             bmin,bmax = [int(x) for x in l.split()]
 
@@ -180,8 +180,12 @@ def ask_bands():
 def ask_proj(struct, need):
     while True:
         try:
-            l = raw_input("> next proj. (" + str(need) +
-                          " to go; Ctrl-D if done)? ").rstrip('\n')
+            if sys.version_info[0] == 2: # python 2
+                l = raw_input("> next proj. (" + str(need) +
+                    " to go; Ctrl-D if done)? ").rstrip('\n')
+            else:
+                l = input("> next proj. (" + str(need) +
+                    " to go; Ctrl-D if done)? ").rstrip('\n')
             if l.strip() == '':
                 return None
             else:
