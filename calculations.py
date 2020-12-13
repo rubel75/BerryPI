@@ -19,6 +19,7 @@ import parsing as b_PyParse
 import numpy
 import copy # needed for deepcopy of arrays
 import collections
+from vec2cart import vec2cart
 
 from collections import OrderedDict as orderedDict
 from convunits import bohrToMeters # conversion [Bohr] => [m]
@@ -203,37 +204,46 @@ class MainCalculationContainer:
         #############################
         ###### Getting Values #######
         #############################
-        self._calculationValues = orderedDict();
+        self.calcVal = orderedDict();
         
         #### *.struct handle
         # - name of atoms
         # - MULT for each atom
         # - coordinates
         # - nuclear charge
-        self._calculationValues['Atom Listing'] = \
+        self.calcVal['Atom Listing'] = \
             parser_struct_handle['Atom Listing']
+        # - lattice type (P,F,B,CXY,CYZ,CXZ,R,H)
+        self.calcVal['lattice type'] = \
+            parser_struct_handle['lattice type']
+        # - lattice orthogonal (T/F)
+        self.calcVal['lattice ortho'] = \
+            parser_struct_handle['lattice ortho']
         # - Cell Volume
-        self._calculationValues['Cell Volume in bohr^3'] = \
+        self.calcVal['Cell Volume in bohr^3'] = \
             parser_struct_handle['cell volume']
         # - Lattice Constants (a,b,c)
-        self._calculationValues['Lattice Constants in bohr'] = \
+        self.calcVal['Lattice Constants in bohr'] = \
             parser_struct_handle['lattice constants']
+        # - lattice vectors BR1_DIR matrix (v_x, v_y, v_z)
+        self.calcVal['Real conventional lat vectors in bohr'] = \
+            parser_struct_handle['real space conventional lattice vectors']
         # - lattice vectors BR2_DIR matrix (v_x, v_y, v_z)
-        self._calculationValues['Lattice Matrix in bohr'] = \
-            parser_struct_handle['real space lattice vectors']
+        self.calcVal['Real primitive lat vectors in bohr'] = \
+            parser_struct_handle['real space primitive lattice vectors']
             
         ### *.inc handle
         # - core charge for each non-eqivalent atom
-        self._calculationValues['Atom core charges'] = \
+        self.calcVal['Atom core charges'] = \
             parser_inc_handle['core charges'];
 
         # check consistency of case.struct and case.inc files
-        if len(self._calculationValues['Atom core charges']) != \
-            len(self._calculationValues['Atom Listing']):
+        if len(self.calcVal['Atom core charges']) != \
+            len(self.calcVal['Atom Listing']):
             print("Number of non-equivalent atoms in case.struct:", \
-                len(self._calculationValues['Atom Listing']))
+                len(self.calcVal['Atom Listing']))
             print("Number of non-equivalent atoms in case.inc:", \
-                len(self._calculationValues['Atom core charges']))
+                len(self.calcVal['Atom core charges']))
             raise Exception("Inconsistent number of non-equivalent atoms")
 
         
@@ -270,7 +280,7 @@ class MainCalculationContainer:
                     print(" "*20, "path(%4d)       %4d        % e        % e" \
                         % (ipath+1, kpt, ph, phwrp))
         print("="*87)
-        print("\n","CALCULATION OF ELECTRONIC POLARIZATION")
+        print("\n\nCALCULATION OF ELECTRONIC POLARIZATION")
         print("="*87)
         print("Value", " "*25, "|  spin  ", "|   ", "dir(1)   ", \
             "|   ", "dir(2)   ", "|   ", "dir(3)")
@@ -304,16 +314,65 @@ class MainCalculationContainer:
                 % tuple(phaseDirSpinWrp11))
         #electron charge / cell volume
         self.ELEC_BY_VOL_CONST = ELECTRON_CHARGE / \
-            bohrToMeters(self._calculationValues['Cell Volume in bohr^3'], \
+            bohrToMeters(self.calcVal['Cell Volume in bohr^3'], \
             dimension = 3.);
         # electronic polarization (C/m2)
-        elP = self.elPolarization(phaseDirSpinWrp11,self._calculationValues, \
-            self.ELEC_BY_VOL_CONST);
-        # ionic polarization (C/m2)
+        elP = self.elPolarization(phaseDirSpinWrp11,self.calcVal, \
+            self.ELEC_BY_VOL_CONST)
+        # convert elP from primitive basis to Cart. coordinates
+        # WIEN2k always uses primitive latt. vec. in constructing Brillouin zone
+        print("\nThe electronic polarization vector is presented in",\
+            "this coord. system:")
+        latVec = numpy.zeros((3,3))
+        for i in range(3): # gather lattice vectors into a (3x3) array
+            latVec[i,:] = self.calcVal['Real primitive lat vectors in bohr'][i]
+            print(" "*4, "dir(%1i) =" % (i+1), \
+                "[% e, % e, % e] bohr" % tuple(latVec[i,:]))
+        print("and will be transformed into Cartesian coordinates.")
+        for i in range(elP.shape[0]): # loop over spin channels
+            print("elP=",elP,elP.shape)
+            elP[i,:] = vec2cart(elP[i,:], latVec) # prim -> Cartesian
+            print("Pel'=",elP[i,:])
+        
+        #############################
+        # ionic polarization (C/m2) #
+        #############################
         ionP = self.determineIonPolarization(self.wrp11,args)
+        # convert ionP from conventional to Cart. coordinates
+        # WIEN2k always uses conventional latt. vec. for ionic positions
+        print("\nThe ionic positions and associated polarization vector is",\
+            "presented in this coord. system:")
+        latVec = numpy.zeros((3,3))
+        for i in range(3): # gather lattice vectors into a (3x3) array
+            latVec[i,:] = self.calcVal['Real conventional lat vectors in bohr'][i]
+            print(" "*4, "dir(%1i) =" % (i+1), \
+                "[% e, % e, % e] bohr" % tuple(latVec[i,:]))
+        for i in range(ionP.shape[0]): # loop over spin channels
+            ionP[i,:] = vec2cart(ionP[i,:], latVec) # prim -> Cartesian
+            print("ionP'=",ionP[i,:])
+        
+        #############################
+        # total polarization (C/m2) #
+        #############################
         # Total polarization (C/m2) will be returned
         # when calling mainCalculation()
         self._totalPolarizationVal = self.totalPolarization(elP, ionP)
+        # Prepare transform polarization from lattice vectors to Cartesian
+        # coordinates (totP -> totPcart
+        latVec = numpy.zeros((3,3))
+        print('''
+Note: When lattice vectors are _not_ aligned with Cartesian coordinates, an
+      additional transformation is required to present the polarization vector
+      in Cartesian coordinates. This can be important when calculating Born 
+      effective charges
+           Z*_i,j = (Omega/e) * dP_i/dr_j,
+      where i, j are Cartesian components, Omega is the cell volume (see output
+      above), and e is the elementary charge. The total polarization vector is
+      presented in Cartesian coordinates and should be used to determine dP_i.
+      It is, however, up to the user to transform the atom displacement vector
+      components dr_j into Cartesian coordinates. The change in fractional
+      coordinated should be converted into dr_j using lattice vectors dir(1,2,3)
+      used in calculation of the ionic polarization (see above).''')
         # END main
 
 
@@ -422,10 +481,10 @@ class MainCalculationContainer:
         return self.totalPolarizationVal()
 
     def calculationValues(self):
-        return self._calculationValues
+        return self.calcVal
 
     def prettyPrintCalculationValues(self):
-        pprint.pprint(self._calculationValues)
+        pprint.pprint(self.calcVal)
     
     def elPolarization(self, berryPhase, calcValues, ELEC_BY_VOL_CONST):
         '''
@@ -438,25 +497,17 @@ class MainCalculationContainer:
         Pel_x = electron charge / unit volume (m) * \
           berry phase mean value/2pi * lattice_matrices (diagonal x);
         '''
-        latticeConstants = calcValues['Lattice Constants in bohr']
-        latticeMatrix_x = calcValues['Lattice Matrix in bohr'][0]
-        latticeMatrix_y = calcValues['Lattice Matrix in bohr'][1]
-        latticeMatrix_z = calcValues['Lattice Matrix in bohr'][2]
-        # return the absolute value of the vector sqrt(x^2 + y^2 + z^2)
-        absVector = lambda vec: math.sqrt(sum([i**2 for i in vec]))
-        # length of lattice vectors
-        lattice_x = absVector(latticeMatrix_x)
-        lattice_y = absVector(latticeMatrix_y)
-        lattice_z = absVector(latticeMatrix_z)
-        # Electronic Polarization [OLEG]: check which lattice constants to use
+        # [OLEG]: check which lattice vectors to use br1 or br2
         nspins = numpy.shape(berryPhase)[1]
         elP = numpy.zeros((nspins,3))
         for spinIndex in range(0,nspins):
-            for coordIndex in range(0,3):
+            for coordIndex in range(0,3): # loop over 3 lattice vector direct.
+                latVec = calcValues['Real primitive lat vectors in bohr'][coordIndex]
+                normLatVec = numpy.linalg.norm(latVec) # length of lat. vector
                 elP[spinIndex,coordIndex] = \
                     (berryPhase[coordIndex,spinIndex]/(2*numpy.pi)) * \
                     ELEC_BY_VOL_CONST * \
-                    bohrToMeters(latticeConstants[coordIndex]);
+                    bohrToMeters(normLatVec);
             print("Electronic polarization (C/m2)     " +\
                 "sp(%1i) " % (spinIndex+1), \
             "[% e, % e, % e]" % tuple(elP[spinIndex,:]))
@@ -503,7 +554,7 @@ class MainCalculationContainer:
 
           where atom valence charge = ( core value - spin val 1 - spin val 2 )
         '''
-        print("\n", "CALCULATION OF IONIC POLARIZATION")
+        print("\n\nCALCULATION OF IONIC POLARIZATION")
         ionP = []
         calcValues = self.calculationValues()
         ELEC_BY_VOL_CONST = self.ELEC_BY_VOL_CONST
@@ -520,7 +571,7 @@ class MainCalculationContainer:
         else:
             nspins = 1
         iatom = -1 # atom index
-        Zcore = self._calculationValues['Atom core charges'] # non-equiv. atoms
+        Zcore = self.calcVal['Atom core charges'] # non-equiv. atoms
         for atom in atomListing: # loop over non-equivalent atoms
             iatom = iatom+1
             theElementName = atom['Element Name']
@@ -595,12 +646,14 @@ class MainCalculationContainer:
         #IONIC Polarization
         ionPol = numpy.zeros((nspins,3))
         for spinIndex in range(0,nspins):
-            for coordIndex in range(0,3):
+            for coordIndex in range(0,3): # loop over 3 lattice vector direct.
                 psi = totIonPhase[spinIndex,coordIndex]
-                a = latticeConstants[coordIndex]
+                # WIEN2k always uses conventional latt. vec. for ionic positions
+                latVec = calcValues['Real conventional lat vectors in bohr'][coordIndex]
+                normLatVec = numpy.linalg.norm(latVec) # length of lat. vector
                 ionPol[spinIndex,coordIndex] = \
                     (psi/(2*numpy.pi)) * ELEC_BY_VOL_CONST * \
-                    bohrToMeters(a);
+                    bohrToMeters(normLatVec)
             print("Ionic polarization (C/m2)    ", \
                 "sp(%1i)" % (spinIndex+1), " "*5, \
                 "[% e, % e, % e]" % tuple(ionPol[spinIndex,:]))
@@ -662,10 +715,10 @@ class MainCalculationContainer:
         '''
         totSpinP = numpy.add(elP, ionP)
         nspins = numpy.shape(totSpinP)[0]
-        print("\nSUMMARY OF POLARIZATION CALCULATION")
+        print("\n\nSUMMARY OF POLARIZATION CALCULATION IN CARTESIAN COORDINATES")
         print("="*87)
-        print("Value", " "*25, "|  spin  ", "|   ", "dir(1)   ", \
-            "|   ", "dir(2)   ", "|   ", "dir(3)")
+        print("Value", " "*25, "|  spin  ", "|   ", "   X     ", \
+            "|   ", "   Y     ", "|   ", "   Z")
         for spinIndex in range(0,nspins):
             print("-"*87)
             print("Electronic polarization (C/m2)     " + \

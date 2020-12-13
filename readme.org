@@ -2,7 +2,7 @@ BerryPI is a software for the calculation of Berry phase and related properties 
 
 *** Current Version
 
-Version Sep 7, 2020
+Version Dec 13, 2020
 
 [[https://github.com/spichardo/BerryPI/wiki][Documentation]]
 
@@ -18,9 +18,3 @@ Version Sep 7, 2020
 - [[https://github.com/spichardo/BerryPI/tree/master/tutorials/tutorial3][Tutorial 3 - Non-orthogonal lattice vectors (same as Tutorial 2)]]
 - [[https://github.com/spichardo/BerryPI/wiki/Tutorial-4:-Polarization-in-GaN][Tutorial 4 - Polarization in wurtzite GaN]]
 - [[https://github.com/spichardo/BerryPI/wiki/Tutorial-5:-Weyl-points-characterization-in-TaAs][Tutorial 5 - Weyl points characterization in TaAs]]
-
-*** Limitation
-- Calculations of electronic polarization (not topological characterization) are restricted to cases when the lattice vectors are aligned with to cartesian directions. For example, the zinc-blend or NaCl structures should be regarded as an 8 atom cell instead of the conventional 2 atom basis. This restriction is partly lifted (see - [[https://github.com/spichardo/BerryPI/wiki/Tutorial:-Non-orthogonal-lattice-vectors][Tutorial 3]]).
-
-*** To Do
-- Non-orthogonal lattice vectors: Extending the capability of "BerryPI" to computing of polarization for structures with non-orthogonal lattice vectors

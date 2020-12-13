@@ -1128,22 +1128,10 @@ if __name__ == "__main__":
     print('''
 Suggested reference:
     S.J.Ahmed, J.Kivinen, B.Zaporzan, L.Curiel, S.Pichardo and O.Rubel
+    "BerryPI: A software for studying polarization of crystalline solids with 
+    WIEN2k density functional all-electron package"
     Comp. Phys. Commun. 184, 647 (2013)
+    https://doi.org/10.1016/j.cpc.2012.10.028
 
-Questions and comments are to be directed to
-    Dr. Oleg Rubel
-    Department of Material Science and Engineering
-    McMaster University
-    1280 Main Street West, Hamilton, ON Canada L8S 4L8
-    Tel: +1-905-5259140, ext. 24094
-    E-mail: rubelo@mcmaster.ca
-    URL: http://olegrubel.mcmaster.ca
-or
-    Dr. Samuel Pichardo 
-    Lakehead University
-          and
-    Sunnybrook Health Science Centre
-    2075 Bayview Avenue, Toronto, ON Canada M4N 3M5 
-    Tel: +1 (416) 480-6156
-    E-mail: spichard@lakeheadu.ca
-    URL: http://www.proteus-mrighifu.net''')
+Questions and comments are to be communicated via the WIEN2k mailing list
+(see http://susi.theochem.tuwien.ac.at/reg_user/mailing_list)''')

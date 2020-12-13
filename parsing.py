@@ -249,18 +249,18 @@ class MainStructParser(AbstractParser):
             # cell volume
             vol=aa*bb*cc/rvfac
             # real space lattice vectors from reciprocal once by matrix invers.
-            br1_dir = np.linalg.inv(br1_rec)
-            br2_dir = np.linalg.inv(br2_rec)
-            det = 0
-            for i in range(0, 2):
-                det = det + br1_dir[i,0]*br1_rec[i,0]
-            br1_dir = br1_dir*2*np.pi/det
-            det = 0
-            for i in range(0, 2):
-                det = det + br2_dir[i,0]*br2_rec[i,0]
-            br2_dir = br2_dir*2*np.pi/det
+            br1_dir = np.linalg.inv(br1_rec)*2*np.pi
+            br2_dir = np.linalg.inv(br2_rec)*2*np.pi
+            # transpose reciprocal lattice vectors as they are stored in columns
+            # instead of raws (real space vectors are fine!)
+            br1_rec = br1_rec.transpose()
+            br2_rec = br2_rec.transpose()
             # return function output lattice vectors and cell volume
-            return (br1_dir,br2_dir,br1_rec,br2_rec,vol)
+            # br1 are conventional lattice vectors
+            # br2 are primitive lattice vectors
+            # _dir is the direct (real) space
+            # _rec is the reciprocal space
+            return (lattic,ortho,br1_dir,br2_dir,br1_rec,br2_rec,vol)
             # END lattVec
         print("Reading case.struct file")
         theText = self.getFileContent()
@@ -293,28 +293,35 @@ class MainStructParser(AbstractParser):
                 print(" "*1, "gamma =", alpha[2], "deg")
                 # determine real and reciprocal lattice vectors based on 
                 # the lattice type and lattice parameters
-                (br1_dir,br2_dir,br1_rec,br2_rec,vol) = \
+                (lattic,ortho,br1_dir,br2_dir,br1_rec,br2_rec,vol) = \
                     lattVec(lattic,aa,bb,cc,alpha)
+                self['lattice type'] = lattic
+                self['lattice ortho'] = ortho
                 self['cell volume'] = vol
                 self['lattice constants'] = [aa,bb,cc]
-                self['real space lattice vectors'] = br2_dir
-                self['reciprocal lattice vectors'] = br2_rec
-                print(" "*1, "Reciprocal lattice vectors br1_rec (rad/bohr):")
-                print(" "*3, br1_rec[0,:])
-                print(" "*3, br1_rec[1,:])
-                print(" "*3, br1_rec[2,:])
-                print(" "*1, "Reciprocal lattice vectors br2_rec (rad/bohr):")
-                print(" "*3, br2_rec[0,:])
-                print(" "*3, br2_rec[1,:])
-                print(" "*3, br2_rec[2,:])
-                print(" "*1, "Real space lattice vectors br1_dir (bohr):")
-                print(" "*3, br1_dir[0,:])
-                print(" "*3, br1_dir[1,:])
-                print(" "*3, br1_dir[2,:])
-                print(" "*1, "Real space lattice vectors br2_dir (bohr):")
-                print(" "*3, br2_dir[0,:])
-                print(" "*3, br2_dir[1,:])
-                print(" "*3, br2_dir[2,:])
+                self['real space conventional lattice vectors'] = br1_dir
+                self['real space primitive lattice vectors'] = br2_dir
+                print(" "*1, "Lattice type:", lattic)
+                print(" "*1, "Reciprocal conventional lattice vectors",\
+                    "br1_rec (2pi/bohr):")
+                print(" "*3, "[% e, % e, % e]" % tuple(br1_rec[0,:]))
+                print(" "*3, "[% e, % e, % e]" % tuple(br1_rec[1,:]))
+                print(" "*3, "[% e, % e, % e]" % tuple(br1_rec[2,:]))
+                print(" "*1, "Reciprocal primitive lattice vectors",\
+                    "br2_rec (2pi/bohr):")
+                print(" "*3, "[% e, % e, % e]" % tuple(br2_rec[0,:]))
+                print(" "*3, "[% e, % e, % e]" % tuple(br2_rec[1,:]))
+                print(" "*3, "[% e, % e, % e]" % tuple(br2_rec[2,:]))
+                print(" "*1, "Real space conventional lattice vectors",\
+                    "br1_dir (bohr):")
+                print(" "*3, "[% e, % e, % e]" % tuple(br1_dir[0,:]))
+                print(" "*3, "[% e, % e, % e]" % tuple(br1_dir[1,:]))
+                print(" "*3, "[% e, % e, % e]" % tuple(br1_dir[2,:]))
+                print(" "*1, "Real space primitive lattice vectors",\
+                    "br2_dir (bohr):")
+                print(" "*3, "[% e, % e, % e]" % tuple(br2_dir[0,:]))
+                print(" "*3, "[% e, % e, % e]" % tuple(br2_dir[1,:]))
+                print(" "*3, "[% e, % e, % e]" % tuple(br2_dir[2,:]))
                 print(" "*1, "Unit cell volume:", vol, "bohr3")
             # find ATOM line
             re_atomListing = re.compile(r'ATOM *(?P<atomNumber>-?[0-9]+):')
