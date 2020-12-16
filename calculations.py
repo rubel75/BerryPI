@@ -280,7 +280,8 @@ class MainCalculationContainer:
                     print(" "*20, "path(%4d)       %4d        % e        % e" \
                         % (ipath+1, kpt, ph, phwrp))
         print("="*87)
-        print("\n\nCALCULATION OF ELECTRONIC POLARIZATION")
+        print("\n\nCALCULATION OF ELECTRONIC POLARIZATION",\
+            "(primitive lattice coordinates)")
         print("="*87)
         print("Value", " "*25, "|  spin  ", "|   ", "dir(1)   ", \
             "|   ", "dir(2)   ", "|   ", "dir(3)")
@@ -330,9 +331,7 @@ class MainCalculationContainer:
                 "[% e, % e, % e] bohr" % tuple(latVec[i,:]))
         print("and will be transformed into Cartesian coordinates.")
         for i in range(elP.shape[0]): # loop over spin channels
-            print("elP=",elP,elP.shape)
             elP[i,:] = vec2cart(elP[i,:], latVec) # prim -> Cartesian
-            print("Pel'=",elP[i,:])
         
         #############################
         # ionic polarization (C/m2) #
@@ -348,8 +347,7 @@ class MainCalculationContainer:
             print(" "*4, "dir(%1i) =" % (i+1), \
                 "[% e, % e, % e] bohr" % tuple(latVec[i,:]))
         for i in range(ionP.shape[0]): # loop over spin channels
-            ionP[i,:] = vec2cart(ionP[i,:], latVec) # prim -> Cartesian
-            print("ionP'=",ionP[i,:])
+            ionP[i,:] = vec2cart(ionP[i,:], latVec) # conventional -> Cartesian
         
         #############################
         # total polarization (C/m2) #
@@ -372,7 +370,9 @@ Note: When lattice vectors are _not_ aligned with Cartesian coordinates, an
       It is, however, up to the user to transform the atom displacement vector
       components dr_j into Cartesian coordinates. The change in fractional
       coordinated should be converted into dr_j using lattice vectors dir(1,2,3)
-      used in calculation of the ionic polarization (see above).''')
+      used in calculation of the ionic polarization (see above). An 
+      Octave/Matlab sctipt can be found in
+      https://github.com/spichardo/BerryPI/wiki/Tutorial-3:-Non-orthogonal-lattice-vectors''')
         # END main
 
 
@@ -554,7 +554,8 @@ Note: When lattice vectors are _not_ aligned with Cartesian coordinates, an
 
           where atom valence charge = ( core value - spin val 1 - spin val 2 )
         '''
-        print("\n\nCALCULATION OF IONIC POLARIZATION")
+        print("\n\nCALCULATION OF IONIC POLARIZATION",\
+            "(conventional lattice coordinates)")
         ionP = []
         calcValues = self.calculationValues()
         ELEC_BY_VOL_CONST = self.ELEC_BY_VOL_CONST

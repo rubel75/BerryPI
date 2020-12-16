@@ -334,6 +334,7 @@ sed -i "${linenr}i\ATOM  -2: X=0.25000000 Y=0.25000000 Z=0.24900000" GaAs2.struc
 echo -e "800\n1\n" | x kgen
 x dstart
 rm *scf
+rm *.broyd*
 run_lapw
 berrypi -k 6:6:6
 echo "EXPECTED GaAs2:
