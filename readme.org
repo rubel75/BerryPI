@@ -14,7 +14,7 @@ Version Dec 13, 2020
 
 *** Tutorials
 - [[https://github.com/spichardo/BerryPI/wiki/Tutorial-1:-Spontaneous-Polarization-in-BaTiO3][Tutorial 1 - Spontaneous polarization calculation of BaTiO3]]
-- [[https://github.com/spichardo/BerryPI/tree/master/tutorials/tutorial2][Tutorial 2 - Born Effective Charges of GaAs]]
-- [[https://github.com/spichardo/BerryPI/tree/master/tutorials/tutorial3][Tutorial 3 - Non-orthogonal lattice vectors (same as Tutorial 2)]]
+- [[https://github.com/spichardo/BerryPI/tree/master/tutorials/tutorial2][Tutorial 2 - Born effective charges of GaAs (supercell, orthogonal lattice vectors)]]
+- [[https://github.com/spichardo/BerryPI/tree/master/tutorials/tutorial3][Tutorial 3 - Born effective charges of GaAs (non-orthogonal lattice vectors)]]
 - [[https://github.com/spichardo/BerryPI/wiki/Tutorial-4:-Polarization-in-GaN][Tutorial 4 - Polarization in wurtzite GaN]]
 - [[https://github.com/spichardo/BerryPI/wiki/Tutorial-5:-Weyl-points-characterization-in-TaAs][Tutorial 5 - Weyl points characterization in TaAs]]
