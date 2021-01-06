@@ -1127,7 +1127,7 @@ if __name__ == "__main__":
         print("\nCompleted using BerryPI version:", versionFile.read())
     print('''
 Suggested reference:
-    S.J.Ahmed, J.Kivinen, B.Zaporzan, L.Curiel, S.Pichardo and O.Rubel
+[1] S.J.Ahmed, J.Kivinen, B.Zaporzan, L.Curiel, S.Pichardo and O.Rubel
     "BerryPI: A software for studying polarization of crystalline solids with 
     WIEN2k density functional all-electron package"
     Comp. Phys. Commun. 184, 647 (2013)
