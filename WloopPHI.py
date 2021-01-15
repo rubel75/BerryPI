@@ -9,6 +9,7 @@ Created on Wed Dec 18 11:13:26 2019
 import subprocess
 import os
 import sys
+import argparse # parse line arguments
 #import FileFormat, ReadInput
 
 
@@ -88,36 +89,36 @@ except ImportError as error:
     print (error.__class__.__name__+": "+error.message)
     sys.exit()
 
-args = sys.argv
-#print (args)
-#print(len(args))
-if len(args) > 4 or len(args) == 1:
-    print ("Please use valid command line options!")
-    print ("Usage: python WloopPHI.py Wloop.in -s -o")
-    print ("Input file name (Wlooop.in) is mandatory and [-s] & [-o] options are optionals.")
-    sys.exit()
+# Set up parser for line arguments
+parser = argparse.ArgumentParser()
+parser.add_argument("infile",\
+        help="input file name",\
+        type=str)
+parser.add_argument("-sp",\
+        help="spin polarized calculation",\
+        action="store_true")
+parser.add_argument("-orb",\
+        help="calculation with an additional orbit potential (e.g., LSDA+U)",\
+        action="store_true")
+args = parser.parse_args()
 
-options = ""
-for i in range(2,len(args)):
-    options += args[i] + " "
-    
-options = options[:-1]
-#print (options)
-#print (len(options))
+# Assign line arguments parsed by "argparse"
+WloopFileName = args.infile # input file name
+print("Input file name:",WloopFileName)
+options = "" # start with empty options and fill it up
+if args.sp: # enable spin polarization
+    options = options + '-sp'
+if args.orb: # enable orbital potential
+    options = options + '-orb'
+print("Additional options:",options)
 
-if len(options) == 5:
-    if (options.find('s') != -1 and options.find('o') != -1): 
-        print ("Optios are OK!")
-    else:
-        print ("Please use valid command line options!")
-        print ("Usage: python WloopPHI.py Wloop.in -s -o")
-        print ("Input file name (Wlooop.in) is mandatory and [-s] & [-o] options are optionals.")
-        sys.exit()
-#print (len(options))
-#sys.exit()
-
-WloopFileName = str(args[1])
-#WloopFileName = str("Wloop.in")    
+# Read input file
+print("Checking existance of",WloopFileName)
+if not(os.path.isfile(WloopFileName)):
+    print("{} does not exist, cannot finish calculation".format(WloopFileName))
+    exit(2)
+else:
+    print('-- OK')
 f = open(WloopFileName, 'r')
 content = f.readlines()
 f.close()
@@ -192,7 +193,7 @@ for i in range(0, n):
     pwd = os.getcwd()
     os.chdir(WorkingDir)
     subprocess.call("mv %s/%s %s/%s" %(pwd, filename, WorkingDir, KlistFileName), shell = True)
-    subprocess.call("python $WIENROOT/SRC_BerryPI/BerryPI/berrypi -j -w -b %i:%i %s > Berrypi.out"%(S_Band, E_Band, options), shell=True)
+    subprocess.call("python $WIENROOT/SRC_BerryPI/BerryPI/berrypi -so -w -b %i %i %s > Berrypi.out"%(S_Band, E_Band, options), shell=True)
     with open("Berrypi.out", 'r') as read_file:
         for line in read_file:
             if "Berry phase sum (rad) =" in line:

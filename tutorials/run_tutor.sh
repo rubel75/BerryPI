@@ -21,23 +21,23 @@ echo "6 - Clean All"
 echo ""
 echo "T E S T S (serial):"
 echo "7 - Test BaTiO3: Lambda1"
-echo "8 - Test BaTiO3: Lambda1 (-s) spin polarization"
-echo "9 - Test BaTiO3: Lambda1 (-j) spin orbit"
-echo "10 - Test BaTiO3: Lambda1 (-o) orb. potential + U=0.1 Ry (spin polarization implied)"
-echo "11 - Test BaTiO3: Lambda1 (-s -j) spin polarization & SOC"
-echo "12 - Test BaTiO3: Lambda1 (-o -j) SOC & orb. potential + U=0.1 Ry (spin polarization implied)"
+echo "8 - Test BaTiO3: Lambda1 (-sp) spin polarization"
+echo "9 - Test BaTiO3: Lambda1 (-so) spin orbit"
+echo "10 - Test BaTiO3: Lambda1 (-orb) orb. potential + U=0.1 Ry (spin polarization implied)"
+echo "11 - Test BaTiO3: Lambda1 (-sp -so) spin polarization & SOC"
+echo "12 - Test BaTiO3: Lambda1 (-orb -so) SOC & orb. potential + U=0.1 Ry (spin polarization implied)"
 echo "101 - Test TaAs: Weyl point charge (single Wilson loop)"
 echo "102 - Test TaAs: Weyl point charge (series of Wilson loops via WloopPHI.py)"
 echo ""
 echo "T E S T S (parallel):"
 echo "13 - Test BaTiO3: Lambda1 (-p) spin polarization (parallel 2 cores)"
-echo "14 - Test BaTiO3: Lambda1 (-s -p) spin polarization (parallel 2 cores)"
-echo "15 - Test BaTiO3: Lambda1 (-j) spin orbit (parallel 2 cores)"
-echo "16 - Test BaTiO3: Lambda1 (-o) orb. potential + U=0.1 Ry (spin polarization implied) (parallel 2 cores)"
-echo "17 - Test BaTiO3: Lambda1 (-s -j) spin polarization & SOC (parallel 2 cores)"
-echo "18 - Test BaTiO3: Lambda1 (-o -j) SOC & orb. potential + U=0.1 Ry (spin polarization implied) (parallel 2 cores)"
-echo "19 - Test BaTiO3: Lambda1 (--sp_c) spin polar. constrained (non-magnetic, up=dn) (parallel 2 cores)"
-echo "20 - Test BaTiO3: Lambda1 (--sp_c -o) spin polar. constrained (non-magnetic, up=dn) + orb. potential + U=0.1 Ry (parallel 2 cores)"
+echo "14 - Test BaTiO3: Lambda1 (-sp -p) spin polarization (parallel 2 cores)"
+echo "15 - Test BaTiO3: Lambda1 (-so) spin orbit (parallel 2 cores)"
+echo "16 - Test BaTiO3: Lambda1 (-orb) orb. potential + U=0.1 Ry (spin polarization implied) (parallel 2 cores)"
+echo "17 - Test BaTiO3: Lambda1 (-sp -so) spin polarization & SOC (parallel 2 cores)"
+echo "18 - Test BaTiO3: Lambda1 (-orb -so) SOC & orb. potential + U=0.1 Ry (spin polarization implied) (parallel 2 cores)"
+echo "19 - Test BaTiO3: Lambda1 (-sp_c) spin polar. constrained (non-magnetic, up=dn) (parallel 2 cores)"
+echo "20 - Test BaTiO3: Lambda1 (-sp_c -orb) spin polar. constrained (non-magnetic, up=dn) + orb. potential + U=0.1 Ry (parallel 2 cores)"
 echo "######################################################"
 read choice
 
@@ -233,7 +233,7 @@ echo "Running Tutorial 1"
 cd tutorial1/lambda1
 init_lapw -b -rkmax 4 -vxc 13 -ecut -6 -numk 230
 run_lapw
-berrypi -k6:6:6
+berrypi -k 6 6 6
 echo "EXPECTED LAMBDA1:
 =======================================================================================
 Value                           |  spin   |    dir(1)    |    dir(2)    |    dir(3)
@@ -251,7 +251,7 @@ rename_files lambda1 lambda0
 echo -e "230\n1\n" | x kgen
 x dstart
 run_lapw
-berrypi -k6:6:6
+berrypi -k 6 6 6
 echo "EXPECTED LAMBDA0:
 =======================================================================================
 Value                           |  spin   |    dir(1)    |    dir(2)    |    dir(3)
@@ -270,7 +270,7 @@ echo "Running Tutorial 2"
 cd tutorial2/lambda1
 init_lapw -b -rkmax 4 -vxc 13 -ecut -6 -numk 230
 run_lapw
-berrypi -k6:6:6
+berrypi -k 6 6 6
 echo "EXPECTED LAMBDA1:
 =======================================================================================
 Value                           |  spin   |    dir(1)    |    dir(2)    |    dir(3)
@@ -288,7 +288,7 @@ rename_files lambda1 lambda2
 echo -e "230\n1\n" | x kgen
 x dstart
 run_lapw
-berrypi -k6:6:6
+berrypi -k 6 6 6
 echo "EXPECTED LAMBDA2:
 =======================================================================================
 Value                           |  spin   |    dir(1)    |    dir(2)    |    dir(3)
@@ -314,7 +314,7 @@ sed -i "${linenr}d" GaAs1.struct
 sed -i "${linenr}i\ATOM  -2: X=0.25000000 Y=0.25000000 Z=0.25100000" GaAs1.struct
 x dstart
 run_lapw
-berrypi -k 6:6:6
+berrypi -k 6 6 6
 echo "EXPECTED GaAs1:
 =======================================================================================
 Value                           |  spin   |    dir(1)    |    dir(2)    |    dir(3)
@@ -334,9 +334,8 @@ sed -i "${linenr}i\ATOM  -2: X=0.25000000 Y=0.25000000 Z=0.24900000" GaAs2.struc
 echo -e "800\n1\n" | x kgen
 x dstart
 rm *scf
-rm *.broyd*
 run_lapw
-berrypi -k 6:6:6
+berrypi -k 6 6 6
 echo "EXPECTED GaAs2:
 =======================================================================================
 Value                           |  spin   |    dir(1)    |    dir(2)    |    dir(3)
@@ -355,7 +354,7 @@ echo "Running Tutorial 4"
 cd tutorial4/GaN-W
 init_lapw -b -vxc 5 -rkmax 7 -numk 300
 run_lapw
-berrypi -k 8:8:8
+berrypi -k 8 8 8
 echo "EXPECTED GaN-W:
 =======================================================================================
 Value                           |  spin   |    dir(1)    |    dir(2)    |    dir(3)
@@ -369,7 +368,7 @@ TOTAL POLARIZATION (C/m2)          both   [ 3.973752e-10, -8.442784e-08, -4.9472
 cd ../GaN-ZB
 init_lapw -b -vxc 5 -rkmax 7 -numk 200
 run_lapw
-berrypi -k 8:8:8
+berrypi -k 8 8 8
 echo "EXPECTED GaN-ZB:
 =======================================================================================
 Value                           |  spin   |    dir(1)    |    dir(2)    |    dir(3)
@@ -397,7 +396,7 @@ echo "Running test 7"
 cd tutorial1/lambda1
 init_lapw -b -rkmax 4 -vxc 13 -ecut -6 -numk 100
 run_lapw -ec 0.0001 -cc 0.001
-berrypi -k4:4:4
+berrypi -k 4 4 4
 echo "EXPECTED LAMBDA1:
 =======================================================================================
 Value                           |  spin   |    dir(1)    |    dir(2)    |    dir(3)
@@ -419,7 +418,7 @@ echo "Running test 8"
 cd tutorial1/lambda1
 init_lapw -b -rkmax 4 -vxc 13 -ecut -6 -numk 100 -sp
 runsp_lapw -ec 0.0001 -cc 0.001
-berrypi -k4:4:4 -s
+berrypi -k 4 4 4 -sp
 echo "EXPECTED LAMBDA1:
 =======================================================================================
 Value                           |  spin   |    dir(1)    |    dir(2)    |    dir(3)
@@ -447,7 +446,7 @@ export EDITOR=cat
 init_lapw -b -rkmax 4 -vxc 13 -ecut -6 -numk 100
 echo -e "0 0 1\n\n\n\nN\n" | init_so_lapw
 run_lapw -so -ec 0.0001 -cc 0.001
-berrypi -k4:4:4 -j
+berrypi -k 4 4 4 -so
 echo "EXPECTED LAMBDA1:
 =======================================================================================
 Value                           |  spin   |    dir(1)    |    dir(2)    |    dir(3)
@@ -471,7 +470,7 @@ export EDITOR=cat
 init_lapw -b -rkmax 4 -vxc 13 -ecut -6 -numk 100 -sp
 echo -e "Ti 2 0.1 0.0\n" | init_orb_lapw -orb # Ti d U=0.1Ry J=0
 runsp_lapw -orb -ec 0.0001 -cc 0.001
-berrypi -k4:4:4 -o
+berrypi -k 4 4 4 -orb
 echo "EXPECTED LAMBDA1:
 =======================================================================================
 Value                           |  spin   |    dir(1)    |    dir(2)    |    dir(3)
@@ -499,7 +498,7 @@ export EDITOR=cat
 init_lapw -b -rkmax 4 -vxc 13 -ecut -6 -numk 100 -sp
 echo -e "0 0 1\n\n\n\ny\ny\n100\nN\n" | init_so_lapw
 runsp_lapw -so -ec 0.0001 -cc 0.001
-berrypi -k4:4:4 -s -j
+berrypi -k 4 4 4 -sp -so
 echo "EXPECTED LAMBDA1:
 =======================================================================================
 Value                           |  spin   |    dir(1)    |    dir(2)    |    dir(3)
@@ -524,7 +523,7 @@ init_lapw -b -rkmax 4 -vxc 13 -ecut -6 -numk 100 -sp
 echo -e "Ti 2 0.1 0.0\n" | init_orb_lapw -orb # Ti d U=0.1Ry J=0
 echo -e "0 0 1\n\n\n\ny\ny\n100\nN\n" | init_so_lapw
 runsp_lapw -so -orb -ec 0.0001 -cc 0.001
-berrypi -k4:4:4 -j -o
+berrypi -k 4 4 4 -so -orb
 echo "EXPECTED LAMBDA1:
 =======================================================================================
 Value                           |  spin   |    dir(1)    |    dir(2)    |    dir(3)
@@ -550,7 +549,7 @@ init_lapw -b -rkmax 7 -vxc 13 -ecut -6 -numk 300
 echo -e "0 0 1\n\n\n\nN\n" | init_so_lapw
 run_lapw -so -ec 0.0001 -cc 0.001
 cp TaAs.klist_band tutorial5.klist
-berrypi -j -w -b 1:84
+berrypi -so -w -b 1 84
 echo "EXPECTED OUTPUT:
 Berry phase sum (rad) = -9.424777984529948
 ======================================================================================="
@@ -598,7 +597,7 @@ echo "1:localhost" > .machines
 echo "1:localhost" >> .machines
 init_lapw -b -rkmax 4 -vxc 13 -ecut -6 -numk 100
 run_lapw -ec 0.0001 -cc 0.001 -p
-berrypi -k4:4:4 -p
+berrypi -k 4 4 4 -p
 echo "EXPECTED LAMBDA1:
 =======================================================================================
 Value                           |  spin   |    dir(1)    |    dir(2)    |    dir(3)
@@ -622,7 +621,7 @@ echo "1:localhost" > .machines
 echo "1:localhost" >> .machines
 init_lapw -b -rkmax 4 -vxc 13 -ecut -6 -numk 100 -sp
 runsp_lapw -ec 0.0001 -cc 0.001 -p
-berrypi -k4:4:4 -s -p
+berrypi -k 4 4 4 -sp -p
 echo "EXPECTED LAMBDA1:
 =======================================================================================
 Value                           |  spin   |    dir(1)    |    dir(2)    |    dir(3)
@@ -652,7 +651,7 @@ export EDITOR=cat
 init_lapw -b -rkmax 4 -vxc 13 -ecut -6 -numk 100
 echo -e "0 0 1\n\n\n\nN\n" | init_so_lapw
 run_lapw -so -ec 0.0001 -cc 0.001 -p
-berrypi -k4:4:4 -j -p
+berrypi -k 4 4 4 -so -p
 echo "EXPECTED LAMBDA1:
 =======================================================================================
 Value                           |  spin   |    dir(1)    |    dir(2)    |    dir(3)
@@ -678,7 +677,7 @@ export EDITOR=cat
 init_lapw -b -rkmax 4 -vxc 13 -ecut -6 -numk 100 -sp
 echo -e "Ti 2 0.1 0.0\n" | init_orb_lapw -orb # Ti d U=0.1Ry J=0
 runsp_lapw -orb -ec 0.0001 -cc 0.001 -p
-berrypi -k4:4:4 -o -p
+berrypi -k 4 4 4 -orb -p
 echo "EXPECTED LAMBDA1:
 =======================================================================================
 Value                           |  spin   |    dir(1)    |    dir(2)    |    dir(3)
@@ -708,7 +707,7 @@ export EDITOR=cat
 init_lapw -b -rkmax 4 -vxc 13 -ecut -6 -numk 100 -sp
 echo -e "0 0 1\n\n\n\ny\ny\n100\nN\n" | init_so_lapw
 runsp_lapw -so -ec 0.0001 -cc 0.001 -p
-berrypi -k4:4:4 -s -j -p
+berrypi -k 4 4 4 -sp -so -p
 echo "EXPECTED LAMBDA1:
 =======================================================================================
 Value                           |  spin   |    dir(1)    |    dir(2)    |    dir(3)
@@ -735,7 +734,7 @@ init_lapw -b -rkmax 4 -vxc 13 -ecut -6 -numk 100 -sp
 echo -e "Ti 2 0.1 0.0\n" | init_orb_lapw -orb # Ti d U=0.1Ry J=0
 echo -e "0 0 1\n\n\n\ny\ny\n100\nN\n" | init_so_lapw
 runsp_lapw -so -orb -ec 0.0001 -cc 0.001 -p
-berrypi -k4:4:4 -j -o -p
+berrypi -k 4 4 4 -so -orb -p
 echo "EXPECTED LAMBDA1:
 =======================================================================================
 Value                           |  spin   |    dir(1)    |    dir(2)    |    dir(3)
@@ -750,7 +749,7 @@ cd ../../
 }
 
 ######################################################################################
-# Test BaTiO3: Lambda1 (--sp_c) spin polar. constrained (non-magnetic, up=dn) (parallel 2 cores)
+# Test BaTiO3: Lambda1 (-sp_c) spin polar. constrained (non-magnetic, up=dn) (parallel 2 cores)
 ######################################################################################
 Tutorial_19 () {
 echo "Running test 19"
@@ -761,7 +760,7 @@ export EDITOR=cat
 instgen -nm # generate non-magnetic starting electronic config.
 init_lapw -b -rkmax 4 -vxc 13 -ecut -6 -numk 100 -sp
 runsp_c_lapw -ec 0.0001 -cc 0.001 -p
-berrypi -k4:4:4 --sp_c -p
+berrypi -k 4 4 4 -sp_c -p
 echo "EXPECTED LAMBDA1:
 =======================================================================================
 Value                           |  spin   |    dir(1)    |    dir(2)    |    dir(3)
@@ -780,7 +779,7 @@ cd ../../
 }
 
 ######################################################################################
-# Test BaTiO3: Lambda1 (--sp_c -o) spin polar. constrained (non-magnetic, up=dn) + orb. potential + U=0.1 Ry (parallel 2 cores)
+# Test BaTiO3: Lambda1 (-sp_c -orb) spin polar. constrained (non-magnetic, up=dn) + orb. potential + U=0.1 Ry (parallel 2 cores)
 ######################################################################################
 Tutorial_20 () {
 echo "Running test 20"
@@ -792,7 +791,7 @@ instgen -nm # generate non-magnetic starting electronic config.
 init_lapw -b -rkmax 4 -vxc 13 -ecut -6 -numk 100 -sp
 echo -e "Ti 2 0.1 0.0\n" | init_orb_lapw -orb # Ti d U=0.1Ry J=0
 runsp_c_lapw -ec 0.0001 -cc 0.001 -orb -p
-berrypi -k4:4:4 --sp_c -o -p
+berrypi -k 4 4 4 -sp_c -orb -p
 echo "EXPECTED LAMBDA1:
 =======================================================================================
 Value                           |  spin   |    dir(1)    |    dir(2)    |    dir(3)

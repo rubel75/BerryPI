@@ -12,7 +12,7 @@ DEFAULT_NUMBER_OF_KPOINTS = 0 #Recommended not to change
 
 #This value is used if one isn't provided in the configuration
 #for key 'K-Mesh Divisions'
-DEFAULT_KMESH_DIVISIONS = (10,10,10)
+DEFAULT_KMESH_DIVISIONS = (4,4,4)
 
 #Shift of k-mesh allowed. Do you want to shift: (0=no, 1=shift)
 DEFAULT_KMESH_SHIFT = 0

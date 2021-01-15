@@ -13,7 +13,8 @@ for details.
 
 from __future__ import print_function # Python 2 & 3 compatible print function
 import os, os.path
-import sys, shutil, getopt
+import sys, shutil
+import argparse # parse line arguments
 import time
 import json
 import subprocess
@@ -99,6 +100,8 @@ def rawBerryPhase(configFile):
 
     # get bands
     bands = configFile['Bloch Band']
+    if bands == None: # create an empty array if band range is not set
+        bands = []
     
     #get the starting directory and switch to it
     oldCurrentWorkingDirectory = os.getcwd()
@@ -166,9 +169,12 @@ def rawBerryPhase(configFile):
         #TODO change to a logging system
         print(DEFAULT_PREFIX + "Checking existance of",tempFilename)
         if not b_PyError.fileExists(tempFilename):
-            print( DEFAULT_PREFIX + "{} does not exist, cannot finish calculation").format(tempFilename)
+            print( DEFAULT_PREFIX +\
+                "{} does not exist, cannot finish calculation".\
+                format(tempFilename))
             exit(2)
-        else: print(DEFAULT_PREFIX + '-- OK')
+        else:
+            print(DEFAULT_PREFIX + '-- OK')
 
 
     ######################################
@@ -748,130 +754,49 @@ def rawBerryPhase(configFile):
 
 
 if __name__ == "__main__":
-    def helpInfo():
-        print('''
-
-        DEPENDENCIES:
-        - WIEN2k + WIEN2WANNIER (tested against v17.1)
-        - Python (tested against 2.7.1)
-        - NumPy (tested against 1.12.0)
-
-        Once you have all the dependencies installed.
-        To run "BerryPI" after standard WIEN2k scf cycle run the following command
-
-        berrypi -k NUM:NUM:NUM [+options see below]
-
-        OPTIONS:
-
-        -h
-
-        Print this help
-
-        --kdiv=NUM:NUM:NUM, -kNUM:NUM:NUM
-
-        Determines the k-mesh for sampling the BZ
-
-        Additional Switches:
-
-        --spin-polarization, -s
-
-        Activate spin polarized caclulation
-        
-        --sp_c
-        
-        Constrained spin-polarized calculation (non-magnetic, up=dn)
-
-        --orb-potential, -o
-
-        Activate calculation with an additional orbit potential
-        (e.g., LSDA+U)
-
-        --spin-orbit, -j
-
-        Activate spin orbit coupling
-
-        --bloch-band=NUM:NUM, -b NUM:NUM
-
-        Used to manually set the bloch band for band by band decomposition.
-        By default, it is parsing out the bloch band based on the number
-        of total bands.
-
-        -l
-
-        Skip lapw1 run. It assumes that the electronic phase calculation
-        has been performed before and all the required files are for
-        computaion of polarization is present and it just calculate the
-        polarization based on those data. In this case the k-mesh will be
-        read from case.klist file
-
-        -p
-
-        Enable parallel caulculation where it run "x lapw1 -p", "x lapwso -p"
-        and "x w2w -p" in parallel mode. It implies that you have .machines file
-        prepared accorning to Wien2k documentation
-
-        -w
-
-        Compute Berry phase along a specific k-path given in the case.klist file.
-        It is used to characterize Weyl-points. This option must be combined 
-        with (-b XX:YY) to specify the band range and (-j) to enable spin-orbit 
-        coupling.
-
-
-        EXAMPLES:
-
-        Run non spin-polarized calculation with 6x6x4 k-mesh
-
-        $ berrypi -k6:6:4
-
-        Subsequent rerun of BerryPI in the same folder without 
-        changing k-mesh (skipping LAPW1)
-
-        $ berrypi -l
-
-        Spin-polarized calculation
-
-        $ berrypi -s -k6:6:4
-        
-        Spin-polarized constrained calculation (up=dn, non-magnetic)
-        
-        $ berrypi --sp_c -k6:6:4
-
-        Spin-polarized calculation with spin-orbit coupling
-
-        $ berrypi -s -j -k6:6:4
-
-        Spin-polarized calculation with an additional orbital potential 
-        (no need for -s option since it is implicitly assumed)
-
-        $ berrypi -o -k6:6:4
-
-        Compute Berry phase along a specific k-path (loop) given in 
-        the case.klist file. It is used to characterize Weyl-points.
-
-        $ berrypi -j -w -b XX:YY
-
-        Enable parallel calculation where it run x lapw1 -p, x lapwso -p 
-        and x w2w -p in parallel mode. It implies that you have .machines 
-        file prepared according to Wien2k documentation
-
-        $ berrypi -p -k6:6:4
-        ''')
-        pass
-
-        
-    try:
-        opts, args = getopt.getopt(sys.argv[1:], \
-            "S:hvpnk:lb:sojw", \
-            ["help", "structure-name=", \
-            "bloch-band=", "spin-polarized", "sp_c", "no-auto", "kdiv=", "no-lapw1", \
-            "parallel", "verbose", "orb-potential", "spin-orbit"]);
-    except getopt.GetoptError as err:
-        # print help information and exit:
-        print(helpInfo())
-        print("ERROR")
-        print(str(err)) # will print something like "option -a not recognized"
-        sys.exit(2)
+    # Set up parser for line arguments
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-k",\
+        help="k mesh for sampling the BZ (default 4 4 4)",\
+        nargs=3,\
+        type=int,\
+        default=[4, 4, 4])
+    parser.add_argument("-sp",\
+        help="spin polarized calculation",\
+        action="store_true")
+    parser.add_argument("-sp_c",\
+        help="constrained spin polarization (no net magnetic moment, up=dn)",\
+        action="store_true")
+    parser.add_argument("-orb",\
+        help="calculation with an additional orbit potential (e.g., LSDA+U)",\
+        action="store_true")
+    parser.add_argument("-so",\
+        help="enable spin-orbit coupling",\
+        action="store_true")
+    parser.add_argument("--skip-lapw",\
+        help="skip lapw1 (and lapwso if -so is active) "+\
+            "and proceed directly to w2w",\
+        action="store_true")
+    parser.add_argument("-p",\
+        help='run "x lapw1 -p", "x lapwso -p" and "x w2w -p" in parallel '+\
+            'mode (needs .machines file)',\
+        action="store_true")
+    parser.add_argument("-w",\
+        help="compute Berry phase along a specific (closed loop) k-pathgiven "+\
+            "in the case.klist file (used for topological Weyl semimetals)",\
+        action="store_true")
+    parser.add_argument("-b",\
+        help="range of Bloch bands used to construct projections "+\
+            "(used for Weil semimetals only in conjunction with -w option)",\
+        nargs=2,\
+        type=int)
+    parser.add_argument("-v",\
+        help="increase output verbosity",\
+        action="store_true")
+    args = parser.parse_args()
+    if args.v:
+        print("verbosity turned on")
+        print("args=", args)
 
     #boolean for whether to check config for
     #configuration dicts
@@ -880,21 +805,17 @@ if __name__ == "__main__":
     #boolean for whether to automate the entire process
     checkAuto = True
 
-    #defaults
-    structure_name = ''
-    structure_path = ''
-    structure_kmesh = config.DEFAULT_KMESH_DIVISIONS
-    bands = []
-    runLAPW = True
-    VERBOSE = False
-
-    helpOpt = False
-    pCalc = False   # calculation is serial by defaul
-    spCalc = False  # no spin polarization by default
-    orbCalc = False # no additional orbital potential by default
-    soCalc = False  # no spin-orbit coupling by default
-    wCalc = False # no k-path specified by default
-    sp_cCalc = False # no constrained spin-polarized by default
+    # Assign line arguments parsed by "argparse"
+    structure_kmesh = args.k # k mesh
+    bands = args.b # range of bands
+    runLAPW = not(args.skip_lapw) # skip LAPW
+    VERBOSE = args.v # verbose output
+    pCalc = args.p   # calculation is serial by defaul
+    spCalc = args.sp  # no spin polarization by default
+    orbCalc = args.orb # no additional orbital potential by default
+    soCalc = args.so  # no spin-orbit coupling by default
+    wCalc = args.w # no k-path specified by default
+    sp_cCalc = args.sp_c # no constrained spin-polarized by default
     
     # Set default case name and path based on where berrypi is executed
     structure_path = os.getcwd()
@@ -904,105 +825,43 @@ if __name__ == "__main__":
     # case mane is taken from structure_name
     sys.stdout = Logger()
 
-    #begin checking command line arguments
-    for argName, argValue in opts:
+    #echo command line arguments and switch implied options
+    if spCalc:
+        print(DEFAULT_PREFIX+'Spin polarization is activated')
+    if sp_cCalc:
+        print(DEFAULT_PREFIX+'Constrained (non-magnetic) ' +\
+            'spin polarization is activated')
+        spCalc = True
+    if orbCalc:
+        print(DEFAULT_PREFIX+'Calculation with an additional '+ \
+            'orbital potential is activated')
+        print(DEFAULT_PREFIX+'Spin polarization is activated '+ \
+            'automatically with adding orbital potential')
+        spCalc = True
+    if soCalc:
+        print(DEFAULT_PREFIX+'Calculation with spin-orbit '+ \
+            'coupling is activated')
+    if not(runLAPW):
+        print(DEFAULT_PREFIX+'Calculations will skip LAPW')
+    if pCalc:
+        print(DEFAULT_PREFIX+"Parallel calculation is activated")
+        print("            it is assumed that you have .machines file ready")
+    if bands == None:
+        print(DEFAULT_PREFIX+'Range of bands [1, last occupied] will be '+\
+            'determined automatically')
+    else:
+        print(DEFAULT_PREFIX+"Only selected range of bands will be used ")
+        print(DEFAULT_PREFIX, "bands=", bands)
+    if wCalc:
+        print(DEFAULT_PREFIX+"Enable Berry phase calculation along a "+\
+            "specific k-path given in the case.klist file. ")
+        print(DEFAULT_PREFIX+"Any input of the k-mesh (-k ... option) "+\
+            "will be ignored")
+        if not(soCalc):
+            soCalc = True
+            print(DEFAULT_PREFIX+'Spin-orbit coupling is activated '+ \
+                'automatically with -w option')
 
-        #help option
-        if argName in ("-h", "--help"):
-            print(helpInfo())
-            helpOpt = True
-            sys.exit(0)
-
-        #structure name option
-        elif argName in ('-S', '--structure-name'):
-            structure_name = argValue
-
-        #enable spin polarization
-        elif argName in ('-s', '--spin-polarized'):
-            print(DEFAULT_PREFIX+'Spin polarization is activated')
-            spCalc = True
-
-        #enable constrained (non-magnetic) spin polarization
-        elif argName in ('--sp_c'):
-            print(DEFAULT_PREFIX+'Constrained (non-magnetic) ' +\
-                'spin polarization is activated')
-            spCalc = True
-            sp_cCalc = True
-
-        #enable orbital potential
-        elif argName in ('-o', '--orb-potential'):
-            print(DEFAULT_PREFIX+'Calculation with an additional '+ \
-                'orbital potential is activated');
-            orbCalc = True
-            print(DEFAULT_PREFIX+'Spin polarization is activated '+ \
-                'automatically with adding orbital potential')
-            spCalc = True
-
-        #enable spin orbit coupling
-        elif argName in ('-j', '--spin-orbit'): # [OLEG] here
-            print(DEFAULT_PREFIX+'Calculation with spin-orbit '+ \
-                'coupling is activated');
-            soCalc = True # OR add combination of "--sp_c -j"
-
-        #automation disabling option
-        elif argName in ('-n', '--no-auto'):
-            checkAuto = False
-
-        # k-mesh
-        elif argName in ('-k', '--kdiv'):
-            try: structure_kmesh = [ int(i) for i in argValue.split(':') ] 
-            except ValueError:
-                print('Value Error: Please enter the integers '+\
-                    'into kmesh in the format of "-k NX:NY:NZ"');
-                sys.exit(2)      
-
-        #Determines whether you should include lapw1 in the automation
-        elif argName in ('-l', '--no-lapw'):
-            runLAPW = False
-
-        #Determines whether to run lapw1 in parallel on the clustrer
-        elif argName in ('-p', '--parallel'):
-            print(DEFAULT_PREFIX+"Parallel calculation is activated")
-            print("            it is assumed that you have .machines file ready")
-            pCalc = True # turn to True when implementation finished
-
-        elif argName in ('-b', '--bloch-band'):
-            print(DEFAULT_PREFIX+"Only selected range of bands will be used ")
-            bands = [ int(i) for i in argValue.split(':') ]
-            print(DEFAULT_PREFIX, "bands=", bands)
-
-        elif argName in ('-w'):
-            print(DEFAULT_PREFIX+"Enable Berry phase calculation along a "+\
-                "specific k-path given in the case.klist file. ")
-            print(DEFAULT_PREFIX+"Any input of the k-mesh (-k ... option) "+\
-                "will be ignored")
-            wCalc = True
-
-        elif argName in ('-v', '--verbose'):
-            VERBOSE = True
-        else:
-            print("Invalid argument {} - {}").format(argName, argValue)
-            sys.exit(2)
-
-    if not helpOpt and checkAuto:
-        try:
-            structure_kmesh # check if k-mesh defined in input param.
-        except NameError: # k-mesh is not defined, ask for input
-            if sys.version_info[0] == 2: # python 2
-                k_mesh_values=raw_input('What kmesh values would you like? '+ \
-                    '(e.g. 2:2:2)\n')
-            else: # python 3
-                k_mesh_values=input('What kmesh values would you like? '+ \
-                    '(e.g. 2:2:2)\n')
-            try: structure_kmesh = [ int(i) for i in k_mesh_values.split(':') ] 
-            except ValueError:
-                print('Value Error: Please enter the integers into '+ \
-                    'kmesh in the format of "x:x:x"');
-                sys.exit(2)
-        else:
-            if not wCalc:
-                print(DEFAULT_PREFIX+'Proceed with the k-mesh', \
-                    structure_kmesh)
 
     # Check input consistency
     if len(structure_kmesh)!=3:
@@ -1019,34 +878,28 @@ if __name__ == "__main__":
         #Sets the lower bound of the dimensions
         print('ERROR: You cannot have negative integers as kmesh values')
         sys.exit(2)
-    elif wCalc and not soCalc:
-        #Wilson loop calculation makes sense with SOC only
-        print('WARNING: Wilson loop calculation makes sense only if',\
-            'combined with spin-orbit coupling (-j)')
-        print('Suggested execution: berrypi -j -w -b XX:YY')
-        print('Calculation will continue')
-    elif wCalc and bands == []:
+    elif wCalc and bands == None:
         #Band range is not specified for Wilson loop calculation
         print('ERROR: Wilson loop calculatio requires the band range',\
             'to be specified')
-        print('Suggested execution: berrypi -j -w -b XX:YY')
+        print('Suggested execution: berrypi -so -w -b XX YY')
         sys.exit(2)
-    if bands != [] and len(bands)!=2:
+    if bands != None and len(bands)!=2:
         #Makes sure that the band range length of the tuple is 2
         print('You entered: ' + str(bands))
         print('ERROR: Please check that you have 2 integers in the band range')
         sys.exit(2)
-    elif bands != [] and 0 in bands:
+    elif bands != None and 0 in bands:
         #Makes sure that there are no values of 0 in the bands
         print('You entered: ' + str(bands))
         print('ERROR: Cannot have a dimension of 0 in the bands range')
         sys.exit(2)
-    elif bands != [] and min(bands)<0:
+    elif bands != None and min(bands)<0:
         #Sets the lower bound of the dimensions
         print('You entered: ' + str(bands))
         print('ERROR: You cannot have negative integers as bands range values')
         sys.exit(2)
-    elif bands != [] and bands[0] > bands[1]:
+    elif bands != None and bands[0] > bands[1]:
         #The range of bands should start with a smaller value
         print('You entered: ' + str(bands))
         print('ERROR: The range of bands should start with a smaller value')

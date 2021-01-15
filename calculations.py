@@ -247,7 +247,7 @@ class MainCalculationContainer:
             raise Exception("Inconsistent number of non-equivalent atoms")
 
         # list of pi-wrapping functions that will be applied to wrap the phase
-        wrpFnList = [self.wrp11, self.wrp02] 
+        wrpFnList = [self.wrp02,self.wrp11] 
         for wrpFn in wrpFnList: # iterate over various wrapping functions
             if wrpFn == self.wrp11:
                 print("\n\n~~~~~~~~~~~~~~~~~~~~ " +\
