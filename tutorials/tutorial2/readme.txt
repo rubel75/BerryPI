@@ -22,10 +22,10 @@ in order to optimize the electron density.
 
 1.4 Run BerryPI using python 
  
-$ berrypi -k6:6:6
+$ berrypi -k 6 6 6
 
 Here BerryPI program is running for the case (GaAs) located in the current directory.
-6:6:6 means the calculation is being done using 6*6*6 k-mesh in the full Brillouin zone (non symmetric) with a total of 216 k points.
+6 6 6 means the calculation is being done using 6*6*6 k-mesh in the full Brillouin zone (non symmetric) with a total of 216 k points.
 
 Note: k-mesh in BerryPI should not necessarily be identical to that used in the SCF cycle
 
@@ -80,7 +80,7 @@ $ run_lapw
 
 2.8 Run BerryPI 
   
-$ berrypi -k6:6:6
+$ berrypi -k 6 6 6
 
 2.9 Once the calculation is completed the results will be printed like this
                ---PHASES/2*PI IN [0 to 2]RANGE---
