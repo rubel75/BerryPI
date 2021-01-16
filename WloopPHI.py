@@ -12,6 +12,21 @@ import sys
 import argparse # parse line arguments
 #import FileFormat, ReadInput
 
+def printEpilog():
+    print('''
+Suggested references:
+[1] S.J.Ahmed, J.Kivinen, B.Zaporzan, L.Curiel, S.Pichardo and O.Rubel
+    "BerryPI: A software for studying polarization of crystalline solids with 
+    WIEN2k density functional all-electron package"
+    Comp. Phys. Commun. 184, 647 (2013)
+    https://doi.org/10.1016/j.cpc.2012.10.028
+[2] H. Saini, M. Laurien, P. Blaha, and O. Rubel
+    “WloopPHI: A tool for ab initio characterization of Weyl semimetals”,
+    arXiv:2008.08124 [cond-mat.mtrl-sci] (2020)
+    https://arxiv.org/abs/2008.08124
+
+Questions and comments are to be communicated via the WIEN2k mailing list
+(see http://susi.theochem.tuwien.ac.at/reg_user/mailing_list)''')
 
 def FileFormatMessage():
     print ("Error: Use proper formated file")
@@ -251,31 +266,34 @@ print ("Output data file ""PHI.dat"" has generated.")
 #################### PLOT ##################################################
 try:
     import matplotlib
-    matplotlib.use('Agg')
-    import matplotlib.pyplot as plt
-    print ("[OK] Matplotlib found")
-    fig, ax = plt.subplots(figsize=(6,6), dpi=300)
-    ax.plot(Data[:, 0], Data[:, 1], 'bo')
-    ax.set(xlabel = 'Loop in %s direction' %direction, ylabel = 'Berry Phase (radians)', title = 'Berry Phase Vs Wilson loop')
-    #ax.grid()
-    fig.savefig("BW_RawData.png")
-    #plt.show()
-    print ("Output figure ""BW_RawData.png"" has generated.")
-
-    fig, ax = plt.subplots(figsize=(6,6), dpi=300)    
-    ax.plot(Data[:, 0], Data[:, 2], 'bo')
-    ax.set(xlabel = 'Loop in %s direction' %direction, ylabel = 'Berry Phase (radians)', title = 'Berry Phase Vs Wilson loop')
-    fig.savefig("BW_PiWrapped.png")
-    print ("Output figure ""BW_PiWrapped.png"" has generated.")
-
-    fig, ax = plt.subplots(figsize=(6,6), dpi=300)
-    ax.plot(Data[:, 0], Data[:, 3], 'bo')
-    ax.set(xlabel = 'Loop in %s direction' %direction, ylabel = 'Berry Phase (1/2pi)', title = 'Berry Phase Vs Wilson loop')
-    fig.savefig("BW_PhaseChange.png")
-    print ("Output figure ""BW_PhaseChange.png"" has generated")
-    print ("Good Bye!!! :)")
-except ImportError as error:
-    print (error.__class__.__name__+": "+error.message)
-    print ("You can plot your figure yourself by using ""PHI.dat"" file.")
+except ImportError as error: # matplotlib is not installed
+    print ("It seems that matplotlib is not installed, but it is not essential.")
+    print ("You can plot the figure yourself by using ""PHI.dat"" file.")
     print ("Good bye!!! :)")
-    sys.exit()
+    printEpilog()
+    sys.exit(0)
+
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+print ("[OK] Matplotlib found")
+fig, ax = plt.subplots(figsize=(6,6), dpi=300)
+ax.plot(Data[:, 0], Data[:, 1], 'bo')
+ax.set(xlabel = 'Loop in %s direction' %direction, ylabel = 'Berry Phase (radians)', title = 'Berry Phase Vs Wilson loop')
+#ax.grid()
+fig.savefig("BW_RawData.png")
+#plt.show()
+print ("Output figure ""BW_RawData.png"" has generated.")
+
+fig, ax = plt.subplots(figsize=(6,6), dpi=300)    
+ax.plot(Data[:, 0], Data[:, 2], 'bo')
+ax.set(xlabel = 'Loop in %s direction' %direction, ylabel = 'Berry Phase (radians)', title = 'Berry Phase Vs Wilson loop')
+fig.savefig("BW_PiWrapped.png")
+print ("Output figure ""BW_PiWrapped.png"" has been generated.")
+
+fig, ax = plt.subplots(figsize=(6,6), dpi=300)
+ax.plot(Data[:, 0], Data[:, 3], 'bo')
+ax.set(xlabel = 'Loop in %s direction' %direction, ylabel = 'Berry Phase (1/2pi)', title = 'Berry Phase Vs Wilson loop')
+fig.savefig("BW_PhaseChange.png")
+print ("Output figure ""BW_PhaseChange.png"" has been generated")
+print ("Good Bye!!! :)")
+printEpilog()
