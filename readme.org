@@ -3,6 +3,8 @@ BerryPI is a software for the calculation of Berry phase and related properties 
 *** Current Version
 
 Version Jan 15, 2021 (major changes: args synced with WIEN2k)
+Version Dec 15, 2020 (major changes: polarization is generalized for non-orthogonal lattice vectors)
+Version Dec 15, 2020 (new feature: characterization of Weyl semimetals)
 
 [[https://github.com/spichardo/BerryPI/wiki][Documentation]]
 
