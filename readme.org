@@ -1,12 +1,15 @@
 BerryPI is a software for the calculation of Berry phase and related properties of solids (including topological materials) with WIEN2k density functional package.
 
-*** Current Version
+*** Current Version and past milestones
 
-Version Jan 15, 2021 (major changes: args synced with WIEN2k)
+Version Jan 15, 2021 (args synced with WIEN2k)
 
-Version Dec 15, 2020 (major changes: polarization is generalized for non-orthogonal lattice vectors)
+Version Dec 15, 2020 (polarization is generalized for non-orthogonal lattice vectors)
 
-Version Dec 15, 2020 (new feature: characterization of Weyl semimetals)
+Version Sep 15, 2020 (python 3.X compatibility)
+
+Version Aug 19, 2020 (new feature: characterization of Weyl semimetals)
+
 
 [[https://github.com/spichardo/BerryPI/wiki][Documentation]]
 
