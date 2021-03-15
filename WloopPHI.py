@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
 Created on Wed Dec 18 11:13:26 2019
@@ -15,15 +15,15 @@ import argparse # parse line arguments
 def printEpilog():
     print('''
 Suggested references:
-[1] S.J.Ahmed, J.Kivinen, B.Zaporzan, L.Curiel, S.Pichardo and O.Rubel
+[1] H. Saini, M. Laurien, P. Blaha, and O. Rubel
+    “WloopPHI: A tool for ab initio characterization of Weyl semimetals”,
+    arXiv:2008.08124 [cond-mat.mtrl-sci] (2020)
+    https://arxiv.org/abs/2008.08124
+[2] S.J. Ahmed, J. Kivinen, B. Zaporzan, L. Curiel, S. Pichardo and O. Rubel
     "BerryPI: A software for studying polarization of crystalline solids with 
     WIEN2k density functional all-electron package"
     Comp. Phys. Commun. 184, 647 (2013)
     https://doi.org/10.1016/j.cpc.2012.10.028
-[2] H. Saini, M. Laurien, P. Blaha, and O. Rubel
-    “WloopPHI: A tool for ab initio characterization of Weyl semimetals”,
-    arXiv:2008.08124 [cond-mat.mtrl-sci] (2020)
-    https://arxiv.org/abs/2008.08124
 
 Questions and comments are to be communicated via the WIEN2k mailing list
 (see http://susi.theochem.tuwien.ac.at/reg_user/mailing_list)''')
@@ -208,8 +208,9 @@ for i in range(0, n):
     pwd = os.getcwd()
     os.chdir(WorkingDir)
     subprocess.call("mv %s/%s %s/%s" %(pwd, filename, WorkingDir, KlistFileName), shell = True)
-    subprocess.call("python $WIENROOT/SRC_BerryPI/BerryPI/berrypi -so -w -b %i %i %s > Berrypi.out"%(S_Band, E_Band, options), shell=True)
-    with open("Berrypi.out", 'r') as read_file:
+    subprocess.call("python $WIENROOT/SRC_BerryPI/BerryPI/berrypi -so -w -b %i %i %s"%(S_Band, E_Band, options), shell=True)
+    berrypiOutFileName = str("%s.outputberry" %(WorkingDir.split('/')[-1]))
+    with open(berrypiOutFileName, 'r') as read_file:
         for line in read_file:
             if "Berry phase sum (rad) =" in line:
                 #return line
