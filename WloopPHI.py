@@ -206,8 +206,8 @@ if __name__=="__main__":
         import numpy as np
         print ("[OK] Numpy found")
     except ImportError as error:
-        print (error.__class__.__name__+": "+error.message)
-        sys.exit()
+        print ("It seems that numpy is not installed. Exiting")
+        sys.exit(1)
     
     # Set up parser for line arguments
     parser = argparse.ArgumentParser()
@@ -272,15 +272,15 @@ if __name__=="__main__":
         print("WARNING -----> Phase Difference: The jump in phase difference is greter than pi/2 which is not good.")
         print("To avoid this warning please increase the number of Wilson loops.")
     print ("Output data file ""PHI.dat"" has generated.")
-       
+    
     #################### PLOT ##################################################
     try:
         import matplotlib
     except ImportError as error: # matplotlib is not installed
-        print (error.__class__.__name__+": "+error.message)    
         print ("It seems that matplotlib is not installed, but it is not essential.")
         print ("You can plot the figure yourself by using ""PHI.dat"" file.")
-        print ("Thank you!")
+        EndTime = time.time() # Calculation end time.
+        print ("Total time = %s" %time.strftime('%H:%M:%S', time.gmtime(float(EndTime - StartTime))))
         printEpilog()
         sys.exit(0)
     
@@ -306,7 +306,6 @@ if __name__=="__main__":
     ax.set(xlabel = 'Loop in %s direction' %direction, ylabel = 'Berry Phase (1/2pi)', title = 'Berry Phase Vs Wilson loop')
     fig.savefig("BW_PhaseChange.png")
     print ("Output figure ""BW_PhaseChange.png"" has been generated")
-    print ("Thank you!")
     EndTime = time.time() # Calculation end time.
     print ("Total time = %s" %time.strftime('%H:%M:%S', time.gmtime(float(EndTime - StartTime))))
     printEpilog()
