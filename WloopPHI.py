@@ -152,7 +152,7 @@ def Solve (*args):
         pwd = os.getcwd()
         os.chdir(WorkingDir)
         subprocess.call("mv %s/%s %s/%s" %(pwd, filename, WorkingDir, KlistFileName), shell = True)
-        subprocess.call("python /media/enigma/7167917D68894F96/GitHub/BerryPI/berrypi -so -w -b %i %i %s > std.out"%(S_Band, E_Band, options), shell=True)
+        subprocess.call("python $WIENROOT/SRC_BerryPI/BerryPI/berrypi -so -w -b %i %i %s"%(S_Band, E_Band, options), shell=True)
         berrypiOutFileName = str("%s.outputberry" %(str(WorkingDir.split('/')[-1])))
         with open(berrypiOutFileName, 'r') as read_file:
             for line in read_file:
