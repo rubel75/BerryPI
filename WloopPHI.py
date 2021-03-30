@@ -47,7 +47,7 @@ def ReadInputValues(content, WloopFileName):
         KlistFileName = str("%s.klist" %(WorkingDir.split('/')[-1]))
         n = int(content[0].split()[0])
         #multiplier = int(content[2].split()[0]) # User dependent (make sure use proper array indexing)
-        multiplier = 1000 # User independent
+        multiplier = 10000 # User independent
     except ValueError:
         print ("Error: Value Error")
         FileFormatMessage()
@@ -152,7 +152,10 @@ def Solve (*args):
         pwd = os.getcwd()
         os.chdir(WorkingDir)
         subprocess.call("mv %s/%s %s/%s" %(pwd, filename, WorkingDir, KlistFileName), shell = True)
-        subprocess.call("python $WIENROOT/SRC_BerryPI/BerryPI/berrypi -so -w -b %i %i %s"%(S_Band, E_Band, options), shell=True)
+        if (i == 0): # full output on the first iteration
+            subprocess.call("python $WIENROOT/SRC_BerryPI/BerryPI/berrypi -so -w -b %i %i %s"%(S_Band, E_Band, options), shell=True)
+        else: # suppressed output
+            subprocess.call("python $WIENROOT/SRC_BerryPI/BerryPI/berrypi -so -w -b %i %i %s > /dev/null"%(S_Band, E_Band, options), shell=True)
         berrypiOutFileName = str("%s.outputberry" %(str(WorkingDir.split('/')[-1])))
         with open(berrypiOutFileName, 'r') as read_file:
             for line in read_file:
@@ -266,7 +269,7 @@ if __name__=="__main__":
     #################### Save data to file #####################################
     outfile = str("PHI.dat")
     np.savetxt(outfile, Data, fmt='%5.5f', delimiter='          ', 
-               header='Loop (%s)       BerryPhase(BP)   BP(-/+pi wrap)   BP(unwrap)' %direction)
+               header='Loop (%s)       BerryPhase(BP)   BP(-/+pi wrap)   BP(unwrap)/2pi' %direction)
     print ("Calculation done!!!")
     if (Check_Diff == True):
         print("WARNING -----> Phase Difference: The jump in phase difference is greter than pi/2 which is not good.")
