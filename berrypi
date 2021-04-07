@@ -518,7 +518,7 @@ def rawBerryPhase(configFile):
         ####################################
         # create input list for write_inwf #
         ####################################
-        if bands != [] and wCalc: # range of bands is specified
+        if bands != []: # range of bands is specified (typicaly for Wilson loop)
             inputListing = '-mode MMN -bands ' + str(bands[0]) + ' ' +\
                  str(bands[1])
         else: # no range of bands is specified (default)
