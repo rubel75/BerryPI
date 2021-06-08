@@ -242,7 +242,7 @@ if __name__=="__main__":
     print("Checking existance of %s" %WloopFileName)
     if not(os.path.isfile(WloopFileName)):
         print("{} does not exist, cannot finish calculation.".format(WloopFileName))
-        sys.exit(2)
+        sys.exit(1)
     else:
         print('-- OK')
     f = open(WloopFileName, 'r')
