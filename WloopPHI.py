@@ -37,7 +37,7 @@ def FileFormatMessage():
 0.4565 0.3000 0.5000 ; -0.4565 0.3000 0.5000          # Starting point 2 ; End point 2          
 0.4565 0.2500 1.0000 ; -0.4565 0.2500 1.0000          # Starting point 3 ; End point 3
 END                                                   # End of file (It is case sensitive)""")
-    sys.exit()
+    sys.exit(0)
     
 
 def ReadInputValues(content, WloopFileName):
@@ -46,8 +46,7 @@ def ReadInputValues(content, WloopFileName):
         print ("Working directory = %s" %(WorkingDir))
         KlistFileName = str("%s.klist" %(WorkingDir.split('/')[-1]))
         n = int(content[0].split()[0])
-        #multiplier = int(content[2].split()[0]) # User dependent (make sure use proper array indexing)
-        multiplier = 10000 # User independent
+        multiplier = 100000000 # User independent
     except ValueError:
         print ("Error: Value Error")
         FileFormatMessage()
@@ -147,15 +146,18 @@ def Solve (*args):
         Klist = np.int_(Klist)
         #break
         filename = str("Wilson.klist")
-        np.savetxt(filename, Klist, fmt="          %5i%5i%5i%5i%5.1f", delimiter='', footer='END', comments='')
+        np.savetxt(filename, Klist, fmt="          %10i%10i%10i%10i%5.1f", 
+                   delimiter='', footer='END', comments='')
         #print(Klist)
         pwd = os.getcwd()
         os.chdir(WorkingDir)
-        subprocess.call("mv %s/%s %s/%s" %(pwd, filename, WorkingDir, KlistFileName), shell = True)
+        subprocess.call("mv %s/%s %s/%s"%(pwd, filename, WorkingDir, KlistFileName), shell = True)
         if (i == 0): # full output on the first iteration
-            subprocess.call("python $WIENROOT/SRC_BerryPI/BerryPI/berrypi -so -w -b %i %i %s"%(S_Band, E_Band, options), shell=True)
+            subprocess.call("python $WIENROOT/SRC_BerryPI/BerryPI/berrypi -so -w -b %i %i %s"\
+                            %(S_Band, E_Band, options), shell=True)
         else: # suppressed output
-            subprocess.call("python $WIENROOT/SRC_BerryPI/BerryPI/berrypi -so -w -b %i %i %s > /dev/null"%(S_Band, E_Band, options), shell=True)
+            subprocess.call("python $WIENROOT/SRC_BerryPI/BerryPI/berrypi -so -w -b %i %i %s > /dev/null"\
+                            %(S_Band, E_Band, options), shell=True)
         berrypiOutFileName = str("%s.outputberry" %(str(WorkingDir.split('/')[-1])))
         with open(berrypiOutFileName, 'r') as read_file:
             for line in read_file:
@@ -165,14 +167,9 @@ def Solve (*args):
                     #print (content)
     
         os.chdir(pwd)
-        #sys.exit()
         
         temp = float(content.split()[-1])
-        #print (temp)
-        #sys.exit()
-    
-        temp1 = ((temp + np.pi) % (2 * np.pi) - np.pi)  # 2 pi wraping
-        #temp = np.array([i, temp])    
+        temp1 = ((temp + np.pi) % (2 * np.pi) - np.pi)  # 2 pi wraping  
         temp = np.array([x_axis[loop], temp, temp1])
         loop += 1
         
@@ -209,6 +206,7 @@ if __name__=="__main__":
         import numpy as np
         print ("[OK] Numpy found")
     except ImportError as error:
+        print (error)
         print ("It seems that numpy is not installed. Exiting")
         sys.exit(1)
     
@@ -239,7 +237,7 @@ if __name__=="__main__":
     print("Checking existance of %s" %WloopFileName)
     if not(os.path.isfile(WloopFileName)):
         print("{} does not exist, cannot finish calculation.".format(WloopFileName))
-        exit(2)
+        sys.exit(2)
     else:
         print('-- OK')
     f = open(WloopFileName, 'r')
@@ -258,7 +256,7 @@ if __name__=="__main__":
     if not os.path.exists(WorkingDir):
         print ("Error: Working directory does not exist.")
         print ("Please check your working directory and try again. Thank you!")
-        sys.exit()
+        sys.exit(1)
         
     ######################## Solver ############################################
     direction, Data = Solve(WorkingDir, KlistFileName, n, multiplier, S_Band, E_Band, K_Start, K_End)
@@ -268,7 +266,7 @@ if __name__=="__main__":
 
     #################### Save data to file #####################################
     outfile = str("PHI.dat")
-    np.savetxt(outfile, Data, fmt='%5.5f', delimiter='          ', 
+    np.savetxt(outfile, Data, fmt='%5.5f', delimiter='          ',\
                header='Loop (%s)       BerryPhase(BP)   BP(-/+pi wrap)   BP(unwrap)/2pi' %direction)
     print ("Calculation done!!!")
     if (Check_Diff == True):
@@ -280,6 +278,7 @@ if __name__=="__main__":
     try:
         import matplotlib
     except ImportError as error: # matplotlib is not installed
+        print (error)
         print ("It seems that matplotlib is not installed, but it is not essential.")
         print ("You can plot the figure yourself by using ""PHI.dat"" file.")
         EndTime = time.time() # Calculation end time.
