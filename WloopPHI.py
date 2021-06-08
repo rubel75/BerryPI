@@ -37,7 +37,7 @@ def FileFormatMessage():
 0.4565 0.3000 0.5000 ; -0.4565 0.3000 0.5000          # Starting point 2 ; End point 2          
 0.4565 0.2500 1.0000 ; -0.4565 0.2500 1.0000          # Starting point 3 ; End point 3
 END                                                   # End of file (It is case sensitive)""")
-    sys.exit(0)
+    sys.exit(1)
     
 
 def ReadInputValues(content, WloopFileName):
@@ -221,6 +221,9 @@ if __name__=="__main__":
     parser.add_argument("-orb",\
             help="calculation with an additional orbit potential (e.g., LSDA+U)",\
             action="store_true")
+    parser.add_argument("-p",\
+            help="parallel calculation (requires proper .machines file)",\
+            action="store_true")
     args = parser.parse_args()
     
     # Assign line arguments parsed by "argparse"
@@ -231,6 +234,8 @@ if __name__=="__main__":
         options = options + '-sp'
     if args.orb: # enable orbital potential
         options = options + '-orb'
+    if args.p: # parallel calculation
+        options = options + '-p'
     print("Additional options: %s" %options)
     
     # Read input file
