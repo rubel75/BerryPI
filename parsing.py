@@ -279,12 +279,12 @@ class MainStructParser(AbstractParser):
             if num == 3: # 4th line case.struct file
                 # read lattice parameters using FORMAT(6F10.7)
                 aa = float(line[0:10])
-                bb = float(line[11:20])
-                cc = float(line[21:30])
+                bb = float(line[10:20])
+                cc = float(line[20:30])
                 alpha = np.zeros(3)
-                alpha[0] = float(line[31:40])
-                alpha[1] = float(line[41:50])
-                alpha[2] = float(line[51:60])
+                alpha[0] = float(line[30:40])
+                alpha[1] = float(line[40:50])
+                alpha[2] = float(line[50:60])
                 print(" "*1, "a =", aa, "bohr")
                 print(" "*1, "b =", bb, "bohr")
                 print(" "*1, "c =", cc, "bohr")
@@ -361,8 +361,9 @@ class MainStructParser(AbstractParser):
         self['Atom Listing'] = []
         re_coordinates = re.compile(r'X= ?(?P<xCoordinate>[0-9.]+) +Y= ?(?P<yCoordinate>[0-9.]+) +Z= ?(?P<zCoordinate>[0-9.]+)')
         re_mult = re.compile(r'MULT= *(?P<multValue>[0-9]+)')
-        re_element = re.compile(r'(?P<elementName>[A-Z][a-z]{0,2}) ?(?P<elementNumber>[0-9]*) +NPT')
-        re_zatom = re.compile(r'.*RMT=.*Z:\s*(?P<Znucl>[0-9.]+)') 
+        re_element = re.compile(r'(?P<elementName>[A-Z][a-z]{0,2}).*NPT')
+        re_zatom = re.compile(r'.*RMT=.*Z:\s*(?P<Znucl>[0-9.]+)')
+        non_equiv_element_counter = 0
         for atom in atomListing:
             theAtom = {}
             for line in atom:
@@ -391,10 +392,8 @@ class MainStructParser(AbstractParser):
                 elementMatches = re_element.search(line)
                 if elementMatches:
                     theAtom['Element Name'] = elementMatches.group('elementName')
-                    if elementMatches.group('elementNumber'):
-                        theAtom['Element Number'] = int(elementMatches.group('elementNumber'))
-                    else:
-                        theAtom['Element Number'] = 1
+                    non_equiv_element_counter += 1
+                    theAtom['Element Number'] = non_equiv_element_counter
 
                 zatomMatches = re_zatom.search(line)
                 if zatomMatches:
