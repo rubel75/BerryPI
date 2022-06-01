@@ -16,8 +16,8 @@ def printEpilog():
 Suggested references:
 [1] H. Saini, M. Laurien, P. Blaha, and O. Rubel
     “WloopPHI: A tool for ab initio characterization of Weyl semimetals”,
-    arXiv:2008.08124 [cond-mat.mtrl-sci] (2020)
-    https://arxiv.org/abs/2008.08124
+    Comp. Phys. Commun. 270, 108147 (2022)
+    https://doi.org/10.1016/j.cpc.2021.108147
 [2] S.J. Ahmed, J. Kivinen, B. Zaporzan, L. Curiel, S. Pichardo and O. Rubel
     "BerryPI: A software for studying polarization of crystalline solids with 
     WIEN2k density functional all-electron package"
