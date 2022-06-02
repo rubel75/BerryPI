@@ -4,7 +4,7 @@ BerryPI is a software for the calculation of Berry phase and related properties 
 
 Version Jun 2, 2022
 
-Version Jan 15, 2021 (args synced with WIEN2k)
+Version Jan 15, 2021 (args synced with WIEN2k; added two alternative pi-wrappings)
 
 Version Dec 15, 2020 (polarization is generalized for non-orthogonal lattice vectors)
 
