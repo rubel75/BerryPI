@@ -764,18 +764,18 @@ def rawBerryPhase(configFile):
 
     ###########################################
     # Restore klist file                      #
-    # cp $filename.klist_orig $filename.klist #
+    # mv $filename.klist_orig $filename.klist #
     ###########################################
     if 'resoreKlist' in locals(): # check if the logical variable was set
         if resoreKlist:
             fileNameSrc = structureName + '.klist_orig'
             fileNameDest = structureName + '.klist'
-            print(DEFAULT_PREFIX + "Trying to copy " + fileNameSrc + " to " + fileNameDest)
+            print(DEFAULT_PREFIX + "Trying to move " + fileNameSrc + " to " + fileNameDest)
             if os.path.isfile(fileNameSrc): # check if $filename.klist_orig is in place
-                shutil.copy(fileNameSrc, fileNameDest)
+                shutil.move(fileNameSrc, fileNameDest)
                 print(DEFAULT_PREFIX + "-- OK")
             else:
-                msg = "file " + fileNameSrc + " does not exist. Copy aborted."
+                msg = "file " + fileNameSrc + " does not exist. Move aborted."
                 print(DEFAULT_PREFIX + msg)
     
 
