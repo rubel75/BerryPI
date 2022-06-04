@@ -13,14 +13,12 @@ it has been asked to return.
 '''
 from __future__ import print_function # Python 2 & 3 compatible print function
 import math, pprint
-
-import errorCheck as b_PyError
+import sys
 import parsing as b_PyParse
 import numpy
 import copy # needed for deepcopy of arrays
 import collections
 from vec2cart import vec2cart
-
 from collections import OrderedDict as orderedDict
 from convunits import bohrToMeters # conversion [Bohr] => [m]
 
@@ -32,15 +30,6 @@ DEBUG = True
 ##################
 
 ELECTRON_CHARGE = 1.60217646e-19
-#bohr to meters
-BOHR_CONSTANT = 5.2917725e-11
-
-#value which determines the bounds 
-#of zeroing our 2pi values
-GAMMA_ZEROING_VALUE = 0.1
-
-COORDINATE_CORRECTION_UPPER_BOUND = 1.0
-COORDINATE_CORRECTION_LOWER_BOUND = 0.8
 
 class PathphaseCalculation:
     '''
@@ -204,7 +193,7 @@ class MainCalculationContainer:
         #############################
         ###### Getting Values #######
         #############################
-        self.calcVal = orderedDict();
+        self.calcVal = orderedDict()
         
         #### *.struct handle
         # - name of atoms
@@ -264,7 +253,7 @@ class MainCalculationContainer:
             phaseDirSpinPathRaw = args['phases']
             # wrap phases in the range [-pi ... +pi]
             phaseDirSpinPathWrp = self.wrpPhase(phaseDirSpinPathRaw, \
-                wrpFn);
+                wrpFn)
             # print nice
             print("\n","Initial Berry phases and their", \
                 "wrapped values")
@@ -297,9 +286,9 @@ class MainCalculationContainer:
                 "|   ", "dir(2)   ", "|   ", "dir(3)")
             print("-"*87)
             # find path-average phase
-            phaseDirSpinWrp = self.pathAvrgPhase(phaseDirSpinPathWrp);
+            phaseDirSpinWrp = self.pathAvrgPhase(phaseDirSpinPathWrp)
             # wrap the average phase again as it can go out of bounds [-pi..+pi]
-            phaseDirSpinWrp = wrpFn(phaseDirSpinWrp);
+            phaseDirSpinWrp = wrpFn(phaseDirSpinWrp)
             nspins = numpy.shape(phaseDirSpinWrp)[1]
             for spinIndex in range(0,nspins):
                 print("Berry phase wrapped (rad)          sp(%1i)" \
@@ -326,7 +315,7 @@ class MainCalculationContainer:
             #electron charge / cell volume
             self.ELEC_BY_VOL_CONST = ELECTRON_CHARGE / \
                 bohrToMeters(self.calcVal['Cell Volume in bohr^3'], \
-                dimension = 3.);
+                dimension = 3.)
             # electronic polarization (C/m2)
             elP = self.elPolarization(phaseDirSpinWrp,self.calcVal, \
                 self.ELEC_BY_VOL_CONST)
@@ -519,7 +508,7 @@ Notes:
         Calculation:
 
         Pel_x = electron charge / unit volume (m) * \
-          berry phase mean value/2pi * lattice_matrices (diagonal x);
+          berry phase mean value/2pi * lattice_matrices (diagonal x)
         '''
         # [OLEG]: check which lattice vectors to use br1 or br2
         nspins = numpy.shape(berryPhase)[1]
@@ -531,7 +520,7 @@ Notes:
                 elP[spinIndex,coordIndex] = \
                     (berryPhase[coordIndex,spinIndex]/(2*numpy.pi)) * \
                     ELEC_BY_VOL_CONST * \
-                    bohrToMeters(normLatVec);
+                    bohrToMeters(normLatVec)
             print("Electronic polarization (C/m2)     " +\
                 "sp(%1i) " % (spinIndex+1), \
             "[% e, % e, % e]" % tuple(elP[spinIndex,:]))
@@ -606,7 +595,7 @@ Notes:
                     for spin in [1, 2]:
                         theValence.append( \
                             atom['Znucl']/2 - Zcore[iatom]/2 \
-                        );
+                        )
                 else:
                     theValence = atom['Znucl'] - Zcore[iatom];
                 xCoordinate = atom['X-Coord'][i]
@@ -661,7 +650,7 @@ Notes:
                 "[% e, % e, % e]" % tuple(totIonPhase[spinIndex,:]))
 
         # warap phases
-        totIonPhase = fnWrpMethod( totIonPhase );
+        totIonPhase = fnWrpMethod( totIonPhase )
 
         for spinIndex in range(0,nspins):
             print("Total ionic phase wrap. (rad)", \
