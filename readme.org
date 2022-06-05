@@ -26,4 +26,5 @@ Version Aug 19, 2020 (new feature: characterization of Weyl semimetals)
 - [[https://github.com/spichardo/BerryPI/tree/master/tutorials/tutorial2][Tutorial 2 - Born effective charges of GaAs (supercell, orthogonal lattice vectors)]]
 - [[https://github.com/spichardo/BerryPI/tree/master/tutorials/tutorial3][Tutorial 3 - Born effective charges of GaAs (non-orthogonal lattice vectors)]]
 - [[https://github.com/spichardo/BerryPI/wiki/Tutorial-4:-Polarization-in-GaN][Tutorial 4 - Polarization in wurtzite GaN]]
-- [[https://github.com/spichardo/BerryPI/wiki/Tutorial-5:-Weyl-points-characterization-in-TaAs][Tutorial 5 - Weyl points characterization in TaAs]]
+- [[https://github.com/spichardo/BerryPI/wiki/Tutorial-5:-Weyl-points-characterization-in-TaAs][Tutorial 5 - Weyl points characterization in TaAs (chirality 1)]]
+- [[https://github.com/spichardo/BerryPI/wiki/Tutorial-6:-Weyl-point-characterization-in-Te][Tutorial 6 - Weyl point characterization in Te (chirality 3)]]
