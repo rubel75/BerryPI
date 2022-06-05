@@ -16,7 +16,7 @@ echo "1 - Tutorial 1: Lambda1 and Lambda0"
 echo "2 - Tutorial 2: Lambda1 and Lambda2"
 echo "3 - Tutorial 3: GaAs1 and GaAs2"
 echo "4 - Tutorial 4: GaN-W and GaN-ZB"
-echo "5 - All Tests (7-20, 101, 102)"
+echo "5 - All Tests (7-20, 101-103)"
 echo "6 - Clean All"
 echo ""
 echo "T E S T S (serial):"
@@ -26,8 +26,9 @@ echo "9 - Test BaTiO3: Lambda1 (-so) spin orbit"
 echo "10 - Test BaTiO3: Lambda1 (-orb) orb. potential + U=0.1 Ry (spin polarization implied)"
 echo "11 - Test BaTiO3: Lambda1 (-sp -so) spin polarization & SOC"
 echo "12 - Test BaTiO3: Lambda1 (-orb -so) SOC & orb. potential + U=0.1 Ry (spin polarization implied)"
-echo "101 - Test TaAs: Weyl point charge (single Wilson loop)"
-echo "102 - Test TaAs: Weyl point charge (series of Wilson loops via WloopPHI.py)"
+echo "101 - Test TaAs: Weyl point chirality (single Wilson loop)"
+echo "102 - Test TaAs: Weyl point chirality (series of Wilson loops via WloopPHI.py)"
+echo "103 - Test Te: Weyl point chirality greater than 1"
 echo ""
 echo "T E S T S (parallel):"
 echo "13 - Test BaTiO3: Lambda1 (-p) spin polarization (parallel 2 cores)"
@@ -97,6 +98,8 @@ case "$choice" in
       Tutorial_101
       CleanTut_5
       Tutorial_102
+	  CleanTut_6
+      Tutorial_103
 	  ;;
 	6)
 	  echo "Cleaning up all files"
@@ -105,6 +108,7 @@ case "$choice" in
 	  CleanTut_3
 	  CleanTut_4
       CleanTut_5
+	  CleanTut_6
 	  rm -rf *.out
 	  ;;
 	7)
@@ -139,6 +143,10 @@ case "$choice" in
       CleanTut_5
 	  Tutorial_102
 	  ;;
+	103)
+	CleanTut_6
+	Tutorial_103
+	;;
     13)
       CleanTut_1
 	  Tutorial_13
@@ -177,60 +185,68 @@ esac
 }
 
 CleanTut_1 () {
-	cd tutorial1
-	rm -rf *.out
-	cd lambda1
+	cd tutorial1 || return
+	rm -rf ./*.out
+	cd lambda1 || return
 	ls -1 | grep -v 'lambda1.struct$' | xargs rm -f
-       cd ../lambda0
+	cd ../lambda0 || return
 	ls -1 | grep -v 'lambda0.struct$' | xargs rm -f
 	cd ../../
 	echo "dir tutorial1: All files but lambda1.struct and lambda0.struct were removed!"
 }
 
 CleanTut_2 () {
-	cd tutorial2
+	cd tutorial2 || return
 	rm -rf Tutorial2_1.out Tutorial2_2.out
-	cd lambda1
+	cd lambda1 || return
 	ls -1 | grep -v 'lambda1.struct$' | xargs rm -f
-       cd ../lambda2
+	cd ../lambda2 || return
 	ls -1 | grep -v 'lambda2.struct$' | xargs rm -f
 	cd ../../
 	echo "dir tutorial2: All files but lambda1.struct and lambda2.struct were removed!"
 }
 
 CleanTut_3 () {
-	cd tutorial3
+	cd tutorial3 || return
 	rm -rf Tutorial3_1.out Tutorial3_2.out
-	cd GaAs1
+	cd GaAs1 || return
 	ls -1 | grep -v 'GaAs1.struct$' | xargs rm -f
-       cd ../GaAs2
+	cd ../GaAs2 || return
 	ls -1 | grep -v 'GaAs2.struct$' | xargs rm -f
 	cd ../../
 	echo "dir tutorial3: All files but GaAs1.struct and GaAs2.struct were removed!"
 }
 
 CleanTut_4 () {
-	cd tutorial4
+	cd tutorial4 || return
 	rm -rf Tutorial4_1.out Tutorial4_2.out
-	cd GaN-W
+	cd GaN-W || return
 	ls -1 | grep -v 'GaN-W.struct$' | xargs rm -f
-       cd ../GaN-ZB
+	cd ../GaN-ZB || return
 	ls -1 | grep -v 'GaN-ZB.struct$' | xargs rm -f
 	cd ../../
 	echo "dir tutorial4: All files but GaN-W.struct and GaN-ZB.struct were removed!"
 }
 
 CleanTut_5 () {
-	cd tutorial5
-    echo $PWD
+	cd tutorial5 || return
+    echo "$PWD"
     ls -1a | grep -v -e 'TaAs.struct$' -e 'TaAs.klist_band$' -e 'readme.txt$' -e '^\.$' -e '^\.\.$' | xargs rm -f # remove all files/dir except "TaAs.struct", "TaAs.klist_band", and "readme.txt"
 	cd ../
 	echo "dir tutorial5: All files but TaAs.struct, TaAs.klist_band, and readme.txt were removed!"
 }
 
+CleanTut_6 () {
+	cd tutorial6 || return
+    echo "$PWD"
+    ls -1a | grep -v -e 'Te.struct$' -e 'Te.klist_band$' -e 'readme.txt$' -e '^\.$' -e '^\.\.$' | xargs rm -f # remove all files/dir except "Te.struct", "Te.klist_band", and "readme.txt"
+	cd ../
+	echo "dir tutorial6: All files but Te.struct, Te.klist_band, and readme.txt were removed!"
+}
+
 Tutorial_1 () {
 echo "Running Tutorial 1"
-cd tutorial1/lambda1
+cd tutorial1/lambda1 || return
 init_lapw -b -rkmax 4 -vxc 13 -ecut -6 -numk 230
 run_lapw
 berrypi -k 6 6 6
@@ -245,7 +261,7 @@ Tot. spin polariz.=Pion+Pel (C/m2) sp(1)  [ 4.944823e-12,  1.281972e-11,  3.0427
 TOTAL POLARIZATION (C/m2)          both   [ 4.944823e-12,  1.281972e-11,  3.042756e-01]
 ======================================================================================="
 cp * ../lambda0
-cd ../lambda0
+cd ../lambda0 || return
 rm lambda1.struct
 rename_files lambda1 lambda0
 echo -e "230\n1\n" | x kgen
@@ -267,7 +283,7 @@ cd ../../
 
 Tutorial_2 () {
 echo "Running Tutorial 2"
-cd tutorial2/lambda1
+cd tutorial2/lambda1 || return
 init_lapw -b -rkmax 4 -vxc 13 -ecut -6 -numk 230
 run_lapw
 berrypi -k 6 6 6
@@ -282,7 +298,7 @@ Tot. spin polariz.=Pion+Pel (C/m2) sp(1)  [ 2.369493e-10,  5.905018e-10, -1.0561
 TOTAL POLARIZATION (C/m2)          both   [ 2.369493e-10,  5.905018e-10, -1.056116e-02]
 ======================================================================================="
 cp * ../lambda2
-cd ../lambda2
+cd ../lambda2 || return
 rm lambda1.struct
 rename_files lambda1 lambda2
 echo -e "230\n1\n" | x kgen
@@ -304,7 +320,7 @@ cd ../../
 
 Tutorial_3 () {
 echo "Running Tutorial 3"
-cd tutorial3/GaAs1
+cd tutorial3/GaAs1 || return
 linenr=$(grep -n -m 1 "ATOM  -2: X=0.25000000 Y=0.25000000 Z=0.25100000" GaAs1.struct | cut -d':' -f1)
 sed -i "${linenr}d" GaAs1.struct
 sed -i "${linenr}i\ATOM  -2: X=0.25100000 Y=0.25200000 Z=0.25300000" GaAs1.struct
@@ -326,7 +342,7 @@ Tot. spin polariz.=Pion+Pel (C/m2) sp(1)  [ 4.756567e-01,  4.756567e-01, -1.4306
 TOTAL POLARIZATION (C/m2)          both   [ 4.756567e-01,  4.756567e-01, -1.430623e+00]
 ======================================================================================="
 cp * ../GaAs2
-cd ../GaAs2
+cd ../GaAs2 || return
 rename_files GaAs1 GaAs2
 linenr=$(grep -n -m 1 "ATOM  -2: X=0.25000000 Y=0.25000000 Z=0.25100000" GaAs2.struct | cut -d':' -f1)
 sed -i "${linenr}d" GaAs2.struct
@@ -351,7 +367,7 @@ cd ../../
 
 Tutorial_4 () {
 echo "Running Tutorial 4"
-cd tutorial4/GaN-W
+cd tutorial4/GaN-W || return
 init_lapw -b -vxc 5 -rkmax 7 -numk 300
 run_lapw
 berrypi -k 8 8 8
@@ -365,7 +381,7 @@ Tot. spin polariz.=Pion+Pel (C/m2) sp(1)  [ 3.973752e-10, -8.442784e-08, -4.9472
 ---------------------------------------------------------------------------------------
 TOTAL POLARIZATION (C/m2)          both   [ 3.973752e-10, -8.442784e-08, -4.947239e-01]
 ======================================================================================="
-cd ../GaN-ZB
+cd ../GaN-ZB || return
 init_lapw -b -vxc 5 -rkmax 7 -numk 200
 run_lapw
 berrypi -k 8 8 8
@@ -393,7 +409,7 @@ cd ../../
 ######################################################################################
 Tutorial_7 () {
 echo "Running test 7"
-cd tutorial1/lambda1
+cd tutorial1/lambda1 || return
 init_lapw -b -rkmax 4 -vxc 13 -ecut -6 -numk 100
 run_lapw -ec 0.0001 -cc 0.001
 berrypi -k 4 4 4
@@ -415,7 +431,7 @@ cd ../../
 ######################################################################################
 Tutorial_8 () {
 echo "Running test 8"
-cd tutorial1/lambda1
+cd tutorial1/lambda1 || return
 init_lapw -b -rkmax 4 -vxc 13 -ecut -6 -numk 100 -sp
 runsp_lapw -ec 0.0001 -cc 0.001
 berrypi -k 4 4 4 -sp
@@ -441,7 +457,7 @@ cd ../../
 ######################################################################################
 Tutorial_9 () {
 echo "Running test 9"
-cd tutorial1/lambda1
+cd tutorial1/lambda1 || return
 export EDITOR=cat
 init_lapw -b -rkmax 4 -vxc 13 -ecut -6 -numk 100
 echo -e "0 0 1\n\n\n\nN\n" | init_so_lapw
@@ -465,7 +481,7 @@ cd ../../
 ######################################################################################
 Tutorial_10 () {
 echo "Running test 10"
-cd tutorial1/lambda1
+cd tutorial1/lambda1 || return
 export EDITOR=cat
 init_lapw -b -rkmax 4 -vxc 13 -ecut -6 -numk 100 -sp
 echo -e "Ti 2 0.1 0.0\n" | init_orb_lapw -orb # Ti d U=0.1Ry J=0
@@ -493,7 +509,7 @@ cd ../../
 ######################################################################################
 Tutorial_11 () {
 echo "Running test 11"
-cd tutorial1/lambda1
+cd tutorial1/lambda1 || return
 export EDITOR=cat
 init_lapw -b -rkmax 4 -vxc 13 -ecut -6 -numk 100 -sp
 echo -e "0 0 1\n\n\n\ny\ny\n100\nN\n" | init_so_lapw
@@ -517,7 +533,7 @@ cd ../../
 ######################################################################################
 Tutorial_12 () {
 echo "Running test 12"
-cd tutorial1/lambda1
+cd tutorial1/lambda1 || return
 export EDITOR=cat
 init_lapw -b -rkmax 4 -vxc 13 -ecut -6 -numk 100 -sp
 echo -e "Ti 2 0.1 0.0\n" | init_orb_lapw -orb # Ti d U=0.1Ry J=0
@@ -542,7 +558,7 @@ cd ../../
 ######################################################################################
 Tutorial_101 () {
 echo "Running test 101"
-cd tutorial5
+cd tutorial5 || return
 export EDITOR=cat
 cp TaAs.struct tutorial5.struct
 init_lapw -b -rkmax 7 -vxc 13 -ecut -6 -numk 300
@@ -561,20 +577,20 @@ cd ../
 ######################################################################################
 Tutorial_102 () {
 echo "Running test 102"
-cd tutorial5
+cd tutorial5 || return
 export EDITOR=cat
 cp TaAs.struct tutorial5.struct
 init_lapw -b -rkmax 7 -vxc 13 -ecut -6 -numk 300
 echo -e "0 0 1\n\n\n\nN\n" | init_so_lapw
 run_lapw -so -ec 0.0001 -cc 0.001
-echo "5" > Wloop.in
-echo "1:84" >> Wloop.in
-echo "&WloopCoordinate" >> Wloop.in
-echo "0.2500 0.0000 1.0000 ; 0.2500 0.0000 0.0000" >> Wloop.in
-echo "0.3000 0.0000 1.0000 ; 0.3000 0.0000 0.0000" >> Wloop.in
-echo "0.2800 0.1500 1.0000 ; 0.2800 0.1500 0.0000" >> Wloop.in
-echo "END" >> Wloop.in
-python ${WIENROOT}/SRC_BerryPI/BerryPI/WloopPHI.py Wloop.in
+echo "5
+1:84
+&WloopCoordinate
+0.2500 0.0000 1.0000 ; 0.2500 0.0000 0.0000
+0.3000 0.0000 1.0000 ; 0.3000 0.0000 0.0000
+0.2800 0.1500 1.0000 ; 0.2800 0.1500 0.0000
+END" > Wloop.in
+python "${WIENROOT}"/SRC_BerryPI/BerryPI/WloopPHI.py Wloop.in
 cat PHI.dat
 echo "EXPECTED OUTPUT:
 # Loop (z)       BerryPhase(BP)   BP(-/+pi wrap)   BP(unwrap)
@@ -588,11 +604,58 @@ cd ../
 }
 
 ######################################################################################
+# TaAs: Weyl point charge (Wloop)
+######################################################################################
+Tutorial_103 () {
+echo "Running test 103"
+cd tutorial6 || return
+export EDITOR=cat
+cp Te.struct tutorial6.struct
+init_lapw -b -rkmax 7 -vxc 13 -ecut -6 -numk 500
+echo -e "0 0 1\n\n\n\nN\n" | init_so_lapw
+run_lapw -so -ec 0.0001 -cc 0.001
+echo "31
+1:39
+&WloopCoordinate
+0.10000 0.00000 -0.15000 ; 0.10000 0.00000 0.15000
+0.09239 0.03827 -0.15000 ; 0.09239 0.03827 0.15000
+0.07071 0.07071 -0.15000 ; 0.07071 0.07071 0.15000
+0.03827 0.09239 -0.15000 ; 0.03827 0.09239 0.15000
+0.00000 0.10000 -0.15000 ; 0.00000 0.10000 0.15000
+-0.03827 0.09239 -0.15000 ; -0.03827 0.09239 0.15000
+-0.07071 0.07071 -0.15000 ; -0.07071 0.07071 0.15000
+-0.09239 0.03827 -0.15000 ; -0.09239 0.03827 0.15000
+-0.10000 0.00000 -0.15000 ; -0.10000 0.00000 0.15000
+-0.09239 -0.03827 -0.15000 ; -0.09239 -0.03827 0.15000
+-0.07071 -0.07071 -0.15000 ; -0.07071 -0.07071 0.15000
+-0.03827 -0.09239 -0.15000 ; -0.03827 -0.09239 0.15000
+-0.00000 -0.10000 -0.15000 ; -0.00000 -0.10000 0.15000
+0.03827 -0.09239 -0.15000 ; 0.03827 -0.09239 0.15000
+0.07071 -0.07071 -0.15000 ; 0.07071 -0.07071 0.15000
+0.09239 -0.03827 -0.15000 ; 0.09239 -0.03827 0.15000
+END" > Wloop.in
+python "${WIENROOT}"/SRC_BerryPI/BerryPI/WloopPHI.py Wloop.in
+head PHI.dat
+echo "EXPECTED OUTPUT:
+# Loop (z)       BerryPhase(BP)   BP(-/+pi wrap)   BP(unwrap)/2pi
+-0.15000          -7.23112          -0.94794          -0.15087
+-0.14000          5.20487          -1.07831          -0.17162
+-0.13000          11.32915          -1.23722          -0.19691
+-0.12000          4.85522          -1.42797          -0.22727
+-0.11000          -1.65461          -1.65461          -0.26334
+-0.10000          -8.20733          -1.92415          -0.30624
+-0.09000          -2.24443          -2.24443          -0.35721
+-0.08000          3.65709          -2.62609          -0.41796
+-0.07000          -9.36478          -3.08159          -0.49045"
+cd ../
+}
+
+######################################################################################
 # BaTiO3 tutorial 1 (parallel)
 ######################################################################################
 Tutorial_13 () {
 echo "Running test 13"
-cd tutorial1/lambda1
+cd tutorial1/lambda1 || return
 echo "1:localhost" > .machines
 echo "1:localhost" >> .machines
 init_lapw -b -rkmax 4 -vxc 13 -ecut -6 -numk 100
@@ -616,7 +679,7 @@ cd ../../
 ######################################################################################
 Tutorial_14 () {
 echo "Running test 14"
-cd tutorial1/lambda1
+cd tutorial1/lambda1 || return
 echo "1:localhost" > .machines
 echo "1:localhost" >> .machines
 init_lapw -b -rkmax 4 -vxc 13 -ecut -6 -numk 100 -sp
@@ -644,7 +707,7 @@ cd ../../
 ######################################################################################
 Tutorial_15 () {
 echo "Running test 15"
-cd tutorial1/lambda1
+cd tutorial1/lambda1 || return
 echo "1:localhost" > .machines
 echo "1:localhost" >> .machines
 export EDITOR=cat
@@ -670,7 +733,7 @@ cd ../../
 ######################################################################################
 Tutorial_16 () {
 echo "Running test 16"
-cd tutorial1/lambda1
+cd tutorial1/lambda1 || return
 echo "1:localhost" > .machines
 echo "1:localhost" >> .machines
 export EDITOR=cat
@@ -700,7 +763,7 @@ cd ../../
 ######################################################################################
 Tutorial_17 () {
 echo "Running test 17"
-cd tutorial1/lambda1
+cd tutorial1/lambda1 || return
 echo "1:localhost" > .machines
 echo "1:localhost" >> .machines
 export EDITOR=cat
@@ -726,7 +789,7 @@ cd ../../
 ######################################################################################
 Tutorial_18 () {
 echo "Running test 18"
-cd tutorial1/lambda1
+cd tutorial1/lambda1 || return
 echo "1:localhost" > .machines
 echo "1:localhost" >> .machines
 export EDITOR=cat
@@ -753,7 +816,7 @@ cd ../../
 ######################################################################################
 Tutorial_19 () {
 echo "Running test 19"
-cd tutorial1/lambda1
+cd tutorial1/lambda1 || return
 echo "1:localhost" > .machines
 echo "1:localhost" >> .machines
 export EDITOR=cat
@@ -783,7 +846,7 @@ cd ../../
 ######################################################################################
 Tutorial_20 () {
 echo "Running test 20"
-cd tutorial1/lambda1
+cd tutorial1/lambda1 || return
 echo "1:localhost" > .machines
 echo "1:localhost" >> .machines
 export EDITOR=cat
