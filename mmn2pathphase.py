@@ -198,7 +198,7 @@ def main(args):
         direction = direction_args['x']
 
     # Initialize some lists
-    phases = {} # for index k, the phase between k and its neighbour along the specified direction
+    Uphases = {} # for index k, the phase between k and its neighbour along the specified direction
     phase_sums = [] # for index k, the accumulated phase along the path in the specified direction starting at k
 
     # Get k-mesh information from case.win
@@ -237,7 +237,7 @@ def main(args):
         # Is this a pair in one of our paths?
         if (k1, k2, G[0], G[1], G[2]) in nnkpts:
             # Create empty square matrix for the pair
-            pair_matrix = numpy.zeros(shape=(n_energy, n_energy), dtype=complex)
+            Mmn = numpy.zeros(shape=(n_energy, n_energy), dtype=complex)
 
             # Read in the pair matrix
             for a in range(n_energy):
@@ -246,25 +246,21 @@ def main(args):
                     element_value = parse_matrix_element_line(f_mmn.readline())
 
                     # Put value into matrix
-                    pair_matrix[a, b] = element_value
+                    Mmn[a, b] = element_value
 
-            # Determine the phase between the pair from the matrix determinant
-            det_Mmn = numpy.linalg.det(pair_matrix)
-            phases[k1] = numpy.angle(det_Mmn)
+            # Determine the phase between <u(n,k)| and |u(n,k+b)>
+            # Here we implemented an alternative approach based on
+            # a singular value decomposition, which is also 
+            # compatible with Wannier charge centers
+            # (see Sec. IIA in PHYSICAL REVIEW B 89, 115102 (2014))
 
-            if VERBOSE:
-                print("(k1, k2, G)=", k1, k2, G)
-                print("pair_matrix Mmn=", pair_matrix)
-                print("eig(pair_matrix)=", numpy.linalg.eig(pair_matrix)[0])
-                print("det_Mmn=", det_Mmn)
-                print("numpy.angle(det_Mmn)=", numpy.angle(det_Mmn))
-                print('---')
+            # perform a singular value decomposition Mmn = V*S*Wh
+            V, S, Wh = numpy.linalg.svd(Mmn, full_matrices=True)
+            del S # clear matrix that we do not need
+            # identify a unitary rotation matrix U from <u(k)| to |u(k+b)>
+            U = numpy.matmul(V,Wh)
+            Uphases[k1] = U
         else:
-            if VERBOSE:
-                print('Discarding','<',k1,',', k2,'> <', G[0], \
-                    ',', G[1], ',', G[2], '>')
-                print('---')
-
             # Read over and discard the data if it's not a pair of interest
             for a in range(n_energy):
                 for b in range(n_energy):
@@ -273,8 +269,19 @@ def main(args):
     f_mmn.close()
 
     if wCalc:
-        #print("Berry phase along the path (rad) =",phases.values())
-        print("[ BerryPI ]", "Berry phase sum (rad) =", sum(phases.values()))
+        # Evaluate for a closed k path
+        # Lambda = product_i ( U(k_i), U(k_{i+1}) )
+        for i, Ui in Uphases.items(): # loop over all U(k,k+b) matrices on the path
+            if i == 1: # for the 1st k point of the path
+                L = Ui # take Lambda = U
+            else:
+                L = numpy.matmul(L,Ui) # accumulate products
+        leign, vect = numpy.linalg.eig(L)
+        del vect # clear matrix that we do not need
+        # Berry phase psi_n = Im[ln leig_n]
+        psin = numpy.angle(leign)
+        psi = sum(psin)
+        print("[ BerryPI ]", "Berry phase sum (rad) =", psi)
         return
 
 
@@ -286,22 +293,40 @@ def main(args):
         # We'll see if this node is an endpoint. If it is, we'll traverse
         # backwards summing the phase differences until we reach the start
         if k_next is None: # Graph ends at k with no k_next
-            phase_sum = phases[k]
-
-            # Propagate backward through graph, accumulating phase difference
-            # at each pair (this _must_ be acyclic)
+            kpath = [] # initialize a k path
+            kpath.append(k) # add second last k point
+            kpath.append(k_prev)
+            # Propagate backward through graph, accumulating all k points
+            # on the path (this _must_ be acyclic)
             while k_prev:
-                # .. accumulate
-                phase_sum = phase_sum + phases[k_prev]
-
-                # .. move onto the next node
-                k = k_prev
+                #  move onto the next node and accumulate
                 neighbours = neighbour_graph[k_prev]
                 k_prev = neighbours[0]
-
-            # k should be the starting item in the graph.
-            # Record starting k and the accumulated phase
-            phase_sums.append((k, phase_sum))
+                kpath.append(k_prev) # accomulate end -> start
+            kpath = kpath[:-1] # remove last element since it is None
+            kpath.reverse() # reverse order of k points start -> end
+            # Global unitary rotation matrix
+            # Lambda = product_i ( U(k_i), U(k_{i+1}) )
+            print("kpath=",kpath)
+            print("kpath[0]=",kpath[0])
+            L = Uphases[kpath[0]] # first point on the path
+            leign, vect = numpy.linalg.eig(L)
+            psin = numpy.angle(leign)
+            print(kpath[0],psin)
+            if len(kpath) > 1:
+                for ki in kpath[1:]: # loop over all (k,k+b) points on the path
+                    Ui = Uphases[ki]
+                    L = numpy.matmul(L,Ui) # accumulate products
+                    leign, vect = numpy.linalg.eig(L)
+                    psin = numpy.angle(leign)
+                    print(ki,psin)
+            leign, vect = numpy.linalg.eig(L)
+            del vect # clear matrix that we do not need
+            # Berry phase psi_n = Im[ln leig_n]
+            psin = numpy.angle(leign)
+            print('TOT', psin)
+            psi = sum(psin)
+            phase_sums.append((kpath[0], psi))
 
     # Sort accumulated phases by ascending k
     phase_sums.sort(key=lambda x:x[0]) # TODO use sorted
