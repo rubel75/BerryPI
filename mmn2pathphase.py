@@ -271,6 +271,7 @@ def main(args):
     if wCalc:
         # Evaluate for a closed k path
         # Lambda = product_i ( U(k_i), U(k_{i+1}) )
+        testdat = open('test.dat', 'w')
         for i, Ui in Uphases.items(): # loop over all U(k,k+b) matrices on the path
             if i == 1: # for the 1st k point of the path
                 L = Ui # take Lambda = U
@@ -280,12 +281,15 @@ def main(args):
         del vect # clear matrix that we do not need
         # Berry phase psi_n = Im[ln leig_n]
         psin = numpy.angle(leign)
+        testdat.write(f'{psin}\n')
         psi = sum(psin)
         print("[ BerryPI ]", "Berry phase sum (rad) =", psi)
+        testdat.close()
         return
 
 
     # Get the sum of phases for each path
+    testdat = open('test.dat', 'w')
     for k, neighbours in neighbour_graph.items():
         k_prev = neighbours[0]
         k_next = neighbours[1]
@@ -308,26 +312,22 @@ def main(args):
             # Global unitary rotation matrix
             # Lambda = product_i ( U(k_i), U(k_{i+1}) )
             print("kpath=",kpath)
-            print("kpath[0]=",kpath[0])
             L = Uphases[kpath[0]] # first point on the path
-            leign, vect = numpy.linalg.eig(L)
-            psin = numpy.angle(leign)
-            print(kpath[0],psin)
             if len(kpath) > 1:
                 for ki in kpath[1:]: # loop over all (k,k+b) points on the path
                     Ui = Uphases[ki]
                     L = numpy.matmul(L,Ui) # accumulate products
-                    leign, vect = numpy.linalg.eig(L)
-                    psin = numpy.angle(leign)
-                    print(ki,psin)
             leign, vect = numpy.linalg.eig(L)
             del vect # clear matrix that we do not need
             # Berry phase psi_n = Im[ln leig_n]
             psin = numpy.angle(leign)
+            numpy.ndarray.sort(psin)
             print('TOT', psin)
+            numpy.set_printoptions(linewidth=numpy.inf)
+            testdat.write(f'{kpath[0]}, {psin}\n')
             psi = sum(psin)
             phase_sums.append((kpath[0], psi))
-
+    testdat.close()
     # Sort accumulated phases by ascending k
     phase_sums.sort(key=lambda x:x[0]) # TODO use sorted
 
