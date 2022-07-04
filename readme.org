@@ -31,6 +31,13 @@ Version Aug 19, 2020 (new feature: characterization of Weyl semimetals)
 
 *** Screenshots
 
-<img src="https://github.com/spichardo/BerryPI/raw/master/wiki/screenshot-WCC.png" alt="Wannier charge centers" width="676"/>
+Polarization calculation in ferroelectric BaTiO3 (spin-polarized version with an orbital potential is shown):
 
-<img src="https://github.com/spichardo/BerryPI/raw/master/wiki/screenshot-polarization.png" alt="Polarization" width="705"/>
+#+ATTR_HTML: :style margin-left: auto; margin-right: auto;
+[[https://github.com/spichardo/BerryPI/raw/master/wiki/screenshot-polarization.png]]
+
+
+Wannier charge centers in topological insulator Bi2Se3:
+
+#+ATTR_HTML: :style margin-left: auto; margin-right: auto;
+[[https://github.com/spichardo/BerryPI/raw/master/wiki/screenshot-WCC.png]]
