@@ -16,7 +16,6 @@ import os, os.path
 import sys, shutil
 import argparse # parse line arguments
 import subprocess
-from decimal import Decimal
 import numpy # math library
 import re
 import functools # needed for functools.reduce()
@@ -29,6 +28,7 @@ import config; from config import BERRY_DEFAULT_CONSOLE_PREFIX as DEFAULT_PREFIX
 import mmn2pathphase
 import testerror; from testerror import testerror
 import rmerror; from rmerror import rmerror
+from os import environ
 
 
 class Logger(object): # redirect stdout to case.outputberry file and console
@@ -78,7 +78,7 @@ def postProcBerryPhase(configFile, phasesRaw, spCalc):
         file_struct = structName + structFileExtensions['struct'],
         file_inc = structName + structFileExtensions['inc'],
         file_scf = structName + structFileExtensions['scf2'],
-        );
+        )
     finalPolarizationValue = mainCalculation()
     return mainCalculation
         
@@ -101,7 +101,6 @@ def rawBerryPhase(configFile):
         bands = []
     
     #get the starting directory and switch to it
-    oldCurrentWorkingDirectory = os.getcwd()
     newWorkingDirectory = configFile['Structure Path']
     changeToWorkingDirectory(newWorkingDirectory)
 
@@ -121,15 +120,10 @@ def rawBerryPhase(configFile):
     pypath = sys.executable # get that to python
     print(DEFAULT_PREFIX + 'pypath = ' + pypath)
     # check python version
-    if sys.version_info[0] > 2: # major python version 3 is not supported
-        print(DEFAULT_PREFIX + 'WARNING: compatibility with python 3.X was only recently',
-            'implemented. Proceed with caution.')
-    elif sys.version_info[0] == 2 and sys.version_info[1] < 7:
-        print(DEFAULT_PREFIX + 'WARNING: python 2.7.X is recommended' + \
-            'prior versions are not tested')
-    else:
-        print(DEFAULT_PREFIX, 'This python version was tested', \
-            'and should be supported')
+    if sys.version_info[0] <= 2: # major python version 3 is supported
+        print(DEFAULT_PREFIX + 'WARNING: compatibility with python 2.7.X',
+        'is not tested any longer. Most likely it will break :(',
+        'Proceed with caution.')
     print(DEFAULT_PREFIX, 'python major version =', sys.version_info[0])
     print(DEFAULT_PREFIX, 'python minor version =', sys.version_info[1])
     print(DEFAULT_PREFIX, 'python micro version =', sys.version_info[2])
@@ -146,10 +140,9 @@ def rawBerryPhase(configFile):
     # print version
     with open(bppath+'/version.info', 'r') as versionFile: # open version file
         print(DEFAULT_PREFIX + versionFile.read())
-    print(DEFAULT_PREFIX + "Python version: " + sys.version)
     print(DEFAULT_PREFIX + "Numpy version: " + numpy.version.version)
     
-    #check to make sure certain files exist
+    # Make sure certain files (prerequisites) exist
     structureName = configFile['Structure Name']
     print(DEFAULT_PREFIX + "Checking prerequisite files for " + structureName)
     if not wCalc: # any calculation except for Weyl points/Wilson loop
@@ -157,13 +150,13 @@ def rawBerryPhase(configFile):
             'struct' : '.struct',
             'inc' : '.inc'
             }
-    else: # case.scf2 and case.inc files are not needed for Weyl points/Wilson loop
+    else: # case.inc files are not needed for Weyl points/Wilson loop
         structFileExtensions = {
             'struct' : '.struct',
+            'klist' : '.klist'
             }
     for extension in structFileExtensions.values():
         tempFilename = structureName + extension
-        #TODO change to a logging system
         print(DEFAULT_PREFIX + "Checking existance of",tempFilename)
         if not b_PyError.fileExists(tempFilename):
             print( DEFAULT_PREFIX +\
@@ -172,6 +165,70 @@ def rawBerryPhase(configFile):
             exit(2)
         else:
             print(DEFAULT_PREFIX + '-- OK')
+    if pCalc: # parallel calc.
+        tempFilename = '.machines'
+        print(DEFAULT_PREFIX + "Checking existance of",tempFilename)
+        if not b_PyError.fileExists(tempFilename):
+            print( DEFAULT_PREFIX +\
+                "{} does not exist, cannot finish calculation".\
+                format(tempFilename))
+            exit(2)
+        else:
+            print(DEFAULT_PREFIX + '-- OK')
+
+    # Check SCRATCH folder in parallel calculations to make sure that
+    # it is accessible from all nodes
+    if pCalc and (environ.get('SCRATCH') is not None): # parallel calc. and SCRATCH is set
+        print(DEFAULT_PREFIX + "You run parallel calculation with SCRATCH variable set")
+        scratch = environ.get('SCRATCH')
+        print(DEFAULT_PREFIX + f"SCRATCH = {scratch}")
+        abspathscratch = os.path.abspath(scratch)
+        print(DEFAULT_PREFIX + f"The absolute path to SCRATCH is {abspathscratch}")
+        print(DEFAULT_PREFIX + f"The absolute path to case folder is {newWorkingDirectory}")
+        if not(abspathscratch == newWorkingDirectory):
+            print(DEFAULT_PREFIX + "Checking the number of distinct "+\
+                    "hosts in the .machines file")
+            cmd = "grep : .machines | grep -Ev "+\
+                    "'#|omp_|lapw0|lapw2_|dstart|nlvdw|nmr|granular|"+\
+                    "residue|extrafine|balance|lapw2_vector' "+\
+                    "| sed 's/: /:/' | uniq |cut -d: -f2"
+            print(DEFAULT_PREFIX + f"Trying to execute: {cmd}")
+            cmdresult = subprocess.run([cmd], capture_output=True, text=True, shell=True)
+            msgwarn = "WARNING: "+\
+                    "Unable to determine the list of distinct "+\
+                    "hosts in the .machines file. The calculation will proceed, "+\
+                    "but it can fail. If it does, please set SCRATCH to the case "+\
+                    "folder."
+            hostlist = cmdresult.stdout.splitlines() # create list of unique hosts
+            print(DEFAULT_PREFIX +\
+                    f'Your list of unique hosts from .machines file is {hostlist}')
+            numdisthosts = len(hostlist) # number of fosts
+            if cmdresult.returncode == 0:
+                if numdisthosts == 0:
+                    print(DEFAULT_PREFIX + msgwarn)
+                elif numdisthosts == 1:
+                    msg = "The SCRATCH does not point to the case folder. "+\
+                            "But, we should not expect any problems with "+\
+                            "locating parallel vector files for w2w since "+\
+                            "you run calculations on one machine."
+                    print(DEFAULT_PREFIX + msg)
+                elif numdisthosts > 1:
+                    msg = "It seems that you run a parralel calculation using "+\
+                            f"{numdisthosts} distinct hosts {hostlist} "+\
+                            "and your SCRATCH variable does not point to the case "+\
+                            "folder. In this case there will be problems with "+\
+                            "locating parallel vector files for w2w."+\
+                            "Please set SCRATCH to the case folder or "+\
+                            "modify .machines to run all parallel calculations "+\
+                            "on one machine and then rerun BerryPI."
+                    raise RuntimeError(msg)
+            else:
+                print(DEFAULT_PREFIX + msgwarn)
+        else:
+            msg = "The SCRATCH points to the case folder. "+\
+                    "We should not expect any problems with "+\
+                    "locating parallel vector files for w2w."
+            print(DEFAULT_PREFIX + msg)
 
 
     ######################################
@@ -247,7 +304,7 @@ def rawBerryPhase(configFile):
     # get length of k-path (-w option) #
     ####################################
     if wCalc:
-        numKDivisions = [0]*3; # creale list [0,0,0]
+        numKDivisions = [0]*3 # creale list [0,0,0]
         print(DEFAULT_PREFIX + "k-path will be read from case.klist file")
         f = open( str(structureName)+'.klist' , 'r' )
         word = ("END", "end")
@@ -297,7 +354,7 @@ def rawBerryPhase(configFile):
                     'cp',
                     str(structureName) + ext,
                     str(structureName) + ext + spin,
-                    );
+                    )
                 try:
                     shell_pathphase_y_copy()
                 except subprocess.CalledProcessError as err:
@@ -335,7 +392,7 @@ def rawBerryPhase(configFile):
                 suffix = suffix + ' ' + '-orb' # activate OP switch
             shell_x_lapw1 = b_PySubProcess.VirtualShellInstance(
                 'x', 'lapw1', suffix
-                );
+                )
 
             try:
                 shell_x_lapw1()
@@ -449,7 +506,7 @@ def rawBerryPhase(configFile):
                 try:
                     blochBandCalculation = \
                         b_PyCalc.CalculateNumberOfBands(structureName + \
-                        '.scf2' + spin);
+                        '.scf2' + spin)
                 except b_PyError.ParseError as err:
                     print(DEFAULT_PREFIX + "ERROR: in automation of " + \
                         str(structureName))
@@ -459,7 +516,7 @@ def rawBerryPhase(configFile):
                     return False
                 blochBandRange = [ 1 , \
                     int(blochBandCalculation.getNumberOfBands(spCalc,soCalc, \
-                    orbCalc,wCalc)) ];
+                    orbCalc,wCalc)) ]
                 print(DEFAULT_PREFIX + " "*4 + \
                     "Number of bloch bands is {}".format(blochBandRange))
                 blochBandSettings.append(blochBandRange)
@@ -468,7 +525,7 @@ def rawBerryPhase(configFile):
                 "Determine number of bloch bands in non-sp mode")
             try:
                 blochBandCalculation = \
-                    b_PyCalc.CalculateNumberOfBands(structureName + '.scf2');
+                    b_PyCalc.CalculateNumberOfBands(structureName + '.scf2')
                 # it is better to take *.scf2 file instead of
             except b_PyError.ParseError as err:
                 print(DEFAULT_PREFIX + "ERROR: in automation of " + \
@@ -479,7 +536,7 @@ def rawBerryPhase(configFile):
                 return False
             blochBandSettings = [[ 1, \
                 int(blochBandCalculation.getNumberOfBands(spCalc,soCalc, \
-                orbCalc,wCalc)) ]];
+                orbCalc,wCalc)) ]]
             print(DEFAULT_PREFIX + " "*4 + \
                 "Number of bloch bands is {}".format(blochBandSettings))
     else: # the band range is specified
@@ -603,7 +660,7 @@ def rawBerryPhase(configFile):
         # execute win2nnkp.py #
         #######################
         if wCalc:
-            wOption = '-w'
+            wOption = '-w' + ' ' + str(wTranslDir)
         else:
             wOption = ''
         shell_win2nnkp = b_PySubProcess.VirtualShellInstance(
@@ -651,10 +708,10 @@ def rawBerryPhase(configFile):
         rmerror('w2w') # rm error files
         if soCalc: # for spin-orbit call executables directly
             shell_w2w = b_PySubProcess.VirtualShellInstance( \
-                'x w2w -so', spinOption, suffix );
+                'x w2w -so', spinOption, suffix )
         else:
             shell_w2w = b_PySubProcess.VirtualShellInstance( \
-                'x w2w', spinOption, suffix );
+                'x w2w', spinOption, suffix )
         try:
             shell_w2w()
         except subprocess.CalledProcessError as err:
@@ -670,7 +727,7 @@ def rawBerryPhase(configFile):
         ####################
         if soCalc and spinLable=='dn': # spin-orbit last passage
             shell_csf = b_PySubProcess.VirtualShellInstance( \
-                'x w2waddsp' );
+                'x w2waddsp' )
             try:
                 shell_csf()
             except subprocess.CalledProcessError as err:
@@ -678,7 +735,7 @@ def rawBerryPhase(configFile):
                 print(DEFAULT_PREFIX + "ERROR --> " + shell_csf.getCommandString())
                 print(str(err))
                 return False
-        
+
 
         ######################################################
         # Compute Berry phase:                               #
@@ -734,7 +791,7 @@ def rawBerryPhase(configFile):
                     b_PySubProcess.VirtualShellInstance(
                     'rm',
                     str(structureName) + ext + spin,
-                    );
+                    )
                 try:
                     shell_pathphase_y_rm()
                 except subprocess.CalledProcessError as err:
@@ -815,9 +872,20 @@ if __name__ == "__main__":
             'mode (needs .machines file)',\
         action="store_true")
     parser.add_argument("-w",\
-        help="compute Berry phase along a specific (closed loop) k-pathgiven "+\
-            "in the case.klist file (used for topological Weyl semimetals)",\
-        action="store_true")
+        help="compute Berry phase along a specific (closed loop) k-path given "+\
+            "in the case.klist file (used for topological Weyl semimetals "+\
+            "and Wannier charge centers). "+\
+            "First k(1) and last k(n) points in the case.klist file will be "+\
+            "joined to form a closed loop k(1) -> k(2) -> ... -> k(n) -> k(1). "+\
+            "The argument (optional) specifies when a periodic image of k(1) "+\
+            "should be used. For example '-w 2' means the following path: "+\
+            "k(1) -> k(2) -> ... -> k(n) -> k(1)+G[2], where G[2] is the second "+\
+            "reciprocal lattice vector. By default we assume '-w 0', which implies "+\
+            "that no translation is added at the end of the loop.",\
+        nargs='?',\
+        const=0,\
+        choices=[0, 1, 2, 3],\
+        type=int)
     parser.add_argument("-b",\
         help="range of Bloch bands used to construct projections "+\
             "(used for Weil semimetals only in conjunction with -w option)",\
@@ -847,7 +915,7 @@ if __name__ == "__main__":
     spCalc = args.sp  # no spin polarization by default
     orbCalc = args.orb # no additional orbital potential by default
     soCalc = args.so  # no spin-orbit coupling by default
-    wCalc = args.w # no k-path specified by default
+    wTranslDir = args.w # no k-path specified by default
     sp_cCalc = args.sp_c # no constrained spin-polarized by default
     
     # Set default case name and path based on where berrypi is executed
@@ -885,16 +953,28 @@ if __name__ == "__main__":
     else:
         print(DEFAULT_PREFIX+"Only selected range of bands will be used ")
         print(DEFAULT_PREFIX, "bands=", bands)
-    if wCalc:
+    if wTranslDir == None: # -w option not set
+        wCalc = False
+    else:
+        wCalc = True
         print(DEFAULT_PREFIX+"Enable Berry phase calculation along a "+\
             "specific k-path given in the case.klist file. ")
         print(DEFAULT_PREFIX+"Any input of the k-mesh (-k ... option) "+\
             "will be ignored")
+        if wTranslDir == 0:
+            print(DEFAULT_PREFIX+"The first and last k point in "+\
+                "the case.klist file "+\
+                "will be connected to form a closed loop")
+        else:
+            print(DEFAULT_PREFIX+"The first and last k point in "+\
+                "the case.klist file "+\
+                f"will be connected by adding G[{wTranslDir}] reciprocal "+\
+                "lattice vector to form a closed loop.")
         if not(soCalc):
             soCalc = True
             print(DEFAULT_PREFIX+'Spin-orbit coupling is activated '+ \
                 'automatically with -w option')
-
+        
 
     # Check input consistency
     if len(structure_kmesh)!=3:
@@ -913,9 +993,9 @@ if __name__ == "__main__":
         sys.exit(2)
     elif wCalc and bands == None:
         #Band range is not specified for Wilson loop calculation
-        print('ERROR: Wilson loop calculatio requires the band range',\
+        print('ERROR: Wilson loop calculation requires the band range',\
             'to be specified')
-        print('Suggested execution: berrypi -so -w -b XX YY')
+        print('Suggested execution: berrypi -so -w [W] -b XX YY')
         sys.exit(2)
     if bands != None and len(bands)!=2:
         #Makes sure that the band range length of the tuple is 2

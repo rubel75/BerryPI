@@ -2,7 +2,7 @@ BerryPI is a software for the calculation of Berry phase and related properties 
 
 *** Current Version and past milestones
 
-Version Jun 2, 2022
+Version July 4, 2022 (added Wannier charge centers for characterization of topological materials and improved handling of SCRATCH for parallel calculations)
 
 Version Jan 15, 2021 (args synced with WIEN2k; added two alternative pi-wrappings)
 
@@ -28,3 +28,9 @@ Version Aug 19, 2020 (new feature: characterization of Weyl semimetals)
 - [[https://github.com/spichardo/BerryPI/wiki/Tutorial-4:-Polarization-in-GaN][Tutorial 4 - Polarization in wurtzite GaN]]
 - [[https://github.com/spichardo/BerryPI/wiki/Tutorial-5:-Weyl-points-characterization-in-TaAs][Tutorial 5 - Weyl points characterization in TaAs (chirality 1)]]
 - [[https://github.com/spichardo/BerryPI/wiki/Tutorial-6:-Weyl-point-characterization-in-Te][Tutorial 6 - Weyl point characterization in Te (chirality 3)]]
+
+*** Screenshots
+
+<img src="https://github.com/spichardo/BerryPI/raw/master/wiki/screenshot-WCC.png" alt="Wannier charge centers" width="676"/>
+
+<img src="https://github.com/spichardo/BerryPI/raw/master/wiki/screenshot-polarization.png" alt="Polarization" width="705"/>

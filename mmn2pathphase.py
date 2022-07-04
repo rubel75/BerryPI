@@ -198,7 +198,7 @@ def main(args):
         direction = direction_args['x']
 
     # Initialize some lists
-    Uphases = {} # for index k, the phase between k and its neighbour along the specified direction
+    Mmn = {} # for index k, the phase between k and its neighbour along the specified direction
     phase_sums = [] # for index k, the accumulated phase along the path in the specified direction starting at k
 
     # Get k-mesh information from case.win
@@ -233,12 +233,10 @@ def main(args):
     for i in range(n_pairs * n_neighbours):
         # Read pair info line
         k1, k2, G = parse_pair_info_line(f_mmn.readline())
-
         # Is this a pair in one of our paths?
         if (k1, k2, G[0], G[1], G[2]) in nnkpts:
             # Create empty square matrix for the pair
-            Mmn = numpy.zeros(shape=(n_energy, n_energy), dtype=complex)
-
+            Mmnk1k2 = numpy.zeros(shape=(n_energy, n_energy), dtype=complex)
             # Read in the pair matrix
             for a in range(n_energy):
                 for b in range(n_energy):
@@ -246,20 +244,9 @@ def main(args):
                     element_value = parse_matrix_element_line(f_mmn.readline())
 
                     # Put value into matrix
-                    Mmn[a, b] = element_value
+                    Mmnk1k2[b, a] = element_value # OR: corrected [a,b] -> [b,a]
 
-            # Determine the phase between <u(n,k)| and |u(n,k+b)>
-            # Here we implemented an alternative approach based on
-            # a singular value decomposition, which is also 
-            # compatible with Wannier charge centers
-            # (see Sec. IIA in PHYSICAL REVIEW B 89, 115102 (2014))
-
-            # perform a singular value decomposition Mmn = V*S*Wh
-            V, S, Wh = numpy.linalg.svd(Mmn, full_matrices=True)
-            del S # clear matrix that we do not need
-            # identify a unitary rotation matrix U from <u(k)| to |u(k+b)>
-            U = numpy.matmul(V,Wh)
-            Uphases[k1] = U
+            Mmn[k1] = Mmnk1k2
         else:
             # Read over and discard the data if it's not a pair of interest
             for a in range(n_energy):
@@ -269,22 +256,26 @@ def main(args):
     f_mmn.close()
 
     if wCalc:
-        # Evaluate for a closed k path
-        # Lambda = product_i ( U(k_i), U(k_{i+1}) )
-        testdat = open('test.dat', 'w')
-        for i, Ui in Uphases.items(): # loop over all U(k,k+b) matrices on the path
+        # Evaluate a cumulatuve matrix product for a closed k path
+        # Lambda = product_i ( Mmn(k_i), Mmn(k_{i+1}) )
+        for i, Mmni in Mmn.items(): # loop over all U(k,k+b) matrices on the path
+            i = int(i)
             if i == 1: # for the 1st k point of the path
-                L = Ui # take Lambda = U
+                L = Mmni # take Lambda = Mmn[k1,k2]
             else:
-                L = numpy.matmul(L,Ui) # accumulate products
+                L = numpy.matmul(L,Mmni) # accumulate products
         leign, vect = numpy.linalg.eig(L)
         del vect # clear matrix that we do not need
         # Berry phase psi_n = Im[ln leig_n]
-        psin = numpy.angle(leign)
-        testdat.write(f'{psin}\n')
+        wcc = numpy.array([numpy.angle(z) / (2 * numpy.pi) % 1 for z in leign])
+        idx = numpy.argsort(wcc) # sort eigenvalues
+        wcc = wcc[idx]
+        numpy.set_printoptions(linewidth=numpy.inf)
+        numpy.savetxt('wcc_i.csv', [wcc],\
+            delimiter=',', footer='', comments='',fmt='%f') # neew [..] to get in one line (not columns)
+        psin = wcc * 2 * numpy.pi
         psi = sum(psin)
         print("[ BerryPI ]", "Berry phase sum (rad) =", psi)
-        testdat.close()
         return
 
 
@@ -311,20 +302,15 @@ def main(args):
             kpath.reverse() # reverse order of k points start -> end
             # Global unitary rotation matrix
             # Lambda = product_i ( U(k_i), U(k_{i+1}) )
-            print("kpath=",kpath)
-            L = Uphases[kpath[0]] # first point on the path
+            L = Mmn[kpath[0]] # first point on the path
             if len(kpath) > 1:
                 for ki in kpath[1:]: # loop over all (k,k+b) points on the path
-                    Ui = Uphases[ki]
-                    L = numpy.matmul(L,Ui) # accumulate products
+                    Mmni = Mmn[ki]
+                    L = numpy.matmul(L,Mmni) # accumulate products
             leign, vect = numpy.linalg.eig(L)
             del vect # clear matrix that we do not need
             # Berry phase psi_n = Im[ln leig_n]
-            psin = numpy.angle(leign)
-            numpy.ndarray.sort(psin)
-            print('TOT', psin)
-            numpy.set_printoptions(linewidth=numpy.inf)
-            testdat.write(f'{kpath[0]}, {psin}\n')
+            psin = numpy.array([numpy.angle(z)  % (2 * numpy.pi) for z in leign])
             psi = sum(psin)
             phase_sums.append((kpath[0], psi))
     testdat.close()
