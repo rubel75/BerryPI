@@ -23,8 +23,9 @@ def user_input():
     kfix = 0.0 # in fraction of reciprocal lattice vectors G[kfixdir]
     bands = [61, 78]
     parallel = True # parallel option [-p] in BerryPI (needs a proper .machines file)
+    spinpolar = False # [-sp] in BerryPI
 
-    return kscandir, kscan, nkscan, kwlsndir, nkwlsn, kfix, bands, parallel
+    return kscandir, kscan, nkscan, kwlsndir, nkwlsn, kfix, bands, parallel, spinpolar
 
 def preliminary():
     if os.environ.get('WIENROOT')==None:
@@ -123,7 +124,8 @@ Questions and comments are to be communicated via the WIEN2k mailing list
 # MAIN
 if __name__=="__main__":
     # Set user parameters
-    kscandir, kscan, nkscan, kwlsndir, nkwlsn, kfix, bands, parallel = user_input()
+    kscandir, kscan, nkscan, kwlsndir, nkwlsn, kfix,\
+            bands, parallel, spinpolar = user_input()
     # Check input
     if not(kscandir in [1, 2, 3]):
         raise ValueError(f'kscandir={kscandir}, while expected one of [1,2,3]')
@@ -151,6 +153,10 @@ if __name__=="__main__":
         poption = '-p'
     else:
         poption = ''
+    if spinpolar:
+        spoption = '-sp'
+    else:
+        spoption = ''
     # Print input
     prolog() # print some info for the user
     print("User input:")
@@ -158,7 +164,11 @@ if __name__=="__main__":
     print(f'kscan range={kscan} with {nkscan} intervals')
     print(f'Wilson loop will use {nkwlsn} intervals')
     print(f'Band range from {bands[0]} to {bands[1]}')
-    k = [0,0,0] # init k plane
+    if parallel:
+        print('Parallel option [-p] will be used in BerryPI call')
+    else:
+        print('Parallel option [-p] will not be used in BerryPI call')
+    k = [0,0,0] # init k plane list
     k[kfixdir-1] = kfix
     k[kscandir-1] = 'var scan'
     k[kwlsndir-1] = 'var Wloop'
@@ -202,13 +212,14 @@ if __name__=="__main__":
         np.savetxt(KlistFileName, klist, fmt="          %10i%10i%10i%10i%5.1f", 
                 delimiter='', footer='END', comments='')
         # run BerryPI
-        proc = subprocess.Popen("python $WIENROOT/SRC_BerryPI/BerryPI/berrypi -so -b %i %i %s -w %i"\
-                %(bands[0], bands[1], poption, kwlsndir), shell=True, stdout=subprocess.PIPE, \
+        proc = subprocess.Popen("python $WIENROOT/SRC_BerryPI/BerryPI/berrypi -so %s -b %i %i %s -w %i"\
+                %(spoption, bands[0], bands[1], poption, kwlsndir), shell=True, stdout=subprocess.PIPE, \
                 stderr=subprocess.PIPE)
         proc.wait()
         (stdout, stderr) = proc.communicate()
         if proc.returncode != 0:
-            print(stderr.decode()) # need decode to deal with b'...' string
+            print(stdout.decode()) # need decode to deal with b'...' string
+            print(stderr.decode())
             msg = "Error while executing BerryPI, exiting"
             raise RuntimeError(msg)
         else:
