@@ -11,8 +11,6 @@ Results are tabulated in the 'wcc.csv' file.
 
 import subprocess
 import os
-import sys
-from typing import List, Type
 import numpy as np
 
 def user_input():
@@ -177,11 +175,11 @@ if __name__=="__main__":
     reslt_file.close()
     # MAIN LOOP
     klistsize = (nkwlsn,3) # klist array dimension
-    # Data = [] # to store Berry phase on each loop
+    Data = [] # to store Berry phase on each loop
     ikscan = -1 # init. counter
     for kscani in np.linspace(start=kscan[0], stop=kscan[1], num=nkscan):
         ikscan += 1
-        print(f'kscani = {kscani} ({ikscan+1} of {nkscan})')
+        print(f'kscani = {kscani:.3f} ({ikscan+1} of {nkscan})')
         klist = np.zeros(klistsize)
         ikwlsn = -1 # init. counter
         for kwlsni in np.linspace(start=0, stop=1-1/nkwlsn, num=nkwlsn):
@@ -223,22 +221,44 @@ if __name__=="__main__":
             print(stderr.decode()) # need decode to deal with b'...' string
             msg = "Error while executing concatenate and sed command, exiting"
             raise RuntimeError(msg)
-        # get output Berry phase for each Wilson loop (currently not used)
-        # berrypiOutFileName = str("%s.outputberry" %(str(WorkingDir.split('/')[-1])))
-        # with open(berrypiOutFileName, 'r') as read_file:
-        #     for line in read_file:
-        #         if "Berry phase sum (rad) =" in line:
-        #             #return line
-        #             content = line
-        #             #print (content)
+        # get output Berry phase for each Wilson loop
+        berrypiOutFileName = str("%s.outputberry" %(str(WorkingDir.split('/')[-1])))
+        with open(berrypiOutFileName, 'r') as read_file:
+            for line in read_file:
+                if "Berry phase sum (rad) =" in line:
+                    #return line
+                    content = line
+                    break
 
-        # temp = float(content.split()[-1])
-        # temp1 = temp % (2 * np.pi)  # 2 pi wraping  
-        # temp = np.array([kscani, temp, temp1])
-        # Data.append(temp)
+        temp1 = float(content.split()[-1])
+        temp2 = temp1 % (2 * np.pi)  # 2 pi wraping  
+        temp = np.array([kscani, temp1, temp2])
+        Data.append(temp)
     # END MAIN LOOP
 
-    # Data = np.array(Data)
-    # print(Data)
+    Data = np.array(Data)
+    phases = Data[:,2]
+    phases = np.unwrap(phases)
+    Data[:,2] = phases
+    print(f'Total Berry phase on each Wislon loop for bands {bands[0]}-{bands[1]}:')
+    print('-'*54)
+    print(' i           k            Phase wrap.    Phase unwrap.')
+    print('                            (rad)           (rad)')
+    print('-'*54)
+    rows, columns = Data.shape
+    leni = len(str(rows)) # dind number of characters
+    ki = [0, 0, 0]
+    for i in range(rows):
+        ki[kfixdir-1] = f'{kfix:.3f}'
+        ki[kscandir-1] = f'{Data[i,0]:.3f}'
+        ki[kwlsndir-1] = '***'
+        kitext = f'[{ki[0]}, {ki[1]}, {ki[2]}]'
+        warn = ''
+        if (i > 0) and (abs(Data[i,2]-Data[i-1,2]) > np.pi/4):
+            warn = '  WARNING: cannot obtain smooth pase evolution'
+        print(f'{i+1:{leni}d}  {kitext}     {Data[i,1]:.3f}        {Data[i,2]:8.3f}{warn}')
+    print('-'*54)
+    print('Here "***" refer to the direction of the Wilson loop.')
+
     subprocess.call("rm -f %s"%("wcc_i.csv"), shell=True) # clean temp file
     epilog() # print concluding remarks
