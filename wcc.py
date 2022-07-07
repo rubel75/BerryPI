@@ -22,8 +22,9 @@ def user_input():
     nkwlsn = 10 # descretization intervals
     kfix = 0.0 # in fraction of reciprocal lattice vectors G[kfixdir]
     bands = [61, 78]
+    parallel = True # parallel option [-p] in BerryPI (needs a proper .machines file)
 
-    return kscandir, kscan, nkscan, kwlsndir, nkwlsn, kfix, bands
+    return kscandir, kscan, nkscan, kwlsndir, nkwlsn, kfix, bands, parallel
 
 def preliminary():
     if os.environ.get('WIENROOT')==None:
@@ -122,7 +123,7 @@ Questions and comments are to be communicated via the WIEN2k mailing list
 # MAIN
 if __name__=="__main__":
     # Set user parameters
-    kscandir, kscan, nkscan, kwlsndir, nkwlsn, kfix, bands = user_input()
+    kscandir, kscan, nkscan, kwlsndir, nkwlsn, kfix, bands, parallel = user_input()
     # Check input
     if not(kscandir in [1, 2, 3]):
         raise ValueError(f'kscandir={kscandir}, while expected one of [1,2,3]')
@@ -146,6 +147,10 @@ if __name__=="__main__":
     kfixdir = set([1,2,3])-set([kscandir,kwlsndir])
     kfixdir = list(kfixdir)
     kfixdir = kfixdir[0]
+    if parallel:
+        poption = '-p'
+    else:
+        poption = ''
     # Print input
     prolog() # print some info for the user
     print("User input:")
@@ -198,7 +203,7 @@ if __name__=="__main__":
                 delimiter='', footer='END', comments='')
         # run BerryPI
         proc = subprocess.Popen("python $WIENROOT/SRC_BerryPI/BerryPI/berrypi -so -b %i %i %s -w %i"\
-                %(bands[0], bands[1], "-p", kwlsndir), shell=True, stdout=subprocess.PIPE, \
+                %(bands[0], bands[1], poption, kwlsndir), shell=True, stdout=subprocess.PIPE, \
                 stderr=subprocess.PIPE)
         proc.wait()
         (stdout, stderr) = proc.communicate()
