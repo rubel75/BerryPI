@@ -2,7 +2,7 @@ BerryPI is a software for the calculation of Berry phase and related properties 
 
 *** Current Version and past milestones
 
-Version July 7, 2022
+Version July 28, 2022 (added Chern number and Berry flux map calculation)
 
 Version July 4, 2022 (added Wannier charge centers for characterization of topological materials and improved handling of SCRATCH for parallel calculations)
 
