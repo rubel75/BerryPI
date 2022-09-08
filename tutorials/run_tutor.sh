@@ -9,6 +9,12 @@
 # Developed by Anton Bokhanchuk
 # revised and expanded by Oleg Rubel
 
+# Check if the WIEN2k env. variable is set
+if [[ -z "${WIENROOT}" ]]; then
+	echo "Error: WIENROOT env variable is not set." 1>&2
+	exit 1
+fi
+
 clear
 echo "######################################################"
 echo "Type the test number and press ENTER to run that test:"
@@ -16,31 +22,32 @@ echo "1 - Tutorial 1: Lambda1 and Lambda0"
 echo "2 - Tutorial 2: Lambda1 and Lambda2"
 echo "3 - Tutorial 3: GaAs1 and GaAs2"
 echo "4 - Tutorial 4: GaN-W and GaN-ZB"
-echo "5 - All Tests (7-20, 101-103)"
+echo "5 - All Tests (7-20, 101-104)"
 echo "6 - Clean All"
 echo ""
 echo "T E S T S (serial):"
-echo "7 - Test BaTiO3: Lambda1"
-echo "8 - Test BaTiO3: Lambda1 (-sp) spin polarization"
-echo "9 - Test BaTiO3: Lambda1 (-so) spin orbit"
-echo "10 - Test BaTiO3: Lambda1 (-orb) orb. potential + U=0.1 Ry (spin polarization implied)"
-echo "11 - Test BaTiO3: Lambda1 (-sp -so) spin polarization & SOC"
-echo "12 - Test BaTiO3: Lambda1 (-orb -so) SOC & orb. potential + U=0.1 Ry (spin polarization implied)"
+echo "  7 - Test BaTiO3: Lambda1"
+echo "  8 - Test BaTiO3: Lambda1 (-sp) spin polarization"
+echo "  9 - Test BaTiO3: Lambda1 (-so) spin orbit"
+echo " 10 - Test BaTiO3: Lambda1 (-orb) orb. potential + U=0.1 Ry (spin polarization implied)"
+echo " 11 - Test BaTiO3: Lambda1 (-sp -so) spin polarization & SOC"
+echo " 12 - Test BaTiO3: Lambda1 (-orb -so) SOC & orb. potential + U=0.1 Ry (spin polarization implied)"
 echo "101 - Test TaAs: Weyl point chirality (single Wilson loop)"
 echo "102 - Test TaAs: Weyl point chirality (series of Wilson loops via WloopPHI.py)"
 echo "103 - Test Te: Weyl point chirality greater than 1"
 echo ""
 echo "T E S T S (parallel):"
-echo "13 - Test BaTiO3: Lambda1 (-p) spin polarization (parallel 2 cores)"
-echo "14 - Test BaTiO3: Lambda1 (-sp -p) spin polarization (parallel 2 cores)"
-echo "15 - Test BaTiO3: Lambda1 (-so) spin orbit (parallel 2 cores)"
-echo "16 - Test BaTiO3: Lambda1 (-orb) orb. potential + U=0.1 Ry (spin polarization implied) (parallel 2 cores)"
-echo "17 - Test BaTiO3: Lambda1 (-sp -so) spin polarization & SOC (parallel 2 cores)"
-echo "18 - Test BaTiO3: Lambda1 (-orb -so) SOC & orb. potential + U=0.1 Ry (spin polarization implied) (parallel 2 cores)"
-echo "19 - Test BaTiO3: Lambda1 (-sp_c) spin polar. constrained (non-magnetic, up=dn) (parallel 2 cores)"
-echo "20 - Test BaTiO3: Lambda1 (-sp_c -orb) spin polar. constrained (non-magnetic, up=dn) + orb. potential + U=0.1 Ry (parallel 2 cores)"
+echo " 13 - Test BaTiO3: Lambda1 (-p) spin polarization (parallel 2 cores)"
+echo " 14 - Test BaTiO3: Lambda1 (-sp -p) spin polarization (parallel 2 cores)"
+echo " 15 - Test BaTiO3: Lambda1 (-so) spin orbit (parallel 2 cores)"
+echo " 16 - Test BaTiO3: Lambda1 (-orb) orb. potential + U=0.1 Ry (spin polarization implied) (parallel 2 cores)"
+echo " 17 - Test BaTiO3: Lambda1 (-sp -so) spin polarization & SOC (parallel 2 cores)"
+echo " 18 - Test BaTiO3: Lambda1 (-orb -so) SOC & orb. potential + U=0.1 Ry (spin polarization implied) (parallel 2 cores)"
+echo " 19 - Test BaTiO3: Lambda1 (-sp_c) spin polar. constrained (non-magnetic, up=dn) (parallel 2 cores)"
+echo " 20 - Test BaTiO3: Lambda1 (-sp_c -orb) spin polar. constrained (non-magnetic, up=dn) + orb. potential + U=0.1 Ry (parallel 2 cores)"
+echo "104 - Test Bi2Se3: Wannier charge centers (parallel 2 cores)"
 echo "######################################################"
-read choice
+read -r choice
 
 menu() {
 
@@ -98,8 +105,11 @@ case "$choice" in
       Tutorial_101
       CleanTut_5
       Tutorial_102
-	  CleanTut_6
+	  CleanTut_5
       Tutorial_103
+	  CleanTut_6
+	  Tutorial_104
+	  CleanTut_7
 	  ;;
 	6)
 	  echo "Cleaning up all files"
@@ -109,6 +119,7 @@ case "$choice" in
 	  CleanTut_4
       CleanTut_5
 	  CleanTut_6
+	  CleanTut_7
 	  rm -rf *.out
 	  ;;
 	7)
@@ -146,6 +157,10 @@ case "$choice" in
 	103)
 	CleanTut_6
 	Tutorial_103
+	;;
+	104)
+	CleanTut_7
+	Tutorial_104
 	;;
     13)
       CleanTut_1
@@ -242,6 +257,14 @@ CleanTut_6 () {
     ls -1a | grep -v -e 'Te.struct$' -e 'Te.klist_band$' -e 'readme.txt$' -e '^\.$' -e '^\.\.$' | xargs rm -f # remove all files/dir except "Te.struct", "Te.klist_band", and "readme.txt"
 	cd ../
 	echo "dir tutorial6: All files but Te.struct, Te.klist_band, and readme.txt were removed!"
+}
+
+CleanTut_7 () {
+	cd tutorial7 || return
+    echo "$PWD"
+    ls -1a | grep -v -e 'Bi2Se3.struct$' -e '^\.$' -e '^\.\.$' | xargs rm -f # remove all files/dir except "Bi2Se3.struct"
+	cd ../
+	echo "dir tutorial7: All files but Bi2Se3.struct were removed!"
 }
 
 Tutorial_1 () {
@@ -870,6 +893,35 @@ Tot. spin polariz.=Pion+Pel (C/m2) sp(2)  [ 2.247081e-15,  6.592793e-14,  1.4856
 TOTAL POLARIZATION (C/m2)          both   [ 4.494161e-15,  1.318559e-13,  2.971269e-01]
 ======================================================================================="
 cd ../../
+}
+
+######################################################################################
+# TaAs: Weyl point charge (Wloop)
+######################################################################################
+Tutorial_104 () {
+echo "Running test 104"
+cd tutorial7 || return
+echo "1:localhost" > .machines
+echo "1:localhost" >> .machines
+export EDITOR=cat
+cp Bi2Se3.struct tutorial7.struct
+init_lapw -b -rkmax 7 -vxc 13 -ecut -6 -numk 300
+echo -e "0 0 1\n\n\n\nN\n" | init_so_lapw
+run_lapw -so -ec 0.0001 -cc 0.001 -p
+python "${WIENROOT}"/SRC_BerryPI/BerryPI/wcc.py
+head wcc.csv
+echo "EXPECTED OUTPUT:
+#k values are fractional coordinates in direction of the reciprocal lattice vector G[2]
+#WCC are evaluated on a closed Wilson loop in direction of the reciprocal lattice vector G[3]
+#k,WCC 1,WCC 2,WCC 3,WCC 4,WCC 5,WCC 6,WCC 7,WCC 8,WCC 9,WCC 10,WCC 11,WCC 12,WCC 13,WCC 14,WCC 15,WCC 16,WCC 17,WCC 18
+0.000000,0.000000,0.000000,0.077516,0.077516,0.204029,0.204029,0.296975,0.296975,0.500000,0.500000,0.703025,0.703025,0.795971,0.795971,0.922484,0.922484,1.000000,1.000000
+0.026316,0.004633,0.004806,0.075260,0.078090,0.146494,0.232747,0.291281,0.308264,0.380144,0.619856,0.691736,0.708719,0.767253,0.853506,0.921910,0.924740,0.995194,0.995367
+0.052632,0.005976,0.013377,0.061909,0.079681,0.094741,0.246159,0.289131,0.320343,0.340872,0.659128,0.679657,0.710869,0.753841,0.905259,0.920319,0.938091,0.986623,0.994024
+0.078947,0.007870,0.020793,0.046057,0.078575,0.087647,0.251658,0.288679,0.327255,0.330569,0.669431,0.672745,0.711321,0.748342,0.912353,0.921425,0.953943,0.979207,0.992130
+0.105263,0.008491,0.023705,0.036344,0.076378,0.086030,0.257531,0.288553,0.326989,0.330617,0.669383,0.673011,0.711447,0.742469,0.913970,0.923622,0.963656,0.976295,0.991509
+0.131579,0.008149,0.023272,0.029263,0.074446,0.085227,0.264484,0.288287,0.328099,0.332270,0.667730,0.671901,0.711713,0.735516,0.914773,0.925554,0.970737,0.976728,0.991851
+0.157895,0.007382,0.021581,0.023879,0.072575,0.084534,0.271165,0.287906,0.331199,0.334152,0.665848,0.668801,0.712094,0.728835,0.915466,0.927425,0.976121,0.978419,0.992618"
+cd ../
 }
 
 
