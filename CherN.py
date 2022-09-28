@@ -17,16 +17,18 @@ Results are stored in the 'berryflux.dat' file.
  
 def user_input():
     """User input section"""
-    i_band = 1    # Inferior band (starts from 1)
-    s_band = 130   # Superior band (must be => to i_band)
-    n = 15 # Discretization of brillouin zone by (n-1)x(n-1) loops. 
-    plane_dir = 3   # Direction normal to the plane  (1 or 2 or 3)
-    plane_value = 0.0 # Value of the constant plane 
-    boundary = [-0.5,0.5,-0.5,0.5] #Boundary selection: ex if plane_dir = 3 -> [1min,1max,2min,2max]
-    parallel = True  # parallel option [-p] in BerryPI (needs a proper .machines file)
-    spinpolar = True # spin polarized [-sp] in BerryPI
-    name = "" #Optional (if left as "" the name of the working directory by default)
-    return i_band,s_band,n,plane_dir,plane_value,parallel,spinpolar,boundary,name
+    i_band = 1    # inferior band (starts from 1)
+    s_band = 1   # superior band (must be => to i_band)
+    n = 1     # discretization of brillouin zone by (n-1)x(n-1) loops. 
+    plane_dir = 3   # direction normal to the plane  (1 or 2 or 3)
+    plane_value = 0.0 # value of the constant plane 
+    boundary = [0,1.0,0,1.0] #boundary selection: ex if plane_dir = 3 -> [1min,1max,2min,2max]
+    parallel = False  # parallel option [-p] in BerryPI (needs a proper .machines file)
+    spinpolar = False # spin polarized [-sp] in BerryPI
+    orbital = False # additional orbital potential [-orb] in BerryPI
+    name = "" #optional (if left as "" the name of the working directory by default)
+    return i_band,s_band,n,plane_dir,plane_value,parallel,spinpolar,boundary,name,orbital
+
 
 
 def preliminary():
@@ -100,7 +102,7 @@ if __name__=="__main__":
     
     np.set_printoptions(threshold=np.inf)
     # Set user parameters
-    i_band,s_band,n,plane_dir,plane_value,parallel,spinpolar,boundary,name = user_input()
+    i_band,s_band,n,plane_dir,plane_value,parallel,spinpolar,boundary,name,orbital = user_input()
     # Check input
     if type(i_band) != int:
         raise ValueError(f'i_band={i_band}, while expected an integer')
@@ -129,7 +131,10 @@ if __name__=="__main__":
         spoption= '-sp'
     else:
         spoption= ''
-
+    if orbital:
+        orboption = '-orb'
+    else:
+        orboption = ''
     # print input
     prolog() # Information for user
     print("User input:")
@@ -138,8 +143,11 @@ if __name__=="__main__":
     print(f'Brillouin zone discretization in {n-1}x{n-1}={(n-1)*(n-1)} loops')
     print(f'Parallel calculation option is set to {parallel}')
     print(f'Spin-polarized calculation option is set to {spinpolar}')
+    print(f'Additional orbital calculation option is set to {orbital}')
     print('         ')
     WorkingDir, case, multiplier = preliminary()
+    #Get kvectors
+    proce = subprocess.Popen("grep -A 3 'G1' %s.outputkgen | tail -n 4 > kvectors"%case,shell=True)
 
     # Defining the meshgrid to perform the calculation
     nx , ny = (n,n)
@@ -194,7 +202,7 @@ if __name__=="__main__":
                        delimiter='', footer='END', comments='')
                 # run BerryPI
                 
-                proc = subprocess.Popen("python $WIENROOT/SRC_BerryPI/BerryPI/berrypi -so -w -b %i %i %s %s"%(i_band, s_band,poption,spoption), shell=True, stdout=subprocess.PIPE, \
+                proc = subprocess.Popen("python $WIENROOT/SRC_BerryPI/BerryPI/berrypi -so -w -b %i %i %s %s %s"%(i_band, s_band,poption,spoption,orboption), shell=True, stdout=subprocess.PIPE, \
                     stderr=subprocess.PIPE)
                 proc.wait()
                 (stdout, stderr) = proc.communicate()
@@ -287,8 +295,8 @@ if __name__=="__main__":
     
     
     print("---------------------------------------")
-    print("The total Chern number is: ",CHERNNUMBERh)
-    print("(for a different phase unwrapping scheme:(",CHERNNUMBER,")") 
+    print("The total Chern number is: ",round(CHERNNUMBERh,5))
+    print("(for a different phase unwrapping scheme:(",round(CHERNNUMBERh,5),")") 
 
     if Check_diffh == True:
         print('The smoothness criteria is not achieved')
@@ -307,15 +315,10 @@ if __name__=="__main__":
         print (error)
         print ("matplotlib is not installed, but it is not essential.")
         print ("You can plot the figure yourself by using the berryflux.dat file.")
-        print("ChernPy is done!")
-        end = time.time()
-        total_time = end - start
-        print("The time of running was: \n"+ str(total_time)," Seconds")
-        print(str(total_time/60)," Minutes")
-        epilog()
         sys.exit(0)
 
     import matplotlib.pyplot as plt
+    import matplotlib.colors as mcolors
     print ("Matplotlib found")
 
     #PLOT OF BERRY CURVATURE FLUX
@@ -333,7 +336,8 @@ if __name__=="__main__":
         column.append(l)
         if flag in indexes and flag > 0:
             flag += 1
-            twoDmatrixp.append(column)
+            #twoDmatrixp.append(column)
+            twoDmatrixp.append(list(reversed(column)))
             stringcolumn = ','.join([str(item) for item in column])
             with open('berryflux.dat', 'a') as f:
                 f.write(stringcolumn)
@@ -357,14 +361,35 @@ if __name__=="__main__":
         f.write('\n')
         f.write(f"Chern number: {CHERNNUMBERh}")
     print("Data stored in berryflux.dat")
+
+    #cmap selection
+    negative = False
+    positive = False
+    levs = range(102)
+    assert len(levs) % 2 == 0
+    for x in twoDmatrix:
+        for y in x:
+            if round(y,2) > 0:
+                positive = True
+            if y < 0:
+                negative = True
+    
+    if positive and negative:
+        cmap = 'seismic'
+    else:
+        cmap = mcolors.LinearSegmentedColormap.from_list(name='red_white_blue',colors =[(0, 0, 1), (1, 1., 1)],N=len(levs)-1)
+    
+    #Normalization to -1 to 1
     twoDmatrix = np.array(twoDmatrix)
-    plt.figure(1, figsize=(15, 25))
-    plt.imshow(twoDmatrix,cmap='viridis',extent=(-0.5,0.5,-0.5,0.5),interpolation='spline36',origin='lower')
-    plt.xlim(-0.5,0.5)
-    plt.ylim(-0.5,0.5)
-    plt.xticks(np.arange(-0.5, 0.5, 0.1))
-    plt.yticks(np.arange(-0.5, 0.5, 0.1))
-    plt.colorbar()
+    twoDmatrix = twoDmatrix*(2*np.pi)/(((1)/(n-1))**2)
+
+    plt.figure(1, figsize=(15, 15))
+    plt.imshow(twoDmatrix,cmap=cmap,extent=(boundary[0],boundary[1],boundary[2],boundary[3]),interpolation='lanczos',origin='lower')
+    plt.xlim(boundary[0],boundary[1])
+    plt.ylim(boundary[2],boundary[3])
+    plt.xticks(np.arange(boundary[0], boundary[1], 0.1))
+    plt.yticks(np.arange(boundary[2], boundary[3], 0.1))
+    plt.colorbar(fraction=0.046, pad=0.04)
     plt.ylabel(r'$k_{y}$')
     plt.xlabel(r'$k_{x}$')
     if name != "":
@@ -373,114 +398,58 @@ if __name__=="__main__":
         plt.title(r'Flux of Berry Curvature: %s'%case)
 
     plt.savefig("berryflux.png",dpi=500)
-    print ("Output figure ""berryflux.png"" generated.")
-    
+    plt.savefig("berryflux.pdf",dpi=500)
+    print ("Output figure ""berryflux"" generated.")
 
     
+    lines=[]
+    path = os.path.dirname(__file__)
+    filename = os.path.join(path, 'kvectors')
+    with open (filename,"rt") as myfile:
+        for myline in myfile:
+            lines.append(myline.rstrip('\n'))
+    linef = lines[1:3]
+    L1 = linef[0].split()
+    L2 = linef[1].split()
 
-     
+    G1x = float(L2[0])
+    G1y = float(L1[0])
+    G2x = float(L2[1])
+    G2y = float(L1[1])
+    
     
 
 
+    #Non orthogonal graph
+    nx, ny = n-1, n-1
+    cell =  np.array([[G2x,G2y]
+                     , [G1x,G1y ]
+    ])
+    
+    x0, y0 = np.mgrid[0:1.0:1j*nx, 0:1.0:1j*ny]
+    x1, y1 = np.tensordot(cell, [x0, y0], axes=(0, 0))
     
     
-    
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    plt.figure(2, figsize=(15, 15))
+    plt.pcolormesh(x1, y1, twoDmatrix, shading='gouraud', cmap=cmap)
+    ax = plt.gca()
+    plt.axis('off')
+    ax.axes.set_aspect('equal')
+    plt.colorbar()
+    plt.tight_layout()
+    plt.rcParams.update({'font.size': 20, 'font.family': 'serif'})
+    if name != "":
+        plt.title(r'Flux of Berry Curvature: %s'%name)
+    else:
+        plt.title(r'Flux of Berry Curvature: %s'%case)
+    plt.savefig("berryflux_nonorth.pdf",dpi=500)
+    plt.savefig("berryflux_nonorth.png",dpi=500)
+    print ("Output figure ""berry_nonorth"" generated.")
+
+
+    print("CherN.py is done!")
+    end = time.time()
+    total_time = end - start
+    print("The time of running was: \n"+ str(total_time)," seconds")
+    print(str(total_time/60)," minutes")
+    epilog()
