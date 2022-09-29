@@ -24,8 +24,9 @@ def user_input():
     bands = [61, 78]
     parallel = True # parallel option [-p] in BerryPI (needs a proper .machines file)
     spinpolar = False # [-sp] in BerryPI
+    orb = False # [-orb] in BerryPI
 
-    return kscandir, kscan, nkscan, kwlsndir, nkwlsn, kfix, bands, parallel, spinpolar
+    return kscandir, kscan, nkscan, kwlsndir, nkwlsn, kfix, bands, parallel, spinpolar, orb
 
 def preliminary():
     if os.environ.get('WIENROOT')==None:
@@ -125,7 +126,7 @@ Questions and comments are to be communicated via the WIEN2k mailing list
 if __name__=="__main__":
     # Set user parameters
     kscandir, kscan, nkscan, kwlsndir, nkwlsn, kfix,\
-            bands, parallel, spinpolar = user_input()
+            bands, parallel, spinpolar, orb = user_input()
     # Check input
     if not(kscandir in [1, 2, 3]):
         raise ValueError(f'kscandir={kscandir}, while expected one of [1,2,3]')
@@ -157,6 +158,10 @@ if __name__=="__main__":
         spoption = '-sp'
     else:
         spoption = ''
+    if orb:
+        orboption = '-orb'
+    else:
+        orboption = ''
     # Print input
     prolog() # print some info for the user
     print("User input:")
@@ -212,9 +217,9 @@ if __name__=="__main__":
         np.savetxt(KlistFileName, klist, fmt="          %10i%10i%10i%10i%5.1f", 
                 delimiter='', footer='END', comments='')
         # run BerryPI
-        proc = subprocess.Popen("python $WIENROOT/SRC_BerryPI/BerryPI/berrypi -so %s -b %i %i %s -w %i"\
-                %(spoption, bands[0], bands[1], poption, kwlsndir), shell=True, stdout=subprocess.PIPE, \
-                stderr=subprocess.PIPE)
+        proc = subprocess.Popen("python $WIENROOT/SRC_BerryPI/BerryPI/berrypi -so %s %s -b %i %i %s -w %i"\
+                %(spoption, orboption, bands[0], bands[1], poption, kwlsndir), shell=True, \
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         proc.wait()
         (stdout, stderr) = proc.communicate()
         if proc.returncode != 0:
