@@ -15,17 +15,18 @@ import numpy as np
 
 def user_input():
     """Editable section where users define their input"""
-    kscandir = 2 # Y
-    kscan = [0, 0.5] # start and end in fraction of the correcponging reciprocal lattice vector G[kscandir]
-    nkscan = 20 # descretization intervals
-    kwlsndir = 3 # Z, different from kscandir
+    kevoldir = 2 # Y
+    kevol = [0, 0.5] # start and end in fraction of the correcponging reciprocal lattice vector G[kevoldir]
+    nkevol = 20 # descretization intervals
+    kwlsndir = 3 # Z, different from kevoldir
     nkwlsn = 10 # descretization intervals
     kfix = 0.0 # in fraction of reciprocal lattice vectors G[kfixdir]
     bands = [61, 78]
     parallel = True # parallel option [-p] in BerryPI (needs a proper .machines file)
     spinpolar = False # [-sp] in BerryPI
+    orbital = False # [-orb] in BerryPI
 
-    return kscandir, kscan, nkscan, kwlsndir, nkwlsn, kfix, bands, parallel, spinpolar
+    return kevoldir, kevol, nkevol, kwlsndir, nkwlsn, kfix, bands, parallel, spinpolar, orbital
 
 def preliminary():
     if os.environ.get('WIENROOT')==None:
@@ -46,12 +47,12 @@ def preliminary():
 def prolog():
     txt="""
 Calculate Wannier charge centers (WCCs) for a plane in k space defined as 
-(kfix, kscan=var, kwcc=var)
+(kfix, kevol=var, kwcc=var)
 
 kwlsn:
     This is a direction in k space along which we construct a closed Wilson loop
     and later evaluate WCCs on that loop. It can be 1 for X, 2 for Y, or 3 for Z.
-kscan:
+kevol:
     This direction is perpendicular to kwcc. The Wilson loop will advance in this
     direction. Later we will plot WCCs vs the k coordinate in this direction.
 kfix:
@@ -73,7 +74,7 @@ Here G[dir. kwlsn] is the reciprocal lattice vector in the direction of Wilson
 loop. We evaluate WCCs for the loop and store in a temporary file wcc_i.csv
 There will be as many WCCs as many bands are considered in BerryPI (-b option).
 
-Next, we advance the Wislon loop in the kscan direction and WCCs again.
+Next, we advance the Wislon loop in the kevol direction and compute WCCs again.
 Multiple Wilson loops form a plane.
 
 *--*--*--*--*--*--*
@@ -86,10 +87,10 @@ Multiple Wilson loops form a plane.
 |  |  |  |  |  |  |   |
 *--*--*--*--*--*--*   kwlsn dir.
 
-kscan dir. ->
+kevol dir. ->
 (kfix is perpendicular to the screen)
 
-After each step along kscan, data from wcc_i.csv are accumulated in the wcc.csv 
+After each step along kevol, data from wcc_i.csv are accumulated in the wcc.csv 
 file."""
     print(txt)
 
@@ -124,29 +125,29 @@ Questions and comments are to be communicated via the WIEN2k mailing list
 # MAIN
 if __name__=="__main__":
     # Set user parameters
-    kscandir, kscan, nkscan, kwlsndir, nkwlsn, kfix,\
-            bands, parallel, spinpolar = user_input()
+    kevoldir, kevol, nkevol, kwlsndir, nkwlsn, kfix,\
+            bands, parallel, spinpolar, orbital = user_input()
     # Check input
-    if not(kscandir in [1, 2, 3]):
-        raise ValueError(f'kscandir={kscandir}, while expected one of [1,2,3]')
+    if not(kevoldir in [1, 2, 3]):
+        raise ValueError(f'kevoldir={kevoldir}, while expected one of [1,2,3]')
     elif not(kwlsndir in [1, 2, 3]):
         raise ValueError(f'kwlsndir={kwlsndir}, while expected one of [1,2,3]')
-    elif kscandir == kwlsndir:
+    elif kevoldir == kwlsndir:
         raise ValueError(f'kwlsndir={kwlsndir} is the same as kwlsndir={kwlsndir}, while expected to be different')
-    if not(type(kscan) == list):
-        raise ValueError(f'kscan should be type list, while you have {type(kscan)}')
-    elif not(len(kscan) == 2):
-        raise ValueError(f'kscan list should have length = 2, while you have {len(kscan)}')
-    if not(type(nkscan) == int):
-        raise ValueError(f'nkscan should be type int, while you have {type(nkscan)}')
-    elif not(nkscan >= 1):
-        raise ValueError(f'nkscan should be at lest 1, while you have {nkscan}')
+    if not(type(kevol) == list):
+        raise ValueError(f'kevol should be type list, while you have {type(kevol)}')
+    elif not(len(kevol) == 2):
+        raise ValueError(f'kevol list should have length = 2, while you have {len(kevol)}')
+    if not(type(nkevol) == int):
+        raise ValueError(f'nkevol should be type int, while you have {type(nkevol)}')
+    elif not(nkevol >= 1):
+        raise ValueError(f'nkevol should be at lest 1, while you have {nkevol}')
     if not(type(nkwlsn) == int):
         raise ValueError(f'nkwlsn should be type int, while you have {type(nkwlsn)}')
     elif not(nkwlsn >= 1):
         raise ValueError(f'nkwlsn should be at lest 1, while you have {nkwlsn}')
     # Evaluate missing inport
-    kfixdir = set([1,2,3])-set([kscandir,kwlsndir])
+    kfixdir = set([1,2,3])-set([kevoldir,kwlsndir])
     kfixdir = list(kfixdir)
     kfixdir = kfixdir[0]
     if parallel:
@@ -157,11 +158,15 @@ if __name__=="__main__":
         spoption = '-sp'
     else:
         spoption = ''
+    if orbital:
+        orboption = '-orb'
+    else:
+        orboption = ''
     # Print input
     prolog() # print some info for the user
     print("User input:")
-    print(f'kscandir={kscandir}, kwlsndir={kwlsndir}, kfixdir={kfixdir}')
-    print(f'kscan range={kscan} with {nkscan} intervals')
+    print(f'kevoldir={kevoldir}, kwlsndir={kwlsndir}, kfixdir={kfixdir}')
+    print(f'kevol range={kevol} with {nkevol} intervals')
     print(f'Wilson loop will use {nkwlsn} intervals')
     print(f'Band range from {bands[0]} to {bands[1]}')
     if parallel:
@@ -170,7 +175,7 @@ if __name__=="__main__":
         print('Parallel option [-p] will not be used in BerryPI call')
     k = [0,0,0] # init k plane list
     k[kfixdir-1] = kfix
-    k[kscandir-1] = 'var scan'
+    k[kevoldir-1] = 'var evol'
     k[kwlsndir-1] = 'var Wloop'
     print(f'Plane is fixed at k={k}')
     WorkingDir, KlistFileName, mult = preliminary()
@@ -178,7 +183,7 @@ if __name__=="__main__":
     subprocess.call("rm -f %s"%("wcc.csv"), shell=True)
     # populate the result file with heading
     reslt_file = open("wcc.csv", "w")
-    heading = f'#k values are fractional coordinates in direction of the reciprocal lattice vector G[{kscandir}]\n'
+    heading = f'#k values are fractional coordinates in direction of the reciprocal lattice vector G[{kevoldir}]\n'
     reslt_file.write(heading)
     heading = f'#WCC are evaluated on a closed Wilson loop in direction of the reciprocal lattice vector G[{kwlsndir}]\n'
     reslt_file.write(heading)
@@ -191,17 +196,17 @@ if __name__=="__main__":
     # MAIN LOOP
     klistsize = (nkwlsn,3) # klist array dimension
     Data = [] # to store Berry phase on each loop
-    ikscan = -1 # init. counter
-    for kscani in np.linspace(start=kscan[0], stop=kscan[1], num=nkscan):
-        ikscan += 1
-        print(f'kscani = {kscani:.3f} ({ikscan+1} of {nkscan})')
+    ikevol = -1 # init. counter
+    for kevoli in np.linspace(start=kevol[0], stop=kevol[1], num=nkevol):
+        ikevol += 1
+        print(f'kevoli = {kevoli:.3f} ({ikevol+1} of {nkevol})')
         klist = np.zeros(klistsize)
         ikwlsn = -1 # init. counter
         for kwlsni in np.linspace(start=0, stop=1-1/nkwlsn, num=nkwlsn):
             ikwlsn += 1
-            # k points [kfix, kscan, kwlsn] set in proper columns
+            # k points [kfix, kevol, kwlsn] set in proper columns
             klist[ikwlsn,kfixdir-1] = kfix
-            klist[ikwlsn,kscandir-1] = kscani
+            klist[ikwlsn,kevoldir-1] = kevoli
             klist[ikwlsn,kwlsndir-1] = kwlsni
         #print(klist)
         klist = klist * mult
@@ -212,9 +217,9 @@ if __name__=="__main__":
         np.savetxt(KlistFileName, klist, fmt="          %10i%10i%10i%10i%5.1f", 
                 delimiter='', footer='END', comments='')
         # run BerryPI
-        proc = subprocess.Popen("python $WIENROOT/SRC_BerryPI/BerryPI/berrypi -so %s -b %i %i %s -w %i"\
-                %(spoption, bands[0], bands[1], poption, kwlsndir), shell=True, stdout=subprocess.PIPE, \
-                stderr=subprocess.PIPE)
+        proc = subprocess.Popen("python $WIENROOT/SRC_BerryPI/BerryPI/berrypi -so %s %s -b %i %i %s -w %i"\
+                %(spoption, orboption, bands[0], bands[1], poption, kwlsndir), shell=True, \
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         proc.wait()
         (stdout, stderr) = proc.communicate()
         if proc.returncode != 0:
@@ -223,13 +228,13 @@ if __name__=="__main__":
             msg = "Error while executing BerryPI, exiting"
             raise RuntimeError(msg)
         else:
-            if (ikscan == 0): # print BerryPI stdout once
+            if (ikevol == 0): # print BerryPI stdout once
                 print(stdout.decode())
                 print('Future BerryPI output will be supressed')
             print("success")
         # append iteration results to a global result file
         proc = subprocess.Popen("cat %s | sed 's/^/%f,/' >> %s"\
-                %("wcc_i.csv", kscani, "wcc.csv"), shell=True, stdout=subprocess.PIPE, \
+                %("wcc_i.csv", kevoli, "wcc.csv"), shell=True, stdout=subprocess.PIPE, \
                 stderr=subprocess.PIPE)
         proc.wait()
         (stdout, stderr) = proc.communicate()
@@ -248,7 +253,7 @@ if __name__=="__main__":
 
         temp1 = float(content.split()[-1])
         temp2 = temp1 % (2 * np.pi)  # 2 pi wraping  
-        temp = np.array([kscani, temp1, temp2])
+        temp = np.array([kevoli, temp1, temp2])
         Data.append(temp)
     # END MAIN LOOP
 
@@ -266,7 +271,7 @@ if __name__=="__main__":
     ki = [0, 0, 0]
     for i in range(rows):
         ki[kfixdir-1] = f'{kfix:.3f}'
-        ki[kscandir-1] = f'{Data[i,0]:.3f}'
+        ki[kevoldir-1] = f'{Data[i,0]:.3f}'
         ki[kwlsndir-1] = '***'
         kitext = f'[{ki[0]}, {ki[1]}, {ki[2]}]'
         warn = ''

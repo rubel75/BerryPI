@@ -272,7 +272,7 @@ def main(args):
         wcc = wcc[idx]
         numpy.set_printoptions(linewidth=numpy.inf)
         numpy.savetxt('wcc_i.csv', [wcc],\
-            delimiter=',', footer='', comments='',fmt='%f') # neew [..] to get in one line (not columns)
+            delimiter=',', footer='', comments='',fmt='%f') # need [..] to get in one line (not columns)
         psin = wcc * 2 * numpy.pi
         psi = sum(psin)
         print("[ BerryPI ]", "Berry phase sum (rad) =", psi)

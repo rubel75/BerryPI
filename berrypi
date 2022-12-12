@@ -388,8 +388,9 @@ def rawBerryPhase(configFile):
             spOptions = ' ' # need space here!
         for suffix in spOptions:
             suffix = suffix + ' ' + pOpt # take care of parallel mode
-            if orbCalc:
+            if orbCalc and not(soCalc): # use [-orb] for LAPW1 without SOC only
                 suffix = suffix + ' ' + '-orb' # activate OP switch
+
             shell_x_lapw1 = b_PySubProcess.VirtualShellInstance(
                 'x', 'lapw1', suffix
                 )
