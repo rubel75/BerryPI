@@ -17,17 +17,17 @@ Results are stored in the 'berryflux.dat' file.
  
 def user_input():
     """User input section"""
-    i_band = 1    # inferior band (starts from 1)
-    s_band = 1   # superior band (must be => to i_band)
-    n = 1     # discretization of brillouin zone by (n-1)x(n-1) loops. 
+    bands = (1,1) # band range (i_band,f_band) (i_band is must be => 1 ,f_band must be => to i_band)
+    n_1 = 1 # discretization of brillouin zone by (n-1) in the 1 direction 
+    n_2 = 1 # discretization of brillouin zone by (n-1) in the 2 direction 
     plane_dir = 3   # direction normal to the plane  (1 or 2 or 3)
-    plane_value = 0.0 # value of the constant plane 
+    plane_height = 0.0 # value of the constant plane 
     boundary = [0,1.0,0,1.0] #boundary selection: ex if plane_dir = 3 -> [1min,1max,2min,2max]
     parallel = False  # parallel option [-p] in BerryPI (needs a proper .machines file)
     spinpolar = False # spin polarized [-sp] in BerryPI
     orbital = False # additional orbital potential [-orb] in BerryPI
     name = "" #optional (if left as "" the name of the working directory by default)
-    return i_band,s_band,n,plane_dir,plane_value,parallel,spinpolar,boundary,name,orbital
+    return bands,n_1,n_2,plane_dir,plane_height,parallel,spinpolar,boundary,name,orbital
 
 
 
@@ -49,11 +49,11 @@ def preliminary():
 def prolog():
     txt="""
 Calculate the Chern topological invariant (C) for a plane perpendicular to one of the axis in k space defined at a certain value 
-(ex: plane_dir = '3', plane_value = 0.0)
+(ex: plane_dir = '3', plane_height = 0.0)
 
 plane_dir:
     This is a direction in k space for which a perpendicular plane is constructed and later discretized for the computing of C. 
-plane_value:
+plane_height:
     This is the value along 'plane_dir' in which the plane is selected.
 
 The calculation is done by discretizing the selected portion of the BZ in(n-1)x(n-1) loops for which the Berry phase is calculated. 
@@ -99,26 +99,30 @@ if __name__=="__main__":
         print(error)
         print("Numpy not installed. Exiting")
         sys.exit(1)
-    
+   
     np.set_printoptions(threshold=np.inf)
     # Set user parameters
-    i_band,s_band,n,plane_dir,plane_value,parallel,spinpolar,boundary,name,orbital = user_input()
+    bands,n_1,n_2,plane_dir,plane_height,parallel,spinpolar,boundary,name,orbital = user_input()
     # Check input
-    if type(i_band) != int:
-        raise ValueError(f'i_band={i_band}, while expected an integer')
-    elif type(s_band) != int:
-        raise ValueError(f's_band={s_band}, while expected an integer')
-    elif type(n) != int:
-        raise ValueError(f's_band={n}, while expected an integer')
+    if type(bands[0]) != int:
+        raise ValueError(f'i_band={bands[0]}, while expected an integer')
+    elif type(bands[1]) != int:
+        raise ValueError(f's_band={bands[1]}, while expected an integer')
+    elif type(n_1) != int:
+        raise ValueError(f'n_1={n_1}, while expected an integer')
+    elif type(n_2) != int:
+        raise ValueError(f'n_1={n_2}, while expected an integer')
     elif type(plane_dir) != int:
         raise ValueError(f'plane_dir={plane_dir}, while expected an integer')    
-    if i_band > s_band:
-        raise ValueError(f'i_band={i_band} > s_band{s_band}')
-    if i_band < 0 or s_band < 0 or n < 0:
-        raise ValueError(f'The values for i_band, s_band and n should be positive.')
-    if n < 1:
-        raise ValueError(f'n={n}, while expected a value greater than 1')
-    elif i_band == 0 or s_band == 0:
+    if bands[0] > bands[1]:
+        raise ValueError(f'i_band={bands[0]} > s_band{bands[1]}')
+    if bands[0] < 0 or bands[1] < 0 or n_1 or n_2< 0:
+        raise ValueError(f'The values for i_band, s_band, n_1 and n_2 should be positive.')
+    if n_1 < 1:
+        raise ValueError(f'n_1={n_1}, while expected a value greater than 1')
+    elif n_2 < 1:
+        raise ValueError(f'n_2={n_2}, while expected a value greater than 1')
+    elif bands[0] == 0 or bands[1] == 0:
         raise ValueError(f'i_band and s_band must be different from zero')
     if not(plane_dir in [1 , 2 , 3]):
         raise ValueError(f'plane_dir={plane_dir}, while expected one of [1,2,3]')
@@ -138,9 +142,9 @@ if __name__=="__main__":
     # print input
     prolog() # Information for user
     print("User input:")
-    print(f'Band range is [{i_band}-{s_band}]')
-    print(f'The selected plane is perpendicular to {plane_dir} with a constant value of {plane_value}')
-    print(f'Brillouin zone discretization in {n-1}x{n-1}={(n-1)*(n-1)} loops')
+    print(f'Band range is [{bands[0]}-{bands[1]}]')
+    print(f'The selected plane is perpendicular to {plane_dir} with a constant value of {plane_height}')
+    print(f'Brillouin zone discretization in {n_1-1}x{n_2-1}={(n_1-1)*(n_2-1)} loops')
     print(f'Parallel calculation option is set to {parallel}')
     print(f'Spin-polarized calculation option is set to {spinpolar}')
     print(f'Additional orbital calculation option is set to {orbital}')
@@ -150,7 +154,7 @@ if __name__=="__main__":
     proce = subprocess.Popen("grep -A 3 'G1' %s.outputkgen | tail -n 4 > kvectors"%case,shell=True)
 
     # Defining the meshgrid to perform the calculation
-    nx , ny = (n,n)
+    nx , ny = (n_1,n_2)
     kx = np.linspace(boundary[0], boundary[1], nx)
     ky = np.linspace(boundary[2], boundary[3], ny)
     kxv , kyv = np.meshgrid(kx , ky, indexing = 'ij')
@@ -158,7 +162,7 @@ if __name__=="__main__":
     # Function for getting the loop points
     full = [] 
     # List with the coordinates, a list with lists, each one is for a value of kx, inside there are lists of tuples with kx constant and varying ky
-    for k in range(0,n):
+    for k in range(0,n_1):
         coordinate = np.c_[kxv[k],-kyv[k]]
         coordinate_list = coordinate.tolist()
         full.append(coordinate_list)
@@ -166,30 +170,30 @@ if __name__=="__main__":
     berry_phases = [] # List of lists of berryphases per row
     count = 0
     #Iterating over very vertex
-    for x in full[0:n-1]: #Iterates over the kx value lists
+    for x in full[0:n_1-1]: #Iterates over the kx value lists
         col_phase = [] #Phases in column
         for y in x: #Iterates over the kx,ky tuple in each kx list
-            if x.index(y) + 1 < n: #Not taking into account edge
+            if x.index(y) + 1 < n_1: #Not taking into account edge
                 dn = full[full.index(x)][x.index(y)+1]
                 dg = full[full.index(x)+1][x.index(y)+1]
                 rt = full[full.index(x)+1][x.index(y)]
                 sm = full[full.index(x)][x.index(y)]
                 #Transform from 2D to 3D
                 if plane_dir == 3:
-                    dn = [ dn[0], dn[1], plane_value]
-                    dg = [ dg[0], dg[1], plane_value]
-                    rt = [ rt[0], rt[1], plane_value]
-                    sm = [ sm[0], sm[1], plane_value]
+                    dn = [ dn[0], dn[1], plane_height]
+                    dg = [ dg[0], dg[1], plane_height]
+                    rt = [ rt[0], rt[1], plane_height]
+                    sm = [ sm[0], sm[1], plane_height]
                 elif plane_dir == 1:
-                    dn = [ plane_value , dn[0], dn[1]]
-                    dg = [ plane_value , dg[0], dg[1]]
-                    rt = [ plane_value , rt[0], rt[1]]
-                    sm = [ plane_value , sm[0], sm[1]]
+                    dn = [ plane_height , dn[0], dn[1]]
+                    dg = [ plane_height , dg[0], dg[1]]
+                    rt = [ plane_height , rt[0], rt[1]]
+                    sm = [ plane_height , sm[0], sm[1]]
                 elif plane_dir == 2:
-                    dn = [ dn[0],plane_value , dn[1]]
-                    dg = [ dg[0],plane_value , dg[1]]
-                    rt = [ rt[0],plane_value , rt[1]]
-                    sm = [ sm[0],plane_value , sm[1]]
+                    dn = [ dn[0],plane_height , dn[1]]
+                    dg = [ dg[0],plane_height , dg[1]]
+                    rt = [ rt[0],plane_height , rt[1]]
+                    sm = [ sm[0],plane_height , sm[1]]
                 loop = [sm,dn,dg,rt]
                 loop = np.array(loop)
                 size = np.size(loop, 0)
@@ -202,7 +206,7 @@ if __name__=="__main__":
                        delimiter='', footer='END', comments='')
                 # run BerryPI
                 
-                proc = subprocess.Popen("python $WIENROOT/SRC_BerryPI/BerryPI/berrypi -so -w -b %i %i %s %s %s"%(i_band, s_band,poption,spoption,orboption), shell=True, stdout=subprocess.PIPE, \
+                proc = subprocess.Popen("python $WIENROOT/SRC_BerryPI/BerryPI/berrypi -so -w -b %i %i %s %s %s"%(bands[0], bands[1],poption,spoption,orboption), shell=True, stdout=subprocess.PIPE, \
                     stderr=subprocess.PIPE)
                 proc.wait()
                 (stdout, stderr) = proc.communicate()
@@ -300,10 +304,10 @@ if __name__=="__main__":
 
     if Check_diffh == True:
         print('The smoothness criteria is not achieved')
-        print('Try increasing n value')
+        print('Try increasing n_1 and n_2 value')
     if Check_diff == True:
         print('The smoothness criteria is not achieved (alternative unwrapping)')
-        print('Try increasing n value')
+        print('Try increasing n _1 and n_2 value')
     print("---------------------------------------")
 
 
@@ -323,7 +327,7 @@ if __name__=="__main__":
 
     #PLOT OF BERRY CURVATURE FLUX
     plt.rcParams.update({'font.size': 20, 'font.family': 'serif'})
-    phases_flux = BPFinalh.tolist()
+    phases_flux = BPFinal.tolist()
     dataf = subprocess.run(["rm berryflux.dat"],shell=True)
     dataf = subprocess.run(["touch berryflux.dat"],shell=True)
     indexes = []
@@ -356,10 +360,15 @@ if __name__=="__main__":
     with open('berryflux.dat', 'a') as f:
         f.write('\n')
         BPFinalhst = ','.join([str(item) for item in BPFinalh])
-        BPFinalhst = "berryphaseslist=["+ BPFinalhst +']'
+        BPFinalhst = "berryphaseslisth=["+ BPFinalhst +']'
+        
+        BPFinalvst = ','.join([str(item) for item in BPFinal])
+        BPFinalvst = "berryphaseslistv=["+ BPFinalvst +']'     
         f.write(BPFinalhst)
         f.write('\n')
-        f.write(f"Chern number: {CHERNNUMBERh}")
+        f.write(BPFinalvst)
+        f.write('\n')        
+        f.write(f"Chern number: {CHERNNUMBER}")
     print("Data stored in berryflux.dat")
 
     #cmap selection
@@ -381,7 +390,7 @@ if __name__=="__main__":
     
     #Normalization to -1 to 1
     twoDmatrix = np.array(twoDmatrix)
-    twoDmatrix = twoDmatrix*(2*np.pi)/(((1)/(n-1))**2)
+    twoDmatrix = twoDmatrix*(2*np.pi)/(((1)/(n_1-1))**2)
 
     plt.figure(1, figsize=(15, 15))
     plt.imshow(twoDmatrix,cmap=cmap,extent=(boundary[0],boundary[1],boundary[2],boundary[3]),interpolation='lanczos',origin='lower')
@@ -421,7 +430,7 @@ if __name__=="__main__":
 
 
     #Non orthogonal graph
-    nx, ny = n-1, n-1
+    nx, ny = n_1-1, n_2-1
     cell =  np.array([[G2x,G2y]
                      , [G1x,G1y ]
     ])
