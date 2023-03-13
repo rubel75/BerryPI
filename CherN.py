@@ -17,11 +17,11 @@ Results are stored in the 'berryflux.dat' file.
  
 def user_input():
     """User input section"""
-    bands = (1,1) # band range (i_band,f_band) (i_band is must be => 1 ,f_band must be => to i_band)
-    n_1 = 1 # discretization of brillouin zone by (n-1) in the 1 direction 
-    n_2 = 1 # discretization of brillouin zone by (n-1) in the 2 direction 
+    bands = [1,1] # band range (i_band,f_band) (i_band is must be => 1 ,f_band must be => to i_band)
+    n_1 = 1 # discretization of brillouin zone by (n-1) in the 1 direction
+    n_2 = 1 # discretization of brillouin zone by (n-1) in the 2 direction
     plane_dir = 3   # direction normal to the plane  (1 or 2 or 3)
-    plane_height = 0.0 # value of the constant plane 
+    plane_height = 0.0 # value of the constant plane
     boundary = [0,1.0,0,1.0] #boundary selection: ex if plane_dir = 3 -> [1min,1max,2min,2max]
     parallel = False  # parallel option [-p] in BerryPI (needs a proper .machines file)
     spinpolar = False # spin polarized [-sp] in BerryPI
@@ -116,7 +116,7 @@ if __name__=="__main__":
         raise ValueError(f'plane_dir={plane_dir}, while expected an integer')    
     if bands[0] > bands[1]:
         raise ValueError(f'i_band={bands[0]} > s_band{bands[1]}')
-    if bands[0] < 0 or bands[1] < 0 or n_1 or n_2< 0:
+    if bands[0] < 0 or bands[1] < 0 or n_1 < 0 or n_2 < 0:
         raise ValueError(f'The values for i_band, s_band, n_1 and n_2 should be positive.')
     if n_1 < 1:
         raise ValueError(f'n_1={n_1}, while expected a value greater than 1')
@@ -298,17 +298,24 @@ if __name__=="__main__":
     CHERNNUMBERh = np.sum(resultsh[1])
     
     
-    print("---------------------------------------")
-    print("The total Chern number is: ",round(CHERNNUMBERh,5))
-    print("(for a different phase unwrapping scheme:(",round(CHERNNUMBERh,5),")") 
+    
 
     if Check_diffh == True:
         print('The smoothness criteria is not achieved')
         print('Try increasing n_1 and n_2 value')
-    if Check_diff == True:
+    elif Check_diff == True:
         print('The smoothness criteria is not achieved (alternative unwrapping)')
         print('Try increasing n _1 and n_2 value')
-    print("---------------------------------------")
+    else:
+        if abs(boundary[0])+abs(boundary[1])==1 and abs(boundary[2])+abs(boundary[3])==1:
+            print("---------------------------------------")
+            print("The total Chern number is: ",round(CHERNNUMBERh,5))
+            print("(for a different phase unwrapping scheme:(",round(CHERNNUMBER,5),")") 
+        else:
+            print("---------------------------------------")
+            print("The total Berry curvature flux for the selected boundary: ",round(CHERNNUMBERh,5))
+            print("(for a different phase unwrapping scheme:(",round(CHERNNUMBER,5),")") 
+        
 
 
     
@@ -331,7 +338,7 @@ if __name__=="__main__":
     dataf = subprocess.run(["rm berryflux.dat"],shell=True)
     dataf = subprocess.run(["touch berryflux.dat"],shell=True)
     indexes = []
-    for i in range(0,len(phases_flux)+1, n-1):
+    for i in range(0,len(phases_flux)+1, n_1-1):
         indexes.append(i)
     flag = 1
     twoDmatrixp = []
@@ -371,44 +378,11 @@ if __name__=="__main__":
         f.write(f"Chern number: {CHERNNUMBER}")
     print("Data stored in berryflux.dat")
 
-    #cmap selection
-    negative = False
-    positive = False
-    levs = range(102)
-    assert len(levs) % 2 == 0
-    for x in twoDmatrix:
-        for y in x:
-            if round(y,2) > 0:
-                positive = True
-            if y < 0:
-                negative = True
-    
-    if positive and negative:
-        cmap = 'seismic'
-    else:
-        cmap = mcolors.LinearSegmentedColormap.from_list(name='red_white_blue',colors =[(0, 0, 1), (1, 1., 1)],N=len(levs)-1)
-    
-    #Normalization to -1 to 1
+
+    #Normalization to units
     twoDmatrix = np.array(twoDmatrix)
-    twoDmatrix = twoDmatrix*(2*np.pi)/(((1)/(n_1-1))**2)
+    twoDmatrix = twoDmatrix/(((1)/(n_1-1))*(((1)/(n_2-1))))
 
-    plt.figure(1, figsize=(15, 15))
-    plt.imshow(twoDmatrix,cmap=cmap,extent=(boundary[0],boundary[1],boundary[2],boundary[3]),interpolation='lanczos',origin='lower')
-    plt.xlim(boundary[0],boundary[1])
-    plt.ylim(boundary[2],boundary[3])
-    plt.xticks(np.arange(boundary[0], boundary[1], 0.1))
-    plt.yticks(np.arange(boundary[2], boundary[3], 0.1))
-    plt.colorbar(fraction=0.046, pad=0.04)
-    plt.ylabel(r'$k_{y}$')
-    plt.xlabel(r'$k_{x}$')
-    if name != "":
-        plt.title(r'Flux of Berry Curvature: %s'%name)
-    else:
-        plt.title(r'Flux of Berry Curvature: %s'%case)
-
-    plt.savefig("berryflux.png",dpi=500)
-    plt.savefig("berryflux.pdf",dpi=500)
-    print ("Output figure ""berryflux"" generated.")
 
     
     lines=[]
@@ -425,8 +399,6 @@ if __name__=="__main__":
     G1y = float(L1[0])
     G2x = float(L2[1])
     G2y = float(L1[1])
-    
-    
 
 
     #Non orthogonal graph
@@ -439,23 +411,57 @@ if __name__=="__main__":
     x1, y1 = np.tensordot(cell, [x0, y0], axes=(0, 0))
     
     
-    plt.figure(2, figsize=(15, 15))
-    plt.pcolormesh(x1, y1, twoDmatrix, shading='gouraud', cmap=cmap)
+    plt.figure(figsize=(15, 15))
+    plt.pcolormesh(x1, y1, twoDmatrix, shading='gouraud', cmap='seismic')
     ax = plt.gca()
     plt.axis('off')
     ax.axes.set_aspect('equal')
     plt.colorbar()
     plt.tight_layout()
+    
+    # Define two vectors as arrays
+    v1 = np.array([G2x, G2y])
+    v2 = np.array([G1x, G1y])
+
+    # Plot the two vectors
+    ax.quiver([0, 0], [0, 0], [v1[0], v2[0]], [v1[1], v2[1]],
+              angles='xy', scale_units='xy', scale=1)
+
+    # Add points along the first vector
+    arrayg = np.array([0.2, 0.4, 0.6, 0.8, 1])
+    v1_points = v1 * arrayg.reshape(-1, 1)
+    for i, point in enumerate(v1_points):
+        ax.scatter(point[0], point[1], color='black', s=1)
+        ax.annotate(f'{round(arrayg[i],1)}', xy=(
+            point[0], point[1]), xytext=(20, -5), textcoords='offset points')
+
+    ax.annotate(r'$b_{2}$', xy=(v1[0]*0.5, v1[1]*0.5),
+                xytext=(80, -40), textcoords='offset points')
+
+
+
+    v2_points = v2 * arrayg.reshape(-1, 1)
+    for i, point in enumerate(v2_points):
+        ax.scatter(point[0], point[1], color='black', label='none', s=1)
+        ax.annotate(f'{round(arrayg[i],1)}', xy=(
+            point[0], point[1]), xytext=(-50, -25), textcoords='offset points')
+
+    ax.annotate(r'$b_{1}$', xy=(v2[0]*0.5, v2[1]*0.5),
+                xytext=(-80, -40), textcoords='offset points')
+    ax.set_xlim([-0.2, v1[1]+0.7])
+    ax.set_ylim([-0.1, v2[1]+0.7])
     plt.rcParams.update({'font.size': 20, 'font.family': 'serif'})
+    
     if name != "":
-        plt.title(r'Flux of Berry Curvature: %s'%name)
+        plt.title(r'Flux of Berry Curvature: %s' % name)
     else:
-        plt.title(r'Flux of Berry Curvature: %s'%case)
-    plt.savefig("berryflux_nonorth.pdf",dpi=500)
-    plt.savefig("berryflux_nonorth.png",dpi=500)
-    print ("Output figure ""berry_nonorth"" generated.")
+        plt.title(r'Flux of Berry Curvature: %s' % case)
 
+    plt.savefig("berryflux.png", dpi=500)
+    plt.savefig("berryflux.pdf", dpi=500)
+    print("Output figure ""berryflux"" generated.")
 
+    
     print("CherN.py is done!")
     end = time.time()
     total_time = end - start
