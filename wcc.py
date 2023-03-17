@@ -170,9 +170,11 @@ if __name__=="__main__":
     print(f'Wilson loop will use {nkwlsn} intervals')
     print(f'Band range from {bands[0]} to {bands[1]}')
     if parallel:
-        print('Parallel option [-p] will be used in BerryPI call')
-    else:
-        print('Parallel option [-p] will not be used in BerryPI call')
+        print(f'Parallel option [{poption}] will be used in BerryPI call')
+    if spinpolar:
+        print(f'Spin-polarization option [{spoption}] will be used in BerryPI call')
+    if orbital:
+        print(f'Orbital potential option [{orboption}] will be used in BerryPI call')
     k = [0,0,0] # init k plane list
     k[kfixdir-1] = kfix
     k[kevoldir-1] = 'var evol'
