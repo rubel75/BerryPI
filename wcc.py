@@ -105,7 +105,7 @@ Suggested references:
     "Electron localization in the insulating state: Application to crystalline semiconductors"
     Phys. Rev. B 64, 115202 (2001)
     https://doi.org/10.1103/PhysRevB.64.115202
-    (this paper first introduced WCCs)
+    (this paper first introduced hybrid WCCs)
 [2] S.J.Ahmed, J.Kivinen, B.Zaporzan, L.Curiel, S.Pichardo and O.Rubel
     "BerryPI: A software for studying polarization of crystalline solids with 
     WIEN2k density functional all-electron package"
