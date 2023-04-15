@@ -3,28 +3,25 @@ import os, os.path
 import subprocess
 import sys
 
-
 """
 Calculation of Chern topological invariant for a given material system. 
 The inferior and top limit bands are defined in the user_input below.
 See prolog() for more details about the calculation setup.
-Results are stored in the 'berryflux.dat' file. 
+Results are stored in the 'berrycurv.csv' file. 
 
 @author: Andrés F Gómez B
 """
 
-
- 
 def user_input():
     """User input section"""
-    bands = [1,1] # band range (i_band,f_band) (i_band is must be => 1 ,f_band must be => to i_band)
-    n_1 = 1 # discretization of brillouin zone by (n-1) in the 1 direction
-    n_2 = 1 # discretization of brillouin zone by (n-1) in the 2 direction
+    bands = [1,130] # band range (i_band,f_band) (i_band is must be => 1 ,f_band must be => to i_band)
+    n_1 = 10 # discretization of brillouin zone by (n_1-1) in the 1 direction
+    n_2 = 10 # discretization of brillouin zone by (n_2-1) in the 2 direction
     plane_dir = 3   # direction normal to the plane  (1 or 2 or 3)
     plane_height = 0.0 # value of the constant plane
     boundary = [0,1.0,0,1.0] #boundary selection: ex if plane_dir = 3 -> [1min,1max,2min,2max]
     parallel = False  # parallel option [-p] in BerryPI (needs a proper .machines file)
-    spinpolar = False # spin polarized [-sp] in BerryPI
+    spinpolar = True # spin polarized [-sp] in BerryPI
     orbital = False # additional orbital potential [-orb] in BerryPI
     name = "" #optional (if left as "" the name of the working directory by default)
     return bands,n_1,n_2,plane_dir,plane_height,parallel,spinpolar,boundary,name,orbital
@@ -56,7 +53,7 @@ plane_dir:
 plane_height:
     This is the value along 'plane_dir' in which the plane is selected.
 
-The calculation is done by discretizing the selected portion of the BZ in(n-1)x(n-1) loops for which the Berry phase is calculated. 
+The calculation is done by discretizing the selected portion of the BZ in(n_1-1)x(n_2-1) loops for which the Berry phase is calculated. 
 
 
 """
@@ -64,8 +61,8 @@ The calculation is done by discretizing the selected portion of the BZ in(n-1)x(
 
 def epilog():
     txt="""
-Results (Chern number and Berryflux values) are stored in the 'berryflux.dat' file. Berry curvature flux is displayed in 
-'berryflux.png' file. Please check headings for more explanation about the content.
+Results (Berry curvature values) are stored in the berrycurv.csv file. Berry curvature is displayed in 
+berrycurv.pdf file.
 
 Suggested references:
 [1] S.J.Ahmed, J.Kivinen, B.Zaporzan, L.Curiel, S.Pichardo and O.Rubel
@@ -79,12 +76,9 @@ Suggested references:
     Phys. Rev. B 95, 075146 (2017)
     https://doi.org/10.1103/PhysRevB.95.075146
 
-[3] QuanSheng Wu, ShengNan Zhang, Hai-Feng Song, Matthias Troyer,and Alexey A. Soluyanov. Wanniertools:
-    An open-source software package for novel topological materials. Computer Physics Communications,
-    224,2018. ISSN 0010-4655. doi: https://doi.org/10.1016/j.cpc.2017.09.033
 
 Questions and comments are to be communicated via the WIEN2k mailing list
-(see http://susi.theochem.tuwien.ac.at/reg_user/mailing_list)"""
+(see http://susi.theochem.tuwien.ac.at/reg_user/mailing_list) """
     print(txt)
 
 # MAIN
@@ -157,7 +151,7 @@ if __name__=="__main__":
     nx , ny = (n_1,n_2)
     kx = np.linspace(boundary[0], boundary[1], nx)
     ky = np.linspace(boundary[2], boundary[3], ny)
-    kxv , kyv = np.meshgrid(kx , ky, indexing = 'ij')
+    kxv , kyv = np.meshgrid(kx , ky, indexing = 'xy')
     
     # Function for getting the loop points
     full = [] 
@@ -232,6 +226,7 @@ if __name__=="__main__":
         berry_phases.append(col_phase) #Appends the list for each row to the total one        
     
     berry_phases_array = np.array(berry_phases)
+
     def totalsum(array):
         summed_row = np.array([])
         for r in array:
@@ -240,6 +235,7 @@ if __name__=="__main__":
         return np.sum(summed_row) 
     
     all_phases = [] #List of wrapped 2pi phases in zigzag
+    
     for i in berry_phases:
         if berry_phases.index(i) % 2 == 0:
             all_phases.extend(i)
@@ -248,6 +244,7 @@ if __name__=="__main__":
             all_phases.extend(rever_list)
     all_phases_array = np.array(all_phases)
     
+ 
     
     phases_horizontal = [] #List of lists by rows
     for L in range(0,len(berry_phases)):
@@ -267,7 +264,7 @@ if __name__=="__main__":
             rever_listh = list(reversed(l))
             all_phasesh.extend(rever_listh)
     all_phasesh_array = np.array(all_phasesh)
-    
+
     
     def Unwrap(Data):
         BP = Data
@@ -298,7 +295,6 @@ if __name__=="__main__":
     CHERNNUMBERh = np.sum(resultsh[1])
     
     
-    
 
     if Check_diffh == True:
         print('The smoothness criteria is not achieved')
@@ -325,65 +321,49 @@ if __name__=="__main__":
     except ImportError as error: # matplotlib is not installed
         print (error)
         print ("matplotlib is not installed, but it is not essential.")
-        print ("You can plot the figure yourself by using the berryflux.dat file.")
+        print ("You can plot the figure by using the information in the berrycurv.csv file.")
         sys.exit(0)
 
     import matplotlib.pyplot as plt
     import matplotlib.colors as mcolors
     print ("Matplotlib found")
 
-    #PLOT OF BERRY CURVATURE FLUX
+    #PLOT OF BERRY CURVATURE PROJECTION VALUE
     plt.rcParams.update({'font.size': 20, 'font.family': 'serif'})
-    phases_flux = BPFinal.tolist()
-    dataf = subprocess.run(["rm berryflux.dat"],shell=True)
-    dataf = subprocess.run(["touch berryflux.dat"],shell=True)
+    phases_flux = BPFinalh.tolist()
+    dataf = subprocess.run(["rm berrycurv.csv"],shell=True)
+    dataf = subprocess.run(["touch berrycurv.csv"],shell=True)
     indexes = []
-    for i in range(0,len(phases_flux)+1, n_1-1):
+    for i in range(0,len(phases_flux)+1, n_2-1):
         indexes.append(i)
     flag = 1
     twoDmatrixp = []
     column = []
+    flagrev = 0
     for l in phases_flux:
-        column.append(l)
-        if flag in indexes and flag > 0:
+        column.append(l/(((1)/(n_1-1))*(((1)/(n_2-1))))) #Normalization to bohr2
+        if flag in indexes and flagrev % 2 == 0:
             flag += 1
-            #twoDmatrixp.append(column)
-            twoDmatrixp.append(list(reversed(column)))
-            stringcolumn = ','.join([str(item) for item in column])
-            with open('berryflux.dat', 'a') as f:
-                f.write(stringcolumn)
-                f.write('\n')
+            twoDmatrixp.append(column)
             column =[]
+            flagrev += 1
+            continue
+        elif flag in indexes:
+            flag += 1
+            twoDmatrixp.append(list(reversed(column)))
+            column = []
+            flagrev += 1
             continue
         flag += 1
-    twoDmatrix = []
-    for lis in twoDmatrixp:
-        if twoDmatrixp.index(lis) % 2 == 0:
-            twoDmatrix.append(lis)
-        else:
-            tempo = list(reversed(lis))
-            twoDmatrix.append(tempo)
     
-    with open('berryflux.dat', 'a') as f:
-        f.write('\n')
-        BPFinalhst = ','.join([str(item) for item in BPFinalh])
-        BPFinalhst = "berryphaseslisth=["+ BPFinalhst +']'
-        
-        BPFinalvst = ','.join([str(item) for item in BPFinal])
-        BPFinalvst = "berryphaseslistv=["+ BPFinalvst +']'     
-        f.write(BPFinalhst)
-        f.write('\n')
-        f.write(BPFinalvst)
-        f.write('\n')        
-        f.write(f"Chern number: {CHERNNUMBER}")
-    print("Data stored in berryflux.dat")
-
-
-    #Normalization to units
-    twoDmatrix = np.array(twoDmatrix)
-    twoDmatrix = twoDmatrix/(((1)/(n_1-1))*(((1)/(n_2-1))))
-
-
+    twoDmatrixprev = twoDmatrixp[::-1]
+    twoDmatrix = np.array(twoDmatrixprev)
+    for u in twoDmatrixp:
+        stringcolumn = ','.join([str(item) for item in u])
+        with open('berrycurv.csv', 'a') as f:
+            f.write(stringcolumn)
+            f.write('\n')
+    print("Data stored in berrycurv.csv")
     
     lines=[]
     path = os.path.dirname(__file__)
@@ -399,7 +379,6 @@ if __name__=="__main__":
     G1y = float(L1[0])
     G2x = float(L2[1])
     G2y = float(L1[1])
-
 
     #Non orthogonal graph
     nx, ny = n_1-1, n_2-1
@@ -457,14 +436,11 @@ if __name__=="__main__":
     else:
         plt.title(r'Flux of Berry Curvature: %s' % case)
 
-    plt.savefig("berryflux.png", dpi=500)
-    plt.savefig("berryflux.pdf", dpi=500)
-    print("Output figure ""berryflux"" generated.")
-
-    
+    plt.savefig("berrycurv.png", dpi=500)
+    plt.savefig("berrycurv.pdf", dpi=500)
+    print("Output figure ""berrycurv"" generated.")
     print("CherN.py is done!")
     end = time.time()
     total_time = end - start
-    print("The time of running was: \n"+ str(total_time)," seconds")
-    print(str(total_time/60)," minutes")
+    print("The time of running was:"+ str(round(total_time/60,2))," minutes")
     epilog()
