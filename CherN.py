@@ -312,40 +312,24 @@ if __name__=="__main__":
             print("The total Berry curvature flux for the selected boundary: ",round(CHERNNUMBERh,5))
             print("(for a different phase unwrapping scheme:(",round(CHERNNUMBER,5),")") 
         
-
-
-    
-    #PLOTS PHASE
-    try:
-        import matplotlib
-    except ImportError as error: # matplotlib is not installed
-        print (error)
-        print ("matplotlib is not installed, but it is not essential.")
-        print ("You can plot the figure by using the information in the berrycurv.csv file.")
-        sys.exit(0)
-
-    import matplotlib.pyplot as plt
-    import matplotlib.colors as mcolors
-    print ("Matplotlib found")
-
-    #PLOT OF BERRY CURVATURE PROJECTION VALUE
-    plt.rcParams.update({'font.size': 20, 'font.family': 'serif'})
-    phases_flux = BPFinalh.tolist()
-    dataf = subprocess.run(["rm berrycurv.csv"],shell=True)
-    dataf = subprocess.run(["touch berrycurv.csv"],shell=True)
+    #SAVE FILE 
+        phases_flux = BPFinalh.tolist()
+    dataf = subprocess.run(["rm berrycurv.csv"], shell=True)
+    dataf = subprocess.run(["touch berrycurv.csv"], shell=True)
     indexes = []
-    for i in range(0,len(phases_flux)+1, n_2-1):
+    for i in range(0, len(phases_flux)+1, n_2-1):
         indexes.append(i)
     flag = 1
     twoDmatrixp = []
     column = []
     flagrev = 0
     for l in phases_flux:
-        column.append(l/(((1)/(n_1-1))*(((1)/(n_2-1))))) #Normalization to bohr2
+        # Normalization to bohr2
+        column.append(l/(((1)/(n_1-1))*(((1)/(n_2-1)))))
         if flag in indexes and flagrev % 2 == 0:
             flag += 1
             twoDmatrixp.append(column)
-            column =[]
+            column = []
             flagrev += 1
             continue
         elif flag in indexes:
@@ -355,7 +339,7 @@ if __name__=="__main__":
             flagrev += 1
             continue
         flag += 1
-    
+
     twoDmatrixprev = twoDmatrixp[::-1]
     twoDmatrix = np.array(twoDmatrixprev)
     for u in twoDmatrixp:
@@ -364,7 +348,26 @@ if __name__=="__main__":
             f.write(stringcolumn)
             f.write('\n')
     print("Data stored in berrycurv.csv")
-    
+
+    #PLOT OF BERRY CURVATURE PROJECTION VALUE
+    try:
+        import matplotlib
+    except ImportError as error: # matplotlib is not installed
+        print (error)
+        print ("matplotlib is not installed, but it is not essential.")
+        print ("You can plot the figure by using the information in the berrycurv.csv file.")
+        print("CherN.py is done!")
+        end = time.time()
+        total_time = end - start
+        print("The time of running was:"+ str(round(total_time/60,2))," minutes")
+        epilog()
+        sys.exit(0)
+
+    import matplotlib.pyplot as plt
+    import matplotlib.colors as mcolors
+    print ("Matplotlib found")
+
+    plt.rcParams.update({'font.size': 20, 'font.family': 'serif'})
     lines=[]
     path = os.path.dirname(__file__)
     filename = os.path.join(path, 'kvectors')
@@ -438,6 +441,7 @@ if __name__=="__main__":
 
     plt.savefig("berrycurv.png", dpi=500)
     plt.savefig("berrycurv.pdf", dpi=500)
+    
     print("Output figure ""berrycurv"" generated.")
     print("CherN.py is done!")
     end = time.time()
