@@ -65,16 +65,24 @@ Results (Berry curvature values) are stored in the berrycurv.csv file. Berry cur
 berrycurv.pdf file.
 
 Suggested references:
-[1] S.J.Ahmed, J.Kivinen, B.Zaporzan, L.Curiel, S.Pichardo and O.Rubel
+[1] A.F. Gomez-Bastidas, O. Rubel
+    "Software implementation for calculating Chern and Z2 topological invariants
+     of crystalline solids with WIEN2k all-electron density functional package"
+     Comp. Phys. Commun. 292, (2023)
+     https://doi.org/10.1016/j.cpc.2023.108864
+[2] S.J.Ahmed, J.Kivinen, B.Zaporzan, L.Curiel, S.Pichardo and O.Rubel
     "BerryPI: A software for studying polarization of crystalline solids with 
     WIEN2k density functional all-electron package"
     Comp. Phys. Commun. 184, 647 (2013)
     https://doi.org/10.1016/j.cpc.2012.10.028
     (our implementation for Berry phase calculation in WIEN2k)
-[2] D. Gresch, G. Autès, O. V. Yazyev, M. Troyer, D. Vanderbilt, B. A. Bernevig, and A. A. Soluyanov
+[3] D. Gresch, G. Autès, O. V. Yazyev, M. Troyer, D. Vanderbilt, B. A. Bernevig, and A. A. Soluyanov
     "Z2Pack: Numerical implementation of hybrid Wannier centers for identifying topological materials"
     Phys. Rev. B 95, 075146 (2017)
     https://doi.org/10.1103/PhysRevB.95.075146
+
+Non Orthogonal plot adapted from: http://staff.ustc.edu.cn/~zqj/posts
+/matplotlib-plot-within-hexagonal/#problem
 
 
 Questions and comments are to be communicated via the WIEN2k mailing list
