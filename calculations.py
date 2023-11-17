@@ -17,10 +17,14 @@ import sys
 import parsing as b_PyParse
 import numpy
 import copy # needed for deepcopy of arrays
-import collections
 from vec2cart import vec2cart
-from collections import OrderedDict as orderedDict
 from convunits import bohrToMeters # conversion [Bohr] => [m]
+from collections import OrderedDict as orderedDict
+try: # compatibility Python 3.10+
+    from collections.abc import Iterable
+except ImportError:
+    from collections import Iterable
+    
 
 DEBUG = True
 
@@ -618,7 +622,7 @@ Notes:
         totIonPhase = numpy.zeros((nspins,3))
         for element, iCoord, iValence in calcIonValues:
             spinIndex = -1
-            if isinstance(iValence, collections.Iterable):
+            if isinstance(iValence, Iterable):
                 pass
             else:
                 iValence = [iValence, ]
