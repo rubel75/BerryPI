@@ -75,7 +75,7 @@ elif (direction == 'x'):
     Data = WloopIN_X(X1, X2, S, E)
 
 else:
-    X1 = X1 + cy
+    X1 = X1 + cx
     X2 = X2 + cz
     Data = WloopIN_Y(X1, X2, S, E)
 
