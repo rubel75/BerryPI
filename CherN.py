@@ -14,14 +14,14 @@ Results are stored in the 'berrycurv.csv' file.
 
 def user_input():
     """User input section"""
-    bands = [1,130] # band range (i_band,f_band) (i_band is must be => 1 ,f_band must be => to i_band)
+    bands = [1,26] # band range (i_band,f_band) (i_band is must be => 1 ,f_band must be => to i_band)
     n_1 = 10 # discretization of brillouin zone by (n_1-1) in the 1 direction
     n_2 = 10 # discretization of brillouin zone by (n_2-1) in the 2 direction
     plane_dir = 3   # direction normal to the plane  (1 or 2 or 3)
     plane_height = 0.0 # value of the constant plane
     boundary = [0,1.0,0,1.0] #boundary selection: ex if plane_dir = 3 -> [1min,1max,2min,2max]
     parallel = False  # parallel option [-p] in BerryPI (needs a proper .machines file)
-    spinpolar = True # spin polarized [-sp] in BerryPI
+    spinpolar = False # spin polarized [-sp] in BerryPI
     orbital = False # additional orbital potential [-orb] in BerryPI
     name = "" #optional (if left as "" the name of the working directory by default)
     return bands,n_1,n_2,plane_dir,plane_height,parallel,spinpolar,boundary,name,orbital
@@ -307,9 +307,11 @@ if __name__=="__main__":
     if Check_diffh == True:
         print('The smoothness criteria is not achieved')
         print('Try increasing n_1 and n_2 value')
+        sys.exit(1)
     elif Check_diff == True:
         print('The smoothness criteria is not achieved (alternative unwrapping)')
         print('Try increasing n _1 and n_2 value')
+        sys.exit(1)
     else:
         if abs(boundary[0])+abs(boundary[1])==1 and abs(boundary[2])+abs(boundary[3])==1:
             print("---------------------------------------")
@@ -321,7 +323,7 @@ if __name__=="__main__":
             print("(for a different phase unwrapping scheme:(",round(CHERNNUMBER,5),")") 
         
     #SAVE FILE 
-        phases_flux = BPFinalh.tolist()
+        phases_flux = BPFinal.tolist()
     dataf = subprocess.run(["rm berrycurv.csv"], shell=True)
     dataf = subprocess.run(["touch berrycurv.csv"], shell=True)
     indexes = []
