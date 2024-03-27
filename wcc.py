@@ -16,10 +16,10 @@ import numpy as np
 def user_input():
     """Editable section where users define their input"""
     kevoldir = 2 # Y
-    kevol = [0, 0.5] # start and end in fraction of the correcponging reciprocal lattice vector G[kevoldir]
-    nkevol = 20 # descretization intervals
+    kevol = [0, 0.5] # start and end in fraction of the corresponding reciprocal lattice vector G[kevoldir]
+    nkevol = 20 # discretization intervals
     kwlsndir = 3 # Z, different from kevoldir
-    nkwlsn = 10 # descretization intervals
+    nkwlsn = 10 # discretization intervals
     kfix = 0.0 # in fraction of reciprocal lattice vectors G[kfixdir]
     bands = [61, 78]
     parallel = True # parallel option [-p] in BerryPI (needs a proper .machines file)
@@ -263,7 +263,7 @@ if __name__=="__main__":
     phases = Data[:,2]
     phases = np.unwrap(phases)
     Data[:,2] = phases
-    print(f'Total Berry phase on each Wislon loop for bands {bands[0]}-{bands[1]}:')
+    print(f'Total Berry phase on each Wilson loop for bands {bands[0]}-{bands[1]}:')
     print('-'*54)
     print(' i           k            Phase wrap.    Phase unwrap.')
     print('                            (rad)           (rad)')
@@ -278,7 +278,7 @@ if __name__=="__main__":
         kitext = f'[{ki[0]}, {ki[1]}, {ki[2]}]'
         warn = ''
         if (i > 0) and (abs(Data[i,2]-Data[i-1,2]) > np.pi/4):
-            warn = '  WARNING: cannot obtain smooth pase evolution'
+            warn = '  WARNING: cannot obtain smooth phase evolution'
         print(f'{i+1:{leni}d}  {kitext}     {Data[i,1]:.3f}        {Data[i,2]:8.3f}{warn}')
     print('-'*54)
     print('Here "***" refer to the direction of the Wilson loop.')
