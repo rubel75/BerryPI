@@ -220,7 +220,7 @@ if __name__=="__main__":
                     if (count == 0): # print BerryPI stdout once
                         print(stdout.decode())
                         print('Future BerryPI output will be supressed')
-                    print(f"Iteration {count+1} status: success")
+                    print(f"Iteration ({count+1} of {(n_1 -1 )* (n_2-1)}) status: success")
                 
                 berrypiOutFileName = str("%s.outputberry" %(str(WorkingDir.split('/')[-1]))) #Reads output.berry
                 with open(berrypiOutFileName, 'r') as read_file:  #Searches for line with berry phase
