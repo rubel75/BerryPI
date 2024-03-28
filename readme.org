@@ -23,6 +23,8 @@ Version Aug 19, 2020 (new feature: characterization of Weyl semimetals)
 
 [2] H. Saini, M. Laurien, P. Blaha, and O. Rubel "WloopPHI: A tool for ab initio characterization of Weyl semimetals", Comp. Phys. Commun. 270, 108147 (2022) ([[https://doi.org/10.1016/j.cpc.2021.108147][Full Text]])
 
+[3] A.F. Gomez-Bastidas, O. Rubel, Software implementation for calculating Chern and Z2 topological invariants of Crystalline solids with WIEN2k all-electron density functional package, Comp. Phys. Commun. 292 ,108864 (2023) ([[https://doi.org/10.1016/j.cpc.2023.108864][Full text]].
+
 *** Tutorials
 - [[https://github.com/spichardo/BerryPI/wiki/Tutorial-1:-Spontaneous-Polarization-in-BaTiO3][Tutorial 1 - Spontaneous polarization calculation of BaTiO3]]
 - [[https://github.com/spichardo/BerryPI/tree/master/tutorials/tutorial2][Tutorial 2 - Born effective charges of GaAs (supercell, orthogonal lattice vectors)]]
