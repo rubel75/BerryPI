@@ -324,7 +324,7 @@ if __name__=="__main__":
         
     #SAVE FILE 
         phases_flux = BPFinal.tolist()
-    dataf = subprocess.run(["rm berrycurv.csv"], shell=True)
+    dataf = subprocess.run(["rm -f berrycurv.csv"], shell=True)
     dataf = subprocess.run(["touch berrycurv.csv"], shell=True)
     indexes = []
     for i in range(0, len(phases_flux)+1, n_2-1):
@@ -375,6 +375,7 @@ if __name__=="__main__":
 
     import matplotlib.pyplot as plt
     import matplotlib.colors as mcolors
+    matplotlib.use('Agg')
     print ("Matplotlib found")
 
     plt.rcParams.update({'font.size': 20, 'font.family': 'serif'})
