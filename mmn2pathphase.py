@@ -153,12 +153,54 @@ def print_usage():
     print(" direction    x, y, or z; for <x, y, z> (default x)")
     print(" -w option is for Weyl k-path calculation")
 
+def vecinner2(a, b):
+    """Evaluate similarity between two vectors 'a' and 'b' using the inner
+    product (|<a|b>|^2)/(|a|*|b|)
+
+    Args:
+        a (float): first vector
+        b (float): second vector
+
+    Returns:
+        float: overlap as inner product
+    """
+    return (dot(a,b)^2.0)/(abs(a)*abs(b))
+
+def continuous(wcc, wcc_prior_kvar):
+    """Find continuous WCC via circular shift of the vector
+
+    Args:
+        wcc (float): vector of current WCC
+        wcc_prior_kvar (float): vector of previous WCC
+
+    Returns:
+        float: new WCC vector
+    """
+    n = len(wcc)
+    maxsim = float('-inf')
+    for nroll in range(-(n-1),n): # generate all circular permutations of WCC vector
+        wccperm = numpy.roll(wcc, nroll)
+        # Account for periodic boundary conditions (0, 1) phase wrapping
+        if nroll > 0:
+            wccperm[0:nroll] -= 1 # subtract 1 from all WCC that are rolled
+        if nroll < 0:
+            wccperm[n+nroll:n] += 1 # add 1 to all WCC that are rolled
+        
+        sim = vecinner2(wccperm,wcc_prior_kvar) # evaluate continuity
+        if sim > maxsim:
+            # store WCC if continuity is improved
+            maxsim = sim
+            wccout = wccperm
+
+    # return WCC that has the best continuity
+    return wccout
 
 ###############################################################################
 # Begin MAIN
 ###############################################################################
 
 def main(args):
+    global wcc_prior_kvar # to save local variable between function calls
 
     #VERBOSE = True
     VERBOSE = False # Whether or not to print extra info
@@ -270,12 +312,22 @@ def main(args):
         wcc = numpy.array([numpy.angle(z) / (2 * numpy.pi) % 1 for z in leign])
         idx = numpy.argsort(wcc) # sort eigenvalues
         wcc = wcc[idx]
+        try: # check if the variable exists
+            wcc_prior_kvar
+        except Exception:
+            pass # do nothing if the variable does not exist
+        else:
+            # obtain the most continuous evolution of HWCC
+            wcc = contineous(wcc, wcc_prior_kvar)
+
         numpy.set_printoptions(linewidth=numpy.inf)
         numpy.savetxt('wcc_i.csv', [wcc],\
             delimiter=',', footer='', comments='',fmt='%f') # need [..] to get in one line (not columns)
         psin = wcc * 2 * numpy.pi
         psi = sum(psin)
         print("[ BerryPI ]", "Berry phase sum (rad) =", psi)
+        # store HWCC untill the next call
+        wcc_prior_kvar = wcc
         return
 
 

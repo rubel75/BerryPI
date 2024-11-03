@@ -10,9 +10,9 @@ Calculation of total phase (sum of electronic and ionic phase) for state where t
 
 1.2 Perform WIEN2k initialization 
 
-$ init_lapw -b -vxc 13 -ecut -6 -numk 230
+$ init_lapw -b -vxc 13 -ecut -6 -numk 230 -nohdlo
 
-Here "-vxc 13" stands for PBE-GGA as exchange correlation function."-ecut -6" means the separation  energy of -6 Ry has been chosen to separate core electron from valance electron. "-numk 230" means that 230 k points has been chosen in Brillouion zone which generates 6*6*6 size k-mesh in the symmetric Brillouion zone
+Here "-vxc 13" stands for PBE-GGA as exchange correlation function."-ecut -6" means the separation  energy of -6 Ry has been chosen to separate core electron from valance electron. "-numk 230" means that 230 k points has been chosen in Brillouion zone which generates 6*6*6 size k-mesh in the symmetric Brillouion zone. The "-nohdlo" switch is needed to avoid generation of high-derivative local orbitals by LSTART. Wien2wannier is incompatible with high-derivative local orbitals.
 
 1.3 Execute WIEN2k scf calculation
  

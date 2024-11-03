@@ -270,7 +270,7 @@ CleanTut_7 () {
 Tutorial_1 () {
 echo "Running Tutorial 1"
 cd tutorial1/lambda1 || return
-init_lapw -b -rkmax 4 -vxc 13 -ecut -6 -numk 230
+init_lapw -b -rkmax 4 -vxc 13 -ecut -6 -numk 230 -nohdlo
 run_lapw
 berrypi -k 6 6 6
 echo "EXPECTED LAMBDA1:
@@ -307,7 +307,7 @@ cd ../../
 Tutorial_2 () {
 echo "Running Tutorial 2"
 cd tutorial2/lambda1 || return
-init_lapw -b -rkmax 4 -vxc 13 -ecut -6 -numk 230
+init_lapw -b -rkmax 4 -vxc 13 -ecut -6 -numk 230 -nohdlo
 run_lapw
 berrypi -k 6 6 6
 echo "EXPECTED LAMBDA1:
@@ -347,7 +347,7 @@ cd tutorial3/GaAs1 || return
 linenr=$(grep -n -m 1 "ATOM  -2: X=0.25000000 Y=0.25000000 Z=0.25100000" GaAs1.struct | cut -d':' -f1)
 sed -i "${linenr}d" GaAs1.struct
 sed -i "${linenr}i\ATOM  -2: X=0.25100000 Y=0.25200000 Z=0.25300000" GaAs1.struct
-init_lapw -b -vxc 5 -rkmax 4 -numk 800
+init_lapw -b -vxc 5 -rkmax 4 -numk 800 -nohdlo
 linenr=$(grep -n -m 1 "ATOM  -2: X=0.25100000 Y=0.25200000 Z=0.25300000" GaAs1.struct | cut -d':' -f1)
 sed -i "${linenr}d" GaAs1.struct
 sed -i "${linenr}i\ATOM  -2: X=0.25000000 Y=0.25000000 Z=0.25100000" GaAs1.struct
@@ -391,7 +391,7 @@ cd ../../
 Tutorial_4 () {
 echo "Running Tutorial 4"
 cd tutorial4/GaN-W || return
-init_lapw -b -vxc 5 -rkmax 7 -numk 300
+init_lapw -b -vxc 5 -rkmax 7 -numk 300 -nohdlo
 run_lapw
 berrypi -k 8 8 8
 echo "EXPECTED GaN-W:
@@ -405,7 +405,7 @@ Tot. spin polariz.=Pion+Pel (C/m2) sp(1)  [ 3.973752e-10, -8.442784e-08, -4.9472
 TOTAL POLARIZATION (C/m2)          both   [ 3.973752e-10, -8.442784e-08, -4.947239e-01]
 ======================================================================================="
 cd ../GaN-ZB || return
-init_lapw -b -vxc 5 -rkmax 7 -numk 200
+init_lapw -b -vxc 5 -rkmax 7 -numk 200 -nohdlo
 run_lapw
 berrypi -k 8 8 8
 echo "EXPECTED GaN-ZB:
@@ -433,7 +433,7 @@ cd ../../
 Tutorial_7 () {
 echo "Running test 7"
 cd tutorial1/lambda1 || return
-init_lapw -b -rkmax 4 -vxc 13 -ecut -6 -numk 100
+init_lapw -b -rkmax 4 -vxc 13 -ecut -6 -numk 100 -nohdlo
 run_lapw -ec 0.0001 -cc 0.001
 berrypi -k 4 4 4
 echo "EXPECTED LAMBDA1:
@@ -455,7 +455,7 @@ cd ../../
 Tutorial_8 () {
 echo "Running test 8"
 cd tutorial1/lambda1 || return
-init_lapw -b -rkmax 4 -vxc 13 -ecut -6 -numk 100 -sp
+init_lapw -b -rkmax 4 -vxc 13 -ecut -6 -numk 100 -sp -nohdlo
 runsp_lapw -ec 0.0001 -cc 0.001
 berrypi -k 4 4 4 -sp
 echo "EXPECTED LAMBDA1:
@@ -482,7 +482,7 @@ Tutorial_9 () {
 echo "Running test 9"
 cd tutorial1/lambda1 || return
 export EDITOR=cat
-init_lapw -b -rkmax 4 -vxc 13 -ecut -6 -numk 100
+init_lapw -b -rkmax 4 -vxc 13 -ecut -6 -numk 100 -nohdlo
 echo -e "0 0 1\n\n\n\nN\n" | init_so_lapw
 run_lapw -so -ec 0.0001 -cc 0.001
 berrypi -k 4 4 4 -so
@@ -506,7 +506,7 @@ Tutorial_10 () {
 echo "Running test 10"
 cd tutorial1/lambda1 || return
 export EDITOR=cat
-init_lapw -b -rkmax 4 -vxc 13 -ecut -6 -numk 100 -sp
+init_lapw -b -rkmax 4 -vxc 13 -ecut -6 -numk 100 -sp -nohdlo
 echo -e "Ti 2 0.1 0.0\n" | init_orb_lapw -orb # Ti d U=0.1Ry J=0
 runsp_lapw -orb -ec 0.0001 -cc 0.001
 berrypi -k 4 4 4 -orb
@@ -534,7 +534,7 @@ Tutorial_11 () {
 echo "Running test 11"
 cd tutorial1/lambda1 || return
 export EDITOR=cat
-init_lapw -b -rkmax 4 -vxc 13 -ecut -6 -numk 100 -sp
+init_lapw -b -rkmax 4 -vxc 13 -ecut -6 -numk 100 -sp -nohdlo
 echo -e "0 0 1\n\n\n\ny\ny\n100\nN\n" | init_so_lapw
 runsp_lapw -so -ec 0.0001 -cc 0.001
 berrypi -k 4 4 4 -sp -so
@@ -558,7 +558,7 @@ Tutorial_12 () {
 echo "Running test 12"
 cd tutorial1/lambda1 || return
 export EDITOR=cat
-init_lapw -b -rkmax 4 -vxc 13 -ecut -6 -numk 100 -sp
+init_lapw -b -rkmax 4 -vxc 13 -ecut -6 -numk 100 -sp -nohdlo
 echo -e "Ti 2 0.1 0.0\n" | init_orb_lapw -orb # Ti d U=0.1Ry J=0
 echo -e "0 0 1\n\n\n\ny\ny\n100\nN\n" | init_so_lapw
 runsp_lapw -so -orb -ec 0.0001 -cc 0.001
@@ -584,7 +584,7 @@ echo "Running test 101"
 cd tutorial5 || return
 export EDITOR=cat
 cp TaAs.struct tutorial5.struct
-init_lapw -b -rkmax 7 -vxc 13 -ecut -6 -numk 300
+init_lapw -b -rkmax 7 -vxc 13 -ecut -6 -numk 300 -nohdlo
 echo -e "0 0 1\n\n\n\nN\n" | init_so_lapw
 run_lapw -so -ec 0.0001 -cc 0.001
 cp TaAs.klist_band tutorial5.klist
@@ -603,7 +603,7 @@ echo "Running test 102"
 cd tutorial5 || return
 export EDITOR=cat
 cp TaAs.struct tutorial5.struct
-init_lapw -b -rkmax 7 -vxc 13 -ecut -6 -numk 300
+init_lapw -b -rkmax 7 -vxc 13 -ecut -6 -numk 300 -nohdlo
 echo -e "0 0 1\n\n\n\nN\n" | init_so_lapw
 run_lapw -so -ec 0.0001 -cc 0.001
 echo "5
@@ -634,7 +634,7 @@ echo "Running test 103"
 cd tutorial6 || return
 export EDITOR=cat
 cp Te.struct tutorial6.struct
-init_lapw -b -rkmax 7 -vxc 13 -ecut -6 -numk 500
+init_lapw -b -rkmax 7 -vxc 13 -ecut -6 -numk 500 -nohdlo
 echo -e "0 0 1\n\n\n\nN\n" | init_so_lapw
 run_lapw -so -ec 0.0001 -cc 0.001
 echo "31
@@ -681,7 +681,7 @@ echo "Running test 13"
 cd tutorial1/lambda1 || return
 echo "1:localhost" > .machines
 echo "1:localhost" >> .machines
-init_lapw -b -rkmax 4 -vxc 13 -ecut -6 -numk 100
+init_lapw -b -rkmax 4 -vxc 13 -ecut -6 -numk 100 -nohdlo
 run_lapw -ec 0.0001 -cc 0.001 -p
 berrypi -k 4 4 4 -p
 echo "EXPECTED LAMBDA1:
@@ -705,7 +705,7 @@ echo "Running test 14"
 cd tutorial1/lambda1 || return
 echo "1:localhost" > .machines
 echo "1:localhost" >> .machines
-init_lapw -b -rkmax 4 -vxc 13 -ecut -6 -numk 100 -sp
+init_lapw -b -rkmax 4 -vxc 13 -ecut -6 -numk 100 -sp -nohdlo
 runsp_lapw -ec 0.0001 -cc 0.001 -p
 berrypi -k 4 4 4 -sp -p
 echo "EXPECTED LAMBDA1:
@@ -734,7 +734,7 @@ cd tutorial1/lambda1 || return
 echo "1:localhost" > .machines
 echo "1:localhost" >> .machines
 export EDITOR=cat
-init_lapw -b -rkmax 4 -vxc 13 -ecut -6 -numk 100
+init_lapw -b -rkmax 4 -vxc 13 -ecut -6 -numk 100 -nohdlo
 echo -e "0 0 1\n\n\n\nN\n" | init_so_lapw
 run_lapw -so -ec 0.0001 -cc 0.001 -p
 berrypi -k 4 4 4 -so -p
@@ -760,7 +760,7 @@ cd tutorial1/lambda1 || return
 echo "1:localhost" > .machines
 echo "1:localhost" >> .machines
 export EDITOR=cat
-init_lapw -b -rkmax 4 -vxc 13 -ecut -6 -numk 100 -sp
+init_lapw -b -rkmax 4 -vxc 13 -ecut -6 -numk 100 -sp -nohdlo
 echo -e "Ti 2 0.1 0.0\n" | init_orb_lapw -orb # Ti d U=0.1Ry J=0
 runsp_lapw -orb -ec 0.0001 -cc 0.001 -p
 berrypi -k 4 4 4 -orb -p
@@ -790,7 +790,7 @@ cd tutorial1/lambda1 || return
 echo "1:localhost" > .machines
 echo "1:localhost" >> .machines
 export EDITOR=cat
-init_lapw -b -rkmax 4 -vxc 13 -ecut -6 -numk 100 -sp
+init_lapw -b -rkmax 4 -vxc 13 -ecut -6 -numk 100 -sp -nohdlo
 echo -e "0 0 1\n\n\n\ny\ny\n100\nN\n" | init_so_lapw
 runsp_lapw -so -ec 0.0001 -cc 0.001 -p
 berrypi -k 4 4 4 -sp -so -p
@@ -816,7 +816,7 @@ cd tutorial1/lambda1 || return
 echo "1:localhost" > .machines
 echo "1:localhost" >> .machines
 export EDITOR=cat
-init_lapw -b -rkmax 4 -vxc 13 -ecut -6 -numk 100 -sp
+init_lapw -b -rkmax 4 -vxc 13 -ecut -6 -numk 100 -sp -nohdlo
 echo -e "Ti 2 0.1 0.0\n" | init_orb_lapw -orb # Ti d U=0.1Ry J=0
 echo -e "0 0 1\n\n\n\ny\ny\n100\nN\n" | init_so_lapw
 runsp_lapw -so -orb -ec 0.0001 -cc 0.001 -p
@@ -844,7 +844,7 @@ echo "1:localhost" > .machines
 echo "1:localhost" >> .machines
 export EDITOR=cat
 instgen -nm # generate non-magnetic starting electronic config.
-init_lapw -b -rkmax 4 -vxc 13 -ecut -6 -numk 100 -sp
+init_lapw -b -rkmax 4 -vxc 13 -ecut -6 -numk 100 -sp -nohdlo
 runsp_c_lapw -ec 0.0001 -cc 0.001 -p
 berrypi -k 4 4 4 -sp_c -p
 echo "EXPECTED LAMBDA1:
@@ -874,7 +874,7 @@ echo "1:localhost" > .machines
 echo "1:localhost" >> .machines
 export EDITOR=cat
 instgen -nm # generate non-magnetic starting electronic config.
-init_lapw -b -rkmax 4 -vxc 13 -ecut -6 -numk 100 -sp
+init_lapw -b -rkmax 4 -vxc 13 -ecut -6 -numk 100 -sp -nohdlo
 echo -e "Ti 2 0.1 0.0\n" | init_orb_lapw -orb # Ti d U=0.1Ry J=0
 runsp_c_lapw -ec 0.0001 -cc 0.001 -orb -p
 berrypi -k 4 4 4 -sp_c -orb -p
@@ -905,7 +905,7 @@ echo "1:localhost" > .machines
 echo "1:localhost" >> .machines
 export EDITOR=cat
 cp Bi2Se3.struct tutorial7.struct
-init_lapw -b -rkmax 7 -vxc 13 -ecut -6 -numk 300
+init_lapw -b -rkmax 7 -vxc 13 -ecut -6 -numk 300 -nohdlo
 echo -e "0 0 1\n\n\n\nN\n" | init_so_lapw
 run_lapw -so -ec 0.0001 -cc 0.001 -p
 python "${WIENROOT}"/SRC_BerryPI/BerryPI/wcc.py
