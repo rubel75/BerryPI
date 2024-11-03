@@ -2,7 +2,7 @@ BerryPI is a software for the calculation of Berry phase and related properties 
 
 *** Current Version and past milestones
 
-Version Nov 11, 2024 (enforced continuity in evolution of hybrid Wannier charge centers)
+Version Nov 3, 2024 (enforced continuity in evolution of hybrid Wannier charge centers)
 
 Version July 28, 2022 (added Chern number and Berry flux map calculation)
 
