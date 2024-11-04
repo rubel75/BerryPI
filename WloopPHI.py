@@ -37,7 +37,6 @@ def FileFormatMessage():
 0.4565 0.3000 0.5000 ; -0.4565 0.3000 0.5000          # Starting point 2 ; End point 2          
 0.4565 0.2500 1.0000 ; -0.4565 0.2500 1.0000          # Starting point 3 ; End point 3
 END                                                   # End of file (It is case sensitive)""")
-    sys.exit(1)
     
 
 def ReadInputValues(content, WloopFileName):
@@ -48,8 +47,8 @@ def ReadInputValues(content, WloopFileName):
         n = int(content[0].split()[0])
         multiplier = 100000000 # User independent
     except ValueError:
-        print ("Error: Value Error")
         FileFormatMessage()
+        raise ValueError('Improper formated file content')
         
     K_Points = []
     wlcoordinate = 0
@@ -204,11 +203,10 @@ if __name__=="__main__":
     StartTime = time.time() # Calculation start time.
     try:
         import numpy as np
+    except ImportError:
+        raise ImportError("NumPy is required but could not be found. Please install it using 'pip install numpy'.")
+    else:
         print ("[OK] Numpy found")
-    except ImportError as error:
-        print (error)
-        print ("It seems that numpy is not installed. Exiting")
-        sys.exit(1)
     
     # Set up parser for line arguments
     parser = argparse.ArgumentParser()
@@ -232,19 +230,23 @@ if __name__=="__main__":
     options = "" # start with empty options and fill it up
     if args.sp: # enable spin polarization
         options = options + '-sp'
+        
     if args.orb: # enable orbital potential
         options = options + '-orb'
+        
     if args.p: # parallel calculation
         options = options + '-p'
+        
     print("Additional options: %s" %options)
     
     # Read input file
     print("Checking existance of %s" %WloopFileName)
     if not(os.path.isfile(WloopFileName)):
-        print("{} does not exist, cannot finish calculation.".format(WloopFileName))
-        sys.exit(1)
+        raise FileNotFoundError(f'{WloopFileName} does not exist, '
+                'cannot finish calculation.')
     else:
         print('-- OK')
+    
     f = open(WloopFileName, 'r')
     content = f.readlines()
     f.close()
@@ -259,9 +261,7 @@ if __name__=="__main__":
         FileFormatMessage()
         
     if not os.path.exists(WorkingDir):
-        print ("Error: Working directory does not exist.")
-        print ("Please check your working directory and try again. Thank you!")
-        sys.exit(1)
+        raise FileNotFoundError('Working directory {WorkingDir} does not exist.')
         
     ######################## Solver ############################################
     direction, Data = Solve(WorkingDir, KlistFileName, n, multiplier, S_Band, E_Band, K_Start, K_End)
@@ -277,6 +277,7 @@ if __name__=="__main__":
     if (Check_Diff == True):
         print("WARNING -----> Phase Difference: The jump in phase difference is greter than pi/2 which is not good.")
         print("To avoid this warning please increase the number of Wilson loops.")
+        
     print ("Output data file ""PHI.dat"" has generated.")
     
     #################### PLOT ##################################################
@@ -290,29 +291,36 @@ if __name__=="__main__":
         print ("Total time = %s" %time.strftime('%H:%M:%S', time.gmtime(float(EndTime - StartTime))))
         printEpilog()
         sys.exit(0)
-    
-    matplotlib.use('Agg')
-    import matplotlib.pyplot as plt
-    print ("[OK] Matplotlib found")
-    fig, ax = plt.subplots(figsize=(6,6), dpi=300)
-    ax.plot(Data[:, 0], Data[:, 1], 'bo')
-    ax.set(xlabel = 'Loop in %s direction' %direction, ylabel = 'Berry Phase (radians)', title = 'Berry Phase Vs Wilson loop')
-    #ax.grid()
-    fig.savefig("BW_RawData.png")
-    #plt.show()
-    print ("Output figure ""BW_RawData.png"" has generated.")
-    
-    fig, ax = plt.subplots(figsize=(6,6), dpi=300)    
-    ax.plot(Data[:, 0], Data[:, 2], 'bo')
-    ax.set(xlabel = 'Loop in %s direction' %direction, ylabel = 'Berry Phase (radians)', title = 'Berry Phase Vs Wilson loop')
-    fig.savefig("BW_PiWrapped.png")
-    print ("Output figure ""BW_PiWrapped.png"" has been generated.")
-    
-    fig, ax = plt.subplots(figsize=(6,6), dpi=300)
-    ax.plot(Data[:, 0], Data[:, 3], 'bo')
-    ax.set(xlabel = 'Loop in %s direction' %direction, ylabel = 'Berry Phase (1/2pi)', title = 'Berry Phase Vs Wilson loop')
-    fig.savefig("BW_PhaseChange.png")
-    print ("Output figure ""BW_PhaseChange.png"" has been generated")
-    EndTime = time.time() # Calculation end time.
-    print ("Total time = %s" %time.strftime('%H:%M:%S', time.gmtime(float(EndTime - StartTime))))
-    printEpilog()
+    else:
+        matplotlib.use('Agg')
+        import matplotlib.pyplot as plt
+        print ("[OK] Matplotlib found")
+        fig, ax = plt.subplots(figsize=(6,6), dpi=300)
+        ax.plot(Data[:, 0], Data[:, 1], 'bo')
+        ax.set(xlabel = 'Loop in %s direction' %direction, \
+                ylabel = 'Berry Phase (radians)', \
+                title = 'Berry Phase Vs Wilson loop')
+        #ax.grid()
+        fig.savefig("BW_RawData.png")
+        #plt.show()
+        print ("Output figure ""BW_RawData.png"" has generated.")
+        
+        fig, ax = plt.subplots(figsize=(6,6), dpi=300)    
+        ax.plot(Data[:, 0], Data[:, 2], 'bo')
+        ax.set(xlabel = 'Loop in %s direction' %direction, \
+                ylabel = 'Berry Phase (radians)', \
+                title = 'Berry Phase Vs Wilson loop')
+        fig.savefig("BW_PiWrapped.png")
+        print ("Output figure ""BW_PiWrapped.png"" has been generated.")
+        
+        fig, ax = plt.subplots(figsize=(6,6), dpi=300)
+        ax.plot(Data[:, 0], Data[:, 3], 'bo')
+        ax.set(xlabel = 'Loop in %s direction' %direction, \
+                ylabel = 'Berry Phase (1/2pi)', \
+                title = 'Berry Phase Vs Wilson loop')
+        fig.savefig("BW_PhaseChange.png")
+        print ("Output figure ""BW_PhaseChange.png"" has been generated")
+        EndTime = time.time() # Calculation end time.
+        print ("Total time = %s" %time.strftime('%H:%M:%S', \
+                time.gmtime(float(EndTime - StartTime))))
+        printEpilog()

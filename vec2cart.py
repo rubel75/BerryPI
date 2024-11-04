@@ -24,20 +24,16 @@ def vec2cart(v, u):
 
     # Check input
     if len(v) != 3: # vector should be in 3D
-        print("ERROR vector length =", len(v))
-        print("vec =", v)
-        print("expected length = 3")
-        sys.exit(1)
+        print(f'vec = {v}')
+        raise ValueError(f'vector length = {len(v)}, while expected length = 3')
+    
     if len(u.shape) != 2: # [u] should be 2D array
-        print("ERROR array shape =", u.shape)
-        print("u =", u)
-        print("expected shape = (3,3)")
-        sys.exit(1)
+        print(f'u = {u}')
+        raise ValueError(f'array shape = {u.shape}, while expected shape = (3,3)')
+    
     if u.shape[0] != 3 or u.shape[1] != 3: # [u] should be 3x3
-        print("ERROR array size =", u.shape)
-        print("u =", u)
-        print("expected shape = (3,3)")
-        sys.exit(1)
+        print(f'u = {u}')
+        raise ValueError(f'array shape = {u.shape}, while expected shape = (3,3)')
 
     # Set up direct cosines of Cartesian coordinate system
     upr = np.zeros((3,3))

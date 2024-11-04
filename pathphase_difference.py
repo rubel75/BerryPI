@@ -10,15 +10,13 @@ def parse_pathphase(line):
 
     return int(parts[0]), float(parts[1])
 
-def print_usage():
-    print >> sys.stderr, "Usage: {0} case1.pathphase case2.pathphase".format(sys.argv[0])
-    print >> sys.stderr, "Computes the phase difference between case2 and case1 taking into account 2*pi wrapping."
-
 if __name__ == "__main__":
     
     if (len(sys.argv) != 3):
-        print_usage()
-        sys.exit(1)
+        print(f'Usage: {sys.argv[0]} case1.pathphase case2.pathphase')
+        print('Computes the phase difference between case2 and case1 '
+                'taking into account 2*pi wrapping.')
+        raise RuntimeError(f'Number of arguments is {len(sys.argv)}, while 3 is expected.')
 
     phase_delta = {}
 

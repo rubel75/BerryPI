@@ -209,8 +209,7 @@ def main(args):
     parse_line_list = lambda line, delimiter, T : [T(y) for y in [x.strip() for x in line.strip().split(delimiter)] if y]
 
     if len(args) < 2:
-        print("Error: no case or direction provided")
-        exit(1)
+        raise RuntimeError("Error: no case or direction provided")
 
     spOption = '' # no spin polarization by default
     wCalc = False # no Weyl point path by default
@@ -232,8 +231,7 @@ def main(args):
 
     if len(args) > 2:
         if args[1] not in direction_args:
-            print("Error: unknown direction", args[1])
-            exit(1)
+            raise ValueError(f'Error: unknown direction {args[1]}')
 
         direction = direction_args[args[1]]
     else:

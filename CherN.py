@@ -96,11 +96,10 @@ if __name__=="__main__":
     
     try:
         import numpy as np
-        print ("Numpy found")
-    except ImportError as error:
-        print(error)
-        print("Numpy not installed. Exiting")
-        sys.exit(1)
+    except ImportError:
+        raise ImportError("NumPy is required but could not be found. Please install it using 'pip install numpy'.")
+    else:
+        print ("[OK] Numpy found")
    
     np.set_printoptions(threshold=np.inf)
     # Set user parameters
@@ -115,17 +114,21 @@ if __name__=="__main__":
     elif type(n_2) != int:
         raise ValueError(f'n_1={n_2}, while expected an integer')
     elif type(plane_dir) != int:
-        raise ValueError(f'plane_dir={plane_dir}, while expected an integer')    
+        raise ValueError(f'plane_dir={plane_dir}, while expected an integer')
+    
     if bands[0] > bands[1]:
         raise ValueError(f'i_band={bands[0]} > s_band{bands[1]}')
+    
     if bands[0] < 0 or bands[1] < 0 or n_1 < 0 or n_2 < 0:
         raise ValueError(f'The values for i_band, s_band, n_1 and n_2 should be positive.')
+    
     if n_1 < 1:
         raise ValueError(f'n_1={n_1}, while expected a value greater than 1')
     elif n_2 < 1:
         raise ValueError(f'n_2={n_2}, while expected a value greater than 1')
     elif bands[0] == 0 or bands[1] == 0:
         raise ValueError(f'i_band and s_band must be different from zero')
+    
     if not(plane_dir in [1 , 2 , 3]):
         raise ValueError(f'plane_dir={plane_dir}, while expected one of [1,2,3]')
     
@@ -133,14 +136,17 @@ if __name__=="__main__":
         poption = '-p'
     else:
         poption = ''
+        
     if spinpolar:
         spoption= '-sp'
     else:
         spoption= ''
+        
     if orbital:
         orboption = '-orb'
     else:
         orboption = ''
+        
     # print input
     prolog() # Information for user
     print("User input:")
@@ -304,14 +310,12 @@ if __name__=="__main__":
     
     
 
-    if Check_diffh == True:
-        print('The smoothness criteria is not achieved')
-        print('Try increasing n_1 and n_2 value')
-        sys.exit(1)
-    elif Check_diff == True:
-        print('The smoothness criteria is not achieved (alternative unwrapping)')
-        print('Try increasing n _1 and n_2 value')
-        sys.exit(1)
+    if Check_diffh:
+        raise RuntimeError('The smoothness criteria is not achieved. '
+                'Try increasing n_1 and n_2 value')
+    elif Check_diff:
+        raise RuntimeError('The smoothness criteria is not achieved '
+                '(alternative unwrapping). Try increasing n _1 and n_2 value')
     else:
         if abs(boundary[0])+abs(boundary[1])==1 and abs(boundary[2])+abs(boundary[3])==1:
             print("---------------------------------------")
