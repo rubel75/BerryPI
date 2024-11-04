@@ -228,7 +228,7 @@ class MainCalculationContainer:
         ### *.inc handle
         # - core charge for each non-eqivalent atom
         self.calcVal['Atom core charges'] = \
-            parser_inc_handle['core charges'];
+            parser_inc_handle['core charges']
 
         # check consistency of case.struct and case.inc files
         if len(self.calcVal['Atom core charges']) != \

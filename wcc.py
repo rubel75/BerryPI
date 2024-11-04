@@ -183,6 +183,7 @@ if __name__=="__main__":
     WorkingDir, KlistFileName, mult = preliminary()
     # remove the result file to get a fresh start
     subprocess.call("rm -f %s"%("wcc.csv"), shell=True)
+    subprocess.call("rm -f %s"%("wcc_prior_kvar.dat"), shell=True)
     # populate the result file with heading
     reslt_file = open("wcc.csv", "w")
     heading = f'#k values are fractional coordinates in direction of the reciprocal lattice vector G[{kevoldir}]\n'
@@ -233,7 +234,9 @@ if __name__=="__main__":
             if (ikevol == 0): # print BerryPI stdout once
                 print(stdout.decode())
                 print('Future BerryPI output will be supressed')
+
             print("success")
+
         # append iteration results to a global result file
         proc = subprocess.Popen("cat %s | sed 's/^/%f,/' >> %s"\
                 %("wcc_i.csv", kevoli, "wcc.csv"), shell=True, stdout=subprocess.PIPE, \

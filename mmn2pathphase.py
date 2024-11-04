@@ -155,7 +155,7 @@ def print_usage():
 
 def vecinner2(a, b):
     """Evaluate similarity between two vectors 'a' and 'b' using the inner
-    product (|<a|b>|^2)/(|a|*|b|)
+    product |<a|b>|/(|a|*|b|)
 
     Args:
         a (float): first vector
@@ -164,7 +164,7 @@ def vecinner2(a, b):
     Returns:
         float: overlap as inner product
     """
-    return (dot(a,b)^2.0)/(abs(a)*abs(b))
+    return numpy.dot(a,b)/( numpy.sqrt(numpy.dot(a,a)) * numpy.sqrt(numpy.dot(b,b)) )
 
 def continuous(wcc, wcc_prior_kvar):
     """Find continuous WCC via circular shift of the vector
@@ -312,13 +312,15 @@ def main(args):
         wcc = numpy.array([numpy.angle(z) / (2 * numpy.pi) % 1 for z in leign])
         idx = numpy.argsort(wcc) # sort eigenvalues
         wcc = wcc[idx]
-        try: # check if the variable exists
-            wcc_prior_kvar
-        except Exception:
-            pass # do nothing if the variable does not exist
+        try: # check if the file with prior HWCC exists
+            wcc_prior_kvar = numpy.loadtxt('wcc_prior_kvar.dat', dtype=float)
+        except:
+            pass # do nothing if file not present
         else:
             # obtain the most continuous evolution of HWCC
-            wcc = contineous(wcc, wcc_prior_kvar)
+            print(f'wcc_prior_kvar={wcc_prior_kvar}')
+            print(f'wcc={wcc}')
+            wcc = continuous(wcc, wcc_prior_kvar)
 
         numpy.set_printoptions(linewidth=numpy.inf)
         numpy.savetxt('wcc_i.csv', [wcc],\
@@ -327,7 +329,7 @@ def main(args):
         psi = sum(psin)
         print("[ BerryPI ]", "Berry phase sum (rad) =", psi)
         # store HWCC untill the next call
-        wcc_prior_kvar = wcc
+        numpy.savetxt('wcc_prior_kvar.dat', wcc, fmt='%f')
         return
 
 
