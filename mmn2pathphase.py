@@ -318,8 +318,6 @@ def main(args):
             pass # do nothing if file not present
         else:
             # obtain the most continuous evolution of HWCC
-            print(f'wcc_prior_kvar={wcc_prior_kvar}')
-            print(f'wcc={wcc}')
             wcc = continuous(wcc, wcc_prior_kvar)
 
         numpy.set_printoptions(linewidth=numpy.inf)
