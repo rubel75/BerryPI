@@ -302,13 +302,12 @@ class MainCalculationContainer:
                 phaseDirSpinWrp = 2*phaseDirSpinWrp # account for the spin degeneracy
                 nspins = numpy.shape(phaseDirSpinWrp)[1]
                 if nspins != 1: # double check
-                    print("Inconsistency detected in the number of spins")
-                    print("Is it spin-polarized calculation? spCalc =", spCalc)
-                    print("Number of spins in the electronic phase array", \
-                        nspins)
+                    print(f'Is it spin-polarized calculation? spCalc = {spCalc}')
+                    print(f'Number of spins in the electronic phase array = {nspins}')
                     print("Expected 1 spin")
                     print("Decision is taken to EXIT")
-                    sys.exit(2)
+                    raise RuntimeError('Inconsistency detected in the number of spins')
+
                 print("Berry phase (rad)                  up+dn  "+ \
                     "[% e, % e, % e]" % tuple(phaseDirSpinWrp))
                 # wrap phases again [-pi ... +pi]
