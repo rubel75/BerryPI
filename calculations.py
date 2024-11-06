@@ -250,6 +250,7 @@ class MainCalculationContainer:
                 print("\n\n~~~~~~~~~~~~~~~~~~~~ " +\
                     "phases are wrapped in the range [0 .. +2pi] " +\
                     " ~~~~~~~~~~~~~~~~~~~~~")
+                
             ########################
             # get electronic phase #
             ########################
@@ -257,13 +258,13 @@ class MainCalculationContainer:
             phaseDirSpinPathRaw = args['phases']
             # wrap phases in the range [-pi ... +pi]
             phaseDirSpinPathWrp = self.wrpPhase(phaseDirSpinPathRaw, \
-                wrpFn)
+                    wrpFn)
             # print nice
             print("\n","Initial Berry phases and their", \
-                "wrapped values")
+                    "wrapped values")
             print("="*87)
             print(" "*30, "| init k-point", "| phase raw (rad)", \
-                "| phase wrap. (rad)")
+                    "| phase wrap. (rad)")
             icoord = -1
             for coord in phaseDirSpinPathRaw:
                 icoord += 1
@@ -282,12 +283,13 @@ class MainCalculationContainer:
                         phwrp = phaseDirSpinPathWrp[icoord][ispin][ipath][1]
                         print(" "*20, "path(%4d)       %4d        % e        % e" \
                             % (ipath+1, kpt, ph, phwrp))
+                        
             print("="*87)
             print("\n\nCALCULATION OF ELECTRONIC POLARIZATION",\
-                "(primitive lattice coordinates)")
+                    "(primitive lattice coordinates)")
             print("="*87)
             print("Value", " "*25, "|  spin  ", "|   ", "dir(1)   ", \
-                "|   ", "dir(2)   ", "|   ", "dir(3)")
+                    "|   ", "dir(2)   ", "|   ", "dir(3)")
             print("-"*87)
             # find path-average phase
             phaseDirSpinWrp = self.pathAvrgPhase(phaseDirSpinPathWrp)
@@ -298,6 +300,7 @@ class MainCalculationContainer:
                 print("Berry phase wrapped (rad)          sp(%1i)" \
                     % (spinIndex+1), \
                     " [% e, % e, % e]" % tuple(phaseDirSpinWrp[:,spinIndex]))
+                
             if not spCalc and not args['so']: # in case of non-SP or non-SO calculation...
                 phaseDirSpinWrp = 2*phaseDirSpinWrp # account for the spin degeneracy
                 nspins = numpy.shape(phaseDirSpinWrp)[1]
@@ -309,19 +312,20 @@ class MainCalculationContainer:
                     raise RuntimeError('Inconsistency detected in the number of spins')
 
                 print("Berry phase (rad)                  up+dn  "+ \
-                    "[% e, % e, % e]" % tuple(phaseDirSpinWrp))
+                        "[% e, % e, % e]" % tuple(phaseDirSpinWrp))
                 # wrap phases again [-pi ... +pi]
                 phaseDirSpinWrp = wrpFn(phaseDirSpinWrp)
                 print("Berry phase wrapped (rad)" +\
-                    "          up+dn  [% e, % e, % e]" \
-                    % tuple(phaseDirSpinWrp))
+                        "          up+dn  [% e, % e, % e]" \
+                        % tuple(phaseDirSpinWrp))
+                
             #electron charge / cell volume
             self.ELEC_BY_VOL_CONST = ELECTRON_CHARGE / \
-                bohrToMeters(self.calcVal['Cell Volume in bohr^3'], \
-                dimension = 3.)
+                    bohrToMeters(self.calcVal['Cell Volume in bohr^3'], \
+                    dimension = 3.)
             # electronic polarization (C/m2)
             elP = self.elPolarization(phaseDirSpinWrp,self.calcVal, \
-                self.ELEC_BY_VOL_CONST)
+                    self.ELEC_BY_VOL_CONST)
             # convert elP from primitive basis to Cart. coordinates
             # WIEN2k always uses primitive latt. vec. in constructing Brillouin zone
             print("\nThe electronic polarization vector is presented in",\
@@ -331,6 +335,7 @@ class MainCalculationContainer:
                 latVec[i,:] = self.calcVal['Real primitive lat vectors in bohr'][i]
                 print(" "*4, "dir(%1i) =" % (i+1), \
                     "[% e, % e, % e] bohr" % tuple(latVec[i,:]))
+                
             print("and will be transformed into Cartesian coordinates.")
             for i in range(elP.shape[0]): # loop over spin channels
                 elP[i,:] = vec2cart(elP[i,:], latVec) # prim -> Cartesian
@@ -347,7 +352,8 @@ class MainCalculationContainer:
             for i in range(3): # gather lattice vectors into a (3x3) array
                 latVec[i,:] = self.calcVal['Real conventional lat vectors in bohr'][i]
                 print(" "*4, "dir(%1i) =" % (i+1), \
-                    "[% e, % e, % e] bohr" % tuple(latVec[i,:]))
+                        "[% e, % e, % e] bohr" % tuple(latVec[i,:]))
+                
             for i in range(ionP.shape[0]): # loop over spin channels
                 ionP[i,:] = vec2cart(ionP[i,:], latVec) # conventional -> Cartesian
             
@@ -360,6 +366,7 @@ class MainCalculationContainer:
             # Prepare transform polarization from lattice vectors to Cartesian
             # coordinates (totP -> totPcart
             latVec = numpy.zeros((3,3))
+            
         # END iterate over various wrapping functions
         print('''
 Notes:
@@ -420,6 +427,7 @@ Notes:
                 # for example [-pi, +pi] => [-pi, -pi]
                 pathPhaseUnwrp = numpy.unwrap( pathPhaseWrp )
                 OUT[icoord][ispin][:,1] = pathPhaseUnwrp
+                
         return OUT
 
     def wrp11(self, IN):
@@ -434,6 +442,7 @@ Notes:
         OUT = (IN + k*numpy.pi) % (2 * numpy.pi) - k*numpy.pi
         if inisarray: # restore output array dimensions to match input
             OUT.resize(inshape)
+            
         return OUT
 
     def wrp02(self, IN):
@@ -448,6 +457,7 @@ Notes:
         OUT = (IN + k*numpy.pi) % (2 * numpy.pi) - k*numpy.pi
         if inisarray: # restore output array dimensions to match input
             OUT.resize(inshape)
+            
         return OUT
 
     def pathAvrgPhase(self, List):
@@ -471,6 +481,7 @@ Notes:
                     x =  x + List[icoord][ispin][ipath][1]
                 avrg = x/(ipath+1)
                 OUT[icoord][ispin] = avrg
+                
         return OUT
 
 
@@ -527,6 +538,7 @@ Notes:
             print("Electronic polarization (C/m2)     " +\
                 "sp(%1i) " % (spinIndex+1), \
             "[% e, % e, % e]" % tuple(elP[spinIndex,:]))
+            
         print("="*87)
         return elP; # END elPolarization
 
@@ -587,6 +599,7 @@ Notes:
             nspins = 2
         else:
             nspins = 1
+            
         iatom = -1 # atom index
         Zcore = self.calcVal['Atom core charges'] # non-equiv. atoms
         for atom in atomListing: # loop over non-equivalent atoms
@@ -607,6 +620,7 @@ Notes:
                 #produce tuple from coordinates
                 coordinates = (xCoordinate, yCoordinate, zCoordinate)
                 calcIonValues.append((theElementName,coordinates, theValence))
+                
         self._calcIonValues = calcIonValues
 
         #### CALCULATION ####
@@ -625,6 +639,7 @@ Notes:
                 pass
             else:
                 iValence = [iValence, ]
+                
             for spinValence in iValence:
                 spinIndex += 1
                 ionPhase = numpy.zeros((nspins,3))
@@ -645,7 +660,9 @@ Notes:
                         "sp(%1i)" % (spinIndex+1), \
                         "%5.2f" % spinValence, \
                         "[% e, % e, % e]" % tuple(ionPhase[spinIndex,:]))
+                    
                 totIonPhase[:,:] += ionPhase
+                
         print("-"*87)
         for spinIndex in range(0,nspins):
             print("Total ionic phase (rad)", " "*5, \
@@ -674,6 +691,7 @@ Notes:
             print("Ionic polarization (C/m2)    ", \
                 "sp(%1i)" % (spinIndex+1), " "*5, \
                 "[% e, % e, % e]" % tuple(ionPol[spinIndex,:]))
+            
         print("="*87)
 
         return ionPol # END determineIonPolarization
@@ -719,6 +737,7 @@ Notes:
                 phaseValue -= domainRange
             elif phaseValue <= 0:
                 phaseValue += domainRange
+                
         return phaseValue    
 
     # Total polarization
@@ -735,18 +754,19 @@ Notes:
         print("\n\nSUMMARY OF POLARIZATION CALCULATION IN CARTESIAN COORDINATES")
         print("="*87)
         print("Value", " "*25, "|  spin  ", "|   ", "   X     ", \
-            "|   ", "   Y     ", "|   ", "   Z")
+                "|   ", "   Y     ", "|   ", "   Z")
         for spinIndex in range(0,nspins):
             print("-"*87)
             print("Electronic polarization (C/m2)     " + \
-                "sp(%1i) " % (spinIndex+1), \
-                "[% e, % e, % e]" % tuple(elP[spinIndex,:]))
+                    "sp(%1i) " % (spinIndex+1), \
+                    "[% e, % e, % e]" % tuple(elP[spinIndex,:]))
             print("Ionic polarization (C/m2)          " + \
-                "sp(%1i) " % (spinIndex+1), \
-                "[% e, % e, % e]" % tuple(ionP[spinIndex,:]))
+                    "sp(%1i) " % (spinIndex+1), \
+                    "[% e, % e, % e]" % tuple(ionP[spinIndex,:]))
             print("Tot. spin polariz.=Pion+Pel (C/m2) " + \
-                "sp(%1i) " % (spinIndex+1), \
-                "[% e, % e, % e]" % tuple(totSpinP[spinIndex,:]))
+                    "sp(%1i) " % (spinIndex+1), \
+                    "[% e, % e, % e]" % tuple(totSpinP[spinIndex,:]))
+            
         print("-"*87)
         totP = numpy.sum(totSpinP, axis=0) # summ over spins
         print("TOTAL POLARIZATION (C/m2)          " + \
@@ -778,12 +798,12 @@ Notes:
 if __name__ == "__main__":
 
     mainCalculation = MainCalculationContainer(
-        file_pathphase_x = './tests/testStruct-x.pathphase',
-        file_pathphase_y = './tests/testStruct-x.pathphase',
-        file_pathphase_z = './tests/testStruct-x.pathphase',
-        file_struct = './tests/testStruct.struct',
-        file_inst = './tests/testStruct.inc'
-        )
+            file_pathphase_x = './tests/testStruct-x.pathphase',
+            file_pathphase_y = './tests/testStruct-x.pathphase',
+            file_pathphase_z = './tests/testStruct-x.pathphase',
+            file_struct = './tests/testStruct.struct',
+            file_inst = './tests/testStruct.inc'
+            )
     mainCalculation.prettyPrintCalculationValues()
     print(mainCalculation.valuephaseMeanValues())
     print(mainCalculation.electronpolar2pi())
