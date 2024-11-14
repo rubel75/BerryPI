@@ -9,10 +9,124 @@ Results are tabulated in the 'wcc.csv' file.
 @author: Oleg Rubel
 """
 
+import pandas as pd
 import subprocess
 import os
 import numpy as np
+import re
+from pathlib import Path
 
+
+def get_bands_from_file(file_path: Path) -> pd.DataFrame:
+    """function to parse bands from the file
+    
+    pattern is defined as follows:
+    ^band: Line starts with the word "band".
+    \s+: One or more spaces after "band".
+    \d+: An integer (band number).
+    [-+]?\d*\.\d+: Matches a floating-point number (optionally with a sign).
+
+    Parameters
+    ----------
+    file_path : Path
+        path to file
+    """
+
+    pattern = r"^band\s+(\d+)\s+([-+]?\d*\.\d+)\s+([-+]?\d*\.\d+)\s+([-+]?\d*\.\d+)[Dd]([-+]?\d+)$"
+    data = []
+    with open(file_path, "r") as output_file:
+        for line in output_file:
+            # If the line matches the pattern, add it to the list.
+            match = re.match(pattern, line.strip())
+            if match:
+                # Extract groups and convert them to appropriate types (int for band number, float for values).
+                band_number = int(match.group(1))
+                emin = float(match.group(2))
+                emax = float(match.group(3))
+                occupancy = float(match.group(4)) * (10 ** int(match.group(5)))
+                data.append((band_number, emin, emax, occupancy))
+
+    band_df = pd.DataFrame(data, columns=["Band Number", "emin", "emax", "occupancy"])
+    band_df.to_csv(file_path.with_suffix(suffix=".csv"))
+    
+    return band_df
+
+def find_edge_bands(band_df, band_overlap_threshold = 0):
+    """finds edge bands by 
+    - identifying the twin bands and bands with no overlap in 
+      energy with the subsequent band. 
+    - then finding the bands that satisfy both conditions and 
+      identifying them as a shell change
+    - sorting these bands by their emax centered on 0 
+    - picking the 2 closest bands to zero, in order of low 
+    band number to high
+
+    Parameters
+    ----------
+    band_df : pd.DataFrame
+        dataframe with all parameters describing bands -
+        Band number, emin, emax, occupancy
+
+    band_overlap_threshold : float
+        threshold between bands to ensure that overlap is determined
+        outside margin of error in band energy calculation
+    Returns
+    -------
+    Tuple
+        Band lower bound and upper bound
+    """
+    # check if band structure occupancies indicates metal
+    metal_band_occupancy = not band_df['occupancy'].isin([0, 1]).all()
+    if metal_band_occupancy:
+        raise ValueError("band occupancies indicate metallic nature!\n Aborting Calculations")
+
+    band_df["next_band_overlap"] = band_df["emax"] > (band_overlap_threshold + band_df["emin"].shift(-1))
+    band_df["twin_band"] = band_df["emax"] == band_df["emax"].shift(-1)
+    band_df["non_overlap_band"] = ~(band_df["next_band_overlap"] | band_df["twin_band"])
+
+    upper_band = band_df[band_df["occupancy"] == 1].max()["Band Number"]
+    non_overlap_band = band_df[band_df["non_overlap_band"] == True]
+    lower_band = (
+        non_overlap_band[
+            non_overlap_band["occupancy"] == 1
+            ]
+            )["Band Number"].nlargest(2).iloc[-1] + 1
+    
+    print([lower_band, upper_band])
+    return [lower_band, upper_band]
+
+def get_bands_from_output(specified_bands, band_overlap_threshold = 0):
+    working_directory = Path.cwd()
+    case_name = working_directory.stem
+    output2_file = working_directory.joinpath(
+                                        Path(case_name).with_suffix(".output2")
+                                        )
+    
+    # Display the results
+    if output2_file.exists():
+        print("File ending with .output2 found:", output2_file)
+        band_df = get_bands_from_file(file_path=output2_file)
+        band_pair_from_output = find_edge_bands(band_df=band_df, band_overlap_threshold=0) #change band overlap threshold here
+
+        if band_pair_from_output != specified_bands and specified_bands is not None:
+            print("WARNING: provided bands do not match output2 file")
+            print(f"WARNING: provided range {specified_bands} does not match detected bands {band_pair_from_output}")
+            print("WARNING: values in bands (user specified) will prevail")
+        elif specified_bands is None:
+            print(f"output2 file parsed, selected bands are {band_pair_from_output}")
+            return band_pair_from_output
+
+    else:
+        print("WARNING: No .output2 files found in the working directory.")
+        if specified_bands is None:
+            raise ValueError("ERROR: output2 (band data) file not found")
+        print("WARNING: Selecting bands provided by user")
+
+    print(f"Selected bands are {band_pair_from_output}")
+    return specified_bands
+
+
+    
 def user_input():
     """Editable section where users define their input"""
     kevoldir = 2 # Y
@@ -21,7 +135,9 @@ def user_input():
     kwlsndir = 3 # Z, different from kevoldir
     nkwlsn = 10 # discretization intervals
     kfix = 0.0 # in fraction of reciprocal lattice vectors G[kfixdir]
-    bands = [61, 78]
+    bands = None # can provide values explicitly here as [lower_band, upper_band]
+    band_overlap_threshold = 0 # specify band overlap threshold desired for band gap identification
+    bands = get_bands_from_output(bands, band_overlap_threshold)
     parallel = True # parallel option [-p] in BerryPI (needs a proper .machines file)
     spinpolar = False # [-sp] in BerryPI
     orbital = False # [-orb] in BerryPI
