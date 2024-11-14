@@ -92,7 +92,6 @@ def find_edge_bands(band_df, band_gap_threshold = 0.01):
             ]
             )["Band Number"].nlargest(2).iloc[-1] + 1
     
-    print([lower_band, upper_band])
     return [lower_band, upper_band]
 
 def get_bands_from_output(specified_bands, band_gap_threshold = 0.01):
