@@ -51,7 +51,7 @@ def get_bands_from_file(file_path: Path) -> pd.DataFrame:
     
     return band_df
 
-def find_edge_bands(band_df, band_overlap_threshold = 0):
+def find_edge_bands(band_df, band_gap_threshold = 0.01):
     """finds edge bands by 
     - identifying the twin bands and bands with no overlap in 
       energy with the subsequent band. 
@@ -67,7 +67,7 @@ def find_edge_bands(band_df, band_overlap_threshold = 0):
         dataframe with all parameters describing bands -
         Band number, emin, emax, occupancy
 
-    band_overlap_threshold : float
+    band_gap_threshold : float
         threshold between bands to ensure that overlap is determined
         outside margin of error in band energy calculation
     Returns
@@ -80,7 +80,7 @@ def find_edge_bands(band_df, band_overlap_threshold = 0):
     if metal_band_occupancy:
         raise ValueError("band occupancies indicate metallic nature!\n Aborting Calculations")
 
-    band_df["next_band_overlap"] = band_df["emax"] > (band_overlap_threshold + band_df["emin"].shift(-1))
+    band_df["next_band_overlap"] = band_df["emax"] > (band_df["emin"].shift(-1) - band_gap_threshold)
     band_df["twin_band"] = band_df["emax"] == band_df["emax"].shift(-1)
     band_df["non_overlap_band"] = ~(band_df["next_band_overlap"] | band_df["twin_band"])
 
@@ -95,7 +95,7 @@ def find_edge_bands(band_df, band_overlap_threshold = 0):
     print([lower_band, upper_band])
     return [lower_band, upper_band]
 
-def get_bands_from_output(specified_bands, band_overlap_threshold = 0):
+def get_bands_from_output(specified_bands, band_gap_threshold = 0.01):
     working_directory = Path.cwd()
     case_name = working_directory.stem
     output2_file = working_directory.joinpath(
@@ -106,7 +106,7 @@ def get_bands_from_output(specified_bands, band_overlap_threshold = 0):
     if output2_file.exists():
         print("File ending with .output2 found:", output2_file)
         band_df = get_bands_from_file(file_path=output2_file)
-        band_pair_from_output = find_edge_bands(band_df=band_df, band_overlap_threshold=0) #change band overlap threshold here
+        band_pair_from_output = find_edge_bands(band_df, band_gap_threshold) #change band overlap threshold here
 
         if band_pair_from_output != specified_bands and specified_bands is not None:
             print("WARNING: provided bands do not match output2 file")
@@ -136,8 +136,8 @@ def user_input():
     nkwlsn = 10 # discretization intervals
     kfix = 0.0 # in fraction of reciprocal lattice vectors G[kfixdir]
     bands = None # can provide values explicitly here as [lower_band, upper_band]
-    band_overlap_threshold = 0 # specify band overlap threshold desired for band gap identification
-    bands = get_bands_from_output(bands, band_overlap_threshold)
+    band_gap_threshold = 0.01 # specify band gap threshold (Ry) for two bands considered separated by the gap
+    bands = get_bands_from_output(bands, band_gap_threshold)
     parallel = True # parallel option [-p] in BerryPI (needs a proper .machines file)
     spinpolar = False # [-sp] in BerryPI
     orbital = False # [-orb] in BerryPI
