@@ -103,25 +103,26 @@ def get_bands_from_output(specified_bands, band_gap_threshold = 0.01):
     
     # Display the results
     if output2_file.exists():
-        print("File ending with .output2 found:", output2_file)
+        print("File case.output2 found:", output2_file)
         band_df = get_bands_from_file(file_path=output2_file)
         band_pair_from_output = find_edge_bands(band_df, band_gap_threshold) #change band overlap threshold here
-
         if band_pair_from_output != specified_bands and specified_bands is not None:
-            print("WARNING: provided bands do not match output2 file")
+            print(f"WARNING: provided bands do not match {case_name}.output2 file")
             print(f"WARNING: provided range {specified_bands} does not match detected bands {band_pair_from_output}")
             print("WARNING: values in bands (user specified) will prevail")
         elif specified_bands is None:
-            print(f"output2 file parsed, selected bands are {band_pair_from_output}")
+            print(f"{case_name}.output2 file parsed, selected bands are {band_pair_from_output}")
             return band_pair_from_output
 
     else:
-        print("WARNING: No .output2 files found in the working directory.")
+        print(f"WARNING: No {case_name}.output2 files found in the working directory.")
         if specified_bands is None:
-            raise ValueError("ERROR: output2 (band data) file not found")
+            raise ValueError(f"ERROR: {case_name}.output2 (band data) file not found")
+        
         print("WARNING: Selecting bands provided by user")
 
     print(f"Selected bands are {band_pair_from_output}")
+
     return specified_bands
 
 
@@ -136,12 +137,12 @@ def user_input():
     kfix = 0.0 # in fraction of reciprocal lattice vectors G[kfixdir]
     bands = None # can provide values explicitly here as [lower_band, upper_band]
     band_gap_threshold = 0.01 # specify band gap threshold (Ry) for two bands considered separated by the gap
-    bands = get_bands_from_output(bands, band_gap_threshold)
     parallel = True # parallel option [-p] in BerryPI (needs a proper .machines file)
     spinpolar = False # [-sp] in BerryPI
     orbital = False # [-orb] in BerryPI
 
-    return kevoldir, kevol, nkevol, kwlsndir, nkwlsn, kfix, bands, parallel, spinpolar, orbital
+    return kevoldir, kevol, nkevol, kwlsndir, nkwlsn, kfix, bands, \
+            band_gap_threshold, parallel, spinpolar, orbital
 
 def preliminary():
     if os.environ.get('WIENROOT')==None:
@@ -240,8 +241,10 @@ Questions and comments are to be communicated via the WIEN2k mailing list
 # MAIN
 if __name__=="__main__":
     # Set user parameters
-    kevoldir, kevol, nkevol, kwlsndir, nkwlsn, kfix,\
-            bands, parallel, spinpolar, orbital = user_input()
+    kevoldir, kevol, nkevol, kwlsndir, nkwlsn, kfix, bands, \
+            band_gap_threshold, parallel, spinpolar, orbital = user_input()
+    # Get the band range
+    bands = get_bands_from_output(bands, band_gap_threshold)
     # Check input
     if not(kevoldir in [1, 2, 3]):
         raise ValueError(f'kevoldir={kevoldir}, while expected one of [1,2,3]')
