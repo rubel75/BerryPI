@@ -7,6 +7,10 @@ See prolog() for more details about the calculation setup.
 Results are tabulated in the 'wcc.csv' file.
 
 @author: Oleg Rubel
+
+Oct 2026: automatic band range (find_edge_bands) no longer relies on "twin"
+bands with equal emax, which exist only with inversion symmetry; it now works
+for non-centrosymmetric crystals (Kramers pairs counted by band parity).
 """
 
 import pandas as pd
@@ -18,7 +22,7 @@ from pathlib import Path
 
 
 def get_bands_from_file(file_path: Path) -> pd.DataFrame:
-    """function to parse bands from the file
+    r"""function to parse bands from the file
     
     pattern is defined as follows:
     ^band: Line starts with the word "band".
@@ -51,15 +55,27 @@ def get_bands_from_file(file_path: Path) -> pd.DataFrame:
     
     return band_df
 
-def find_edge_bands(band_df, band_gap_threshold = 0.01):
-    """finds edge bands by 
-    - identifying the twin bands and bands with no overlap in 
-      energy with the subsequent band. 
-    - then finding the bands that satisfy both conditions and 
-      identifying them as a shell change
-    - sorting these bands by their emax centered on 0 
-    - picking the 2 closest bands to zero, in order of low 
-    band number to high
+def find_edge_bands(band_df, band_gap_threshold = 0.01, kramers = True):
+    """finds the band range [lower_band, upper_band] of the highest
+    energy-separated manifold of fully occupied bands
+
+    - upper_band is the highest fully occupied band
+    - lower_band is the first band above the highest gap (wider than
+      band_gap_threshold) found below upper_band in the band ranges
+      (emin, emax) listed in case.output2
+    - with time-reversal symmetry (kramers = True: spin-orbit coupling,
+      no spin polarization) a gap is accepted only if the number of bands
+      below it is even. Kramers partners are degenerate at the TRIM points,
+      so a real gap never separates them. Without inversion symmetry the
+      partners split away from the TRIM points, and on an SCF k mesh that
+      contains no TRIM point (e.g. a shifted mesh) two split partners can
+      show a spurious gap. The previous version detected Kramers pairs as
+      "twin" bands with equal emax, which holds only with inversion symmetry.
+    - if no such gap exists, all occupied bands are used (lower_band = 1)
+
+    Note: the band ranges come from the SCF k mesh only. An overlap of two
+    bands between mesh points is not seen, which is what band_gap_threshold
+    guards against.
 
     Parameters
     ----------
@@ -68,65 +84,88 @@ def find_edge_bands(band_df, band_gap_threshold = 0.01):
         Band number, emin, emax, occupancy
 
     band_gap_threshold : float
-        threshold between bands to ensure that overlap is determined
-        outside margin of error in band energy calculation
+        minimum gap (Ry) between two bands for them to be considered
+        separated, outside the margin of error of the band ranges
+
+    kramers : bool
+        bands come in Kramers pairs (time-reversal symmetry with SOC)
+
     Returns
     -------
-    Tuple
-        Band lower bound and upper bound
+    list
+        [lower_band, upper_band] (1-based band numbers)
     """
+    band_df = band_df.sort_values("Band Number").reset_index(drop=True)
+    occ = band_df["occupancy"].to_numpy()
+    occ_full = occ.max()
     # check if band structure occupancies indicates metal
-    metal_band_occupancy = not band_df['occupancy'].isin([0, 1]).all()
-    if metal_band_occupancy:
+    if not np.all(np.isclose(occ, 0, atol=1e-6) | np.isclose(occ, occ_full, atol=1e-6)):
         raise ValueError("band occupancies indicate metallic nature!\n Aborting Calculations")
+    nb = band_df["Band Number"].to_numpy()
+    if not np.array_equal(nb, np.arange(1, len(nb) + 1)):
+        raise ValueError("band numbers in case.output2 are not 1, 2, 3, ...")
+    full = np.isclose(occ, occ_full, atol=1e-6)
+    upper_band = int(nb[full].max())
+    if not full[:upper_band].all():
+        raise ValueError("fully occupied bands are not contiguous, aborting")
+    if kramers and upper_band % 2:
+        raise ValueError(f"odd number of occupied bands ({upper_band}) "
+                         "with Kramers pairs expected, aborting")
+    emin = band_df["emin"].to_numpy()
+    emax = band_df["emax"].to_numpy()
+    # gap above band n (index n-1): emin(n+1) - emax(n)
+    gap = emin[1:] - emax[:-1]
+    if upper_band < len(nb):
+        print(f"Gap above band {upper_band} on the SCF k mesh: "
+              f"{gap[upper_band - 1]:.4f} Ry")
+    step = 2 if kramers else 1
+    lower_band = 1
+    for n in range(upper_band - step, 0, -step):
+        if gap[n - 1] > band_gap_threshold:
+            lower_band = n + 1
+            print(f"Gap below band {lower_band} on the SCF k mesh: "
+                  f"{gap[n - 1]:.4f} Ry")
+            break
+    else:
+        print("No gap below the highest occupied bands, all occupied bands are used")
+    if kramers:
+        odd = [n for n in range(lower_band, upper_band, 2)
+               if gap[n - 1] > band_gap_threshold]
+        if odd:
+            print(f"Gaps above the odd bands {odd} are ignored "
+                  "(split Kramers partners, see find_edge_bands)")
 
-    band_df["next_band_overlap"] = band_df["emax"] > (band_df["emin"].shift(-1) - band_gap_threshold)
-    band_df["twin_band"] = band_df["emax"] == band_df["emax"].shift(-1)
-    band_df["non_overlap_band"] = ~(band_df["next_band_overlap"] | band_df["twin_band"])
-
-    upper_band = band_df[band_df["occupancy"] == 1].max()["Band Number"]
-    non_overlap_band = band_df[band_df["non_overlap_band"] == True]
-    lower_band = (
-        non_overlap_band[
-            non_overlap_band["occupancy"] == 1
-            ]
-            )["Band Number"].nlargest(2).iloc[-1] + 1
-    
     return [lower_band, upper_band]
 
-def get_bands_from_output(specified_bands, band_gap_threshold = 0.01):
+def get_bands_from_output(specified_bands, band_gap_threshold = 0.01, kramers = True):
     working_directory = Path.cwd()
     case_name = working_directory.stem
     output2_file = working_directory.joinpath(
                                         Path(case_name).with_suffix(".output2")
                                         )
-    
-    # Display the results
+
     if output2_file.exists():
         print("File case.output2 found:", output2_file)
         band_df = get_bands_from_file(file_path=output2_file)
-        band_pair_from_output = find_edge_bands(band_df, band_gap_threshold) #change band overlap threshold here
-        if band_pair_from_output != specified_bands and specified_bands is not None:
-            print(f"WARNING: provided bands do not match {case_name}.output2 file")
+        band_pair_from_output = find_edge_bands(band_df, band_gap_threshold, kramers)
+        print(f"{case_name}.output2 file parsed, detected bands are {band_pair_from_output}")
+        if specified_bands is None:
+            print(f"Selected bands are {band_pair_from_output}")
+            return band_pair_from_output
+        if list(specified_bands) != band_pair_from_output:
             print(f"WARNING: provided range {specified_bands} does not match detected bands {band_pair_from_output}")
             print("WARNING: values in bands (user specified) will prevail")
-        elif specified_bands is None:
-            print(f"{case_name}.output2 file parsed, selected bands are {band_pair_from_output}")
-            return band_pair_from_output
-
     else:
         print(f"WARNING: No {case_name}.output2 files found in the working directory.")
         if specified_bands is None:
             raise ValueError(f"ERROR: {case_name}.output2 (band data) file not found")
-        
         print("WARNING: Selecting bands provided by user")
 
-    print(f"Selected bands are {band_pair_from_output}")
+    print(f"Selected bands are {list(specified_bands)}")
 
-    return specified_bands
+    return list(specified_bands)
 
 
-    
 def user_input():
     """Editable section where users define their input"""
     kevoldir = 2 # Y
@@ -244,14 +283,15 @@ if __name__=="__main__":
     kevoldir, kevol, nkevol, kwlsndir, nkwlsn, kfix, bands, \
             band_gap_threshold, parallel, spinpolar, orbital = user_input()
     # Get the band range
-    bands = get_bands_from_output(bands, band_gap_threshold)
+    # Kramers pairs (time reversal) unless spin polarized
+    bands = get_bands_from_output(bands, band_gap_threshold, kramers=not spinpolar)
     # Check input
     if not(kevoldir in [1, 2, 3]):
         raise ValueError(f'kevoldir={kevoldir}, while expected one of [1,2,3]')
     elif not(kwlsndir in [1, 2, 3]):
         raise ValueError(f'kwlsndir={kwlsndir}, while expected one of [1,2,3]')
     elif kevoldir == kwlsndir:
-        raise ValueError(f'kwlsndir={kwlsndir} is the same as kwlsndir={kwlsndir}, while expected to be different')
+        raise ValueError(f'kwlsndir={kwlsndir} is the same as kevoldir={kevoldir}, while expected to be different')
     if not(type(kevol) == list):
         raise ValueError(f'kevol should be type list, while you have {type(kevol)}')
     elif not(len(kevol) == 2):
